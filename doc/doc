@@ -1,0 +1,11 @@
+tty --> teletypes
+
+  /dev/ttySn --> serial port terminal
+  /dev/tty --> controlling terminal
+  /dev/ttyn, /dev/console --> console
+
+  pty --> peseudo terminal, /dev/pty/mn /dev/pty/sn
+  pts/ptmx  --> pty
+
+
+  

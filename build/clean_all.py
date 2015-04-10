@@ -6,6 +6,7 @@ from build_thirdparty import clean_thirdparty_libs
 from build_core import *
 from build_comms import *
 from build_simulator import *
+from build_simulator_test import *
 
 
 def clean_bin_files(build_info):
@@ -41,3 +42,6 @@ if __name__ == "__main__":
 
     print "Cleaning simulator...\n"
     clean_simulator(bi)
+
+    print "Cleaning simulator_test...\n"
+    clean_simulator_test(bi)

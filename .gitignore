@@ -31,4 +31,5 @@ thirdparty/boost/project-config.jam
 thirdparty/boost/tools/build/v2/engine/bin.linuxx86_64/b2
 thirdparty/boost/tools/build/v2/engine/bin.linuxx86_64/bjam
 thirdparty/boost/tools/build/v2/engine/bootstrap/jam0
-
+tags
+cscope*

@@ -48,6 +48,18 @@ def build_Boost(build_info, compiler_arch):
 
     os.chdir("../../build")
 
+def build_UnitTestPP( build_info , compiler_arch ):
+    if "linux" == build_info.host_platform:
+        os.chdir("../thirdparty")
+        build_cmd = batch_command(build_info.host_platform)
+        build_cmd.add_command('make -C unittestpp LDFLAGS= ')
+        if build_cmd.execute() != 0:
+            build_info.logger.error("Build unittestpp failed.")
+        build_cmd = batch_command(build_info.host_platform)
+        build_cmd.add_command('rm -rf bin lib ')
+        build_cmd.execute()
+        os.chdir("../build")
+
 
 def build_thirdparty_libs(build_info):
     import glob
@@ -61,6 +73,7 @@ def build_thirdparty_libs(build_info):
 
         print "\nBuilding boost...\n"
         build_Boost(build_info, arch)
+        build_UnitTestPP( build_info , arch )
 
         if not build_info.prefer_static:
             for fname in glob.iglob("../thirdparty/boost/lib/%s_%s/lib/*.%s" % (build_info.target_platform, arch[0], dll_suffix)):
@@ -111,10 +124,22 @@ def clean_boost(build_info):
 
     os.chdir("../../build")
 
+def clean_unittestpp(build_info):
+    if "linux" == build_info.target_platform:
+        print "Clean unittestpp..." 
+        os.chdir("../thirdparty/unittestpp")
+        build_cmd = batch_command(build_info.host_platform)
+        build_cmd.add_command('rm -rf bin lib')
+        build_cmd.execute()
+        build_cmd = batch_command(build_info.host_platform)
+        build_cmd.add_command('make  clean')
+        build_cmd.execute()
+        os.chdir("../../build")
 
 def clean_thirdparty_libs(build_info):
     print "Cleaning boost...\n"
     clean_boost(build_info)
+    clean_unittestpp(build_info)
 
 
 if __name__ == "__main__":

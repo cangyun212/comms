@@ -9,6 +9,7 @@ from build_thirdparty import build_thirdparty_libs
 from build_core import build_core
 from build_comms import build_comms
 from build_simulator import build_simulator
+from build_simulator_test import build_simulator_test
 from build_util import *
 
 if __name__ == "__main__":
@@ -26,3 +27,5 @@ if __name__ == "__main__":
     print "Building simulator..."
     build_simulator(bi)
 
+    print "Building simulator test ..."
+    build_simulator_test(bi)

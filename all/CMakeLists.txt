@@ -11,3 +11,6 @@ add_subdirectory("${CORE_PROJECT_DIR}/cmake" "core")
 add_subdirectory("${COMMS_PROJECT_DIR}/cmake" "comms")
 add_subdirectory("${SIMULATOR_PROJECT_DIR}/cmake" "simulator")
 
+add_dependencies(comms core)
+add_dependencies(simulator core)
+add_dependencies(simulator comms)

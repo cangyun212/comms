@@ -24,39 +24,45 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(LIB_NAME core)
 
+set(CORE_CONSOLE_HEADER_FILES
+    ${CORE_PROJECT_DIR}/include/console/ConsoleTable.hpp
+    ${CORE_PROJECT_DIR}/include/console/ConsoleProgressbar.hpp
+    ${CORE_PROJECT_DIR}/include/console/ConsoleWindow.hpp
+    ${CORE_PROJECT_DIR}/include/console/ConsolePrinter.hpp
+    ${CORE_PROJECT_DIR}/include/console/ConsoleStream.hpp
+    )
+
+set(CORE_CONSOLE_SOURCE_FILES
+    ${CORE_PROJECT_DIR}/src/console/ConsoleTable.cpp
+    ${CORE_PROJECT_DIR}/src/console/ConsoleProgressbar.cpp
+    ${CORE_PROJECT_DIR}/src/console/ConsoleWindow.cpp
+    ${CORE_PROJECT_DIR}/src/console/ConsolePrinter.cpp
+    ${CORE_PROJECT_DIR}/src/console/ConsoleStream.cpp
+    )
+
 set(CORE_HEADER_FILES
-    ${CORE_PROJECT_DIR}/include/core.hpp
-    ${CORE_PROJECT_DIR}/include/core_config.hpp
-    ${CORE_PROJECT_DIR}/include/core_types.hpp
-    ${CORE_PROJECT_DIR}/include/core_utils.hpp
-    ${CORE_PROJECT_DIR}/include/core_singleton.hpp
-    ${CORE_PROJECT_DIR}/include/core_thread.hpp
-    ${CORE_PROJECT_DIR}/include/core_timer.hpp
-    ${CORE_PROJECT_DIR}/include/core_debug.hpp
-    ${CORE_PROJECT_DIR}/include/core_console.hpp
-    ${CORE_PROJECT_DIR}/include/core_window.hpp
-    ${CORE_PROJECT_DIR}/include/console/core_console_table.hpp
-    ${CORE_PROJECT_DIR}/include/console/core_console_progress_bar.hpp
-    ${CORE_PROJECT_DIR}/include/console/core_console_window.hpp
-    ${CORE_PROJECT_DIR}/include/console/core_console_printer.hpp
-    ${CORE_PROJECT_DIR}/include/console/core_console_stream.hpp
-)
+    ${CORE_PROJECT_DIR}/include/Core.hpp
+    ${CORE_PROJECT_DIR}/include/Config.hpp
+    ${CORE_PROJECT_DIR}/include/Types.hpp
+    ${CORE_PROJECT_DIR}/include/Utils.hpp
+    ${CORE_PROJECT_DIR}/include/Singleton.hpp
+    ${CORE_PROJECT_DIR}/include/Timer.hpp
+    ${CORE_PROJECT_DIR}/include/Console.hpp
+    ${CORE_PROJECT_DIR}/include/Window.hpp
+    )
+
 set(CORE_SOURCE_FILES
-    ${CORE_PROJECT_DIR}/src/core.cpp
-    ${CORE_PROJECT_DIR}/src/core_utils.cpp
-    ${CORE_PROJECT_DIR}/src/core_timer.cpp
-    ${CORE_PROJECT_DIR}/src/core_debug.cpp
-    ${CORE_PROJECT_DIR}/src/core_console.cpp
-    ${CORE_PROJECT_DIR}/src/console/core_console_table.cpp
-    ${CORE_PROJECT_DIR}/src/console/core_console_progress_bar.cpp
-    ${CORE_PROJECT_DIR}/src/console/core_console_window.cpp
-    ${CORE_PROJECT_DIR}/src/console/core_console_printer.cpp
-    ${CORE_PROJECT_DIR}/src/console/core_console_stream.cpp
-)
+    ${CORE_PROJECT_DIR}/src/Core.cpp
+    ${CORE_PROJECT_DIR}/src/Utils.cpp
+    ${CORE_PROJECT_DIR}/src/Timer.cpp
+    ${CORE_PROJECT_DIR}/src/Console.cpp
+    )
 
 
 source_group("Source Files" FILES ${CORE_SOURCE_FILES})
+source_group("Source Files\\Console" FILES ${CORE_CONSOLE_SOURCE_FILES})
 source_group("Header Files" FILES ${CORE_HEADER_FILES})
+source_group("Header Files\\Console" FILES ${CORE_CONSOLE_HEADER_FILES})
 
 # for autolink
 add_definitions(-DCORE_SOURCE)
@@ -64,22 +70,30 @@ add_definitions(-DCORE_SOURCE)
 include(${SG_PROJECT_DIR}/cmake/configboost.cmake)
 
 include_directories(${Boost_INCLUDE_DIR})
-include_directories(${PDCURSES_PROJECT_DIR}/pdcurses)
 include_directories(${CORE_PROJECT_DIR}/include)
+if(SG_PLATFORM_WINDOWS)
+    include_directories(${PDCURSES_PROJECT_DIR}/pdcurses)
+endif()
 
 link_directories(${Boost_LIBRARY_DIR})
 
 add_library(${LIB_NAME} SHARED 
-	${CORE_SOURCE_FILES} ${CORE_HEADER_FILES}
+	${CORE_SOURCE_FILES} ${CORE_CONSOLE_SOURCE_FILES} ${CORE_HEADER_FILES} ${CORE_CONSOLE_HEADER_FILES}
 )
 
-target_link_libraries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
-    debug pdcurses${SG_OUTPUT_SUFFIX}_d optimized pdcurses${SG_OUTPUT_SUFFIX})
 
-if(SG_PLATFORM_LINUX)
-    include(${PDCURSES_PROJECT_DIR}/pdcurses/x11/pdcurses.cmake)
-    target_link_libraries(${LIB_NAME} ${PDCURSES_XLIBS} ${PDCURSES_EXTRA_LIBS})
+if(SG_PLATFORM_WINDOWS)
+    target_link_libraries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
+        debug pdcurses${SG_OUTPUT_SUFFIX}_d optimized pdcurses${SG_OUTPUT_SUFFIX})
+else()
+    target_link_libraries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
+        ncurses)
 endif()
+
+#if(SG_PLATFORM_LINUX)
+#    include(${PDCURSES_PROJECT_DIR}/pdcurses/x11/pdcurses.cmake)
+#    target_link_libraries(${LIB_NAME} ${PDCURSES_XLIBS} ${PDCURSES_EXTRA_LIBS})
+#endif()
 
 set_target_properties(${LIB_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${SG_LIB_DIR}

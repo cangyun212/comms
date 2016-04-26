@@ -1,6 +1,8 @@
-#include "core/core.hpp"
+#include "Core.hpp"
 
-#include "core/core_timer.hpp"
+#include <chrono>
+
+#include "Timer.hpp"
 
 
 namespace sg {
@@ -22,8 +24,8 @@ namespace sg {
 
     double Timer::CurrentTime() const
     {
-        chrono::steady_clock::time_point tp = chrono::steady_clock::now();
-        return chrono::duration_cast<chrono::duration<double, milli> >(tp.time_since_epoch()).count();
+        std::chrono::steady_clock::time_point tp = std::chrono::steady_clock::now();
+        return std::chrono::duration_cast<std::chrono::duration<double, std::milli> >(tp.time_since_epoch()).count();
     }
 
 }

@@ -21,8 +21,9 @@ if __name__ == "__main__":
     print("Building boost...")
     build_boost(bi)
 
-    print("Building pdcurses...")
-    build_pdcurses(bi)
+    if "win" == bi.host_platform:
+        print("Building pdcurses...")
+        build_pdcurses(bi)
 
     print("Building all...")
     build_all(bi) 

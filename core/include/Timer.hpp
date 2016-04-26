@@ -1,7 +1,7 @@
 #ifndef __CORE_TIMER_HPP__
 #define __CORE_TIMER_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
 namespace sg {
 

@@ -26,31 +26,31 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(EXE_NAME simulator)
 
 set(SIMULATOR_HEADER_FILES 
-    ${SIMULATOR_PROJECT_DIR}/include/simulator.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/qcom_simulator.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/line_reader.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/action.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/qcom_action.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/action_factory.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/qcom_action_factory.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/action_center.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/predeclare.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/utils.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/cmd_parser.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/Simulator.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/QcomSimulator.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/LineReader.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/Action.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/QcomAction.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/ActionFactory.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/QcomActionFactory.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/ActionCenter.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/Predeclare.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/Utils.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/CmdParser.hpp
     )
 
 set(SIMULATOR_SOURCE_FILES
-    ${SIMULATOR_PROJECT_DIR}/src/main.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/simulator.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/qcom_simulator.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/line_reader.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/action.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/qcom_action.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/action_factory.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/qcom_action_factory.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/action_center.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/utils.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/cmd_parser.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/Main.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/Simulator.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/QcomSimulator.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/LineReader.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/Action.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/QcomAction.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/ActionFactory.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/QcomActionFactory.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/ActionCenter.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/Utils.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/CmdParser.cpp
     )
 
 source_group("Source Files" FILES ${SIMULATOR_SOURCE_FILES})

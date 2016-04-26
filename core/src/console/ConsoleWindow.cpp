@@ -1,14 +1,26 @@
-#include "core/core.hpp"
+#include "Core.hpp"
 
-#include "core/console/core_console_window.hpp"
-
-#ifdef CORE_PLATFORM_LINUX
+#ifdef SG_PLATFORM_WINDOWS
+#include "curses.h"
+#elif defined(SG_PLATFORM_LINUX)
 #include <ncurses.h>
 #endif
 
+#include "Console/ConsoleWindow.hpp"
+
+namespace
+{
+    inline static WINDOW* sHandle2Win(void *handle)
+    {
+        return reinterpret_cast<WINDOW*>(handle);
+    }
+
+    sg::cwctype s_color = 0;
+}
+
 namespace sg
 {
-    ConsoleWindow::ConsoleWindow(const std::string &name, uint32_t width, uint32_t height, int32_t x, int32_t y)
+    ConsoleWindow::ConsoleWindow(const std::string &name, uint width, uint height, int x, int y)
         : Window(name)
         , m_top_margin(0)
         , m_lef_margin(0)
@@ -20,16 +32,19 @@ namespace sg
         , m_rc('\0')
         , m_bs(BS_NO)
     {
+        BOOST_ASSERT((width <= static_cast<uint>(std::numeric_limits<int>::max())) &&
+            height <= static_cast<uint>(std::numeric_limits<int>::max()));
+
         m_height = height;
         m_width = width;
         m_top = y;
         m_left = x;
 
-        WINDOW *handle = newwin(m_height, m_width, m_top, m_left);
+        WINDOW *handle = newwin(static_cast<int>(m_height), static_cast<int>(m_width), m_top, m_left);
         scrollok(handle, TRUE);
         keypad(handle, TRUE);
 
-        m_native_handle = handle;
+        m_native = handle;
     }
 
     ConsoleWindow::ConsoleWindow(const std::string &name, void *extern_handle)
@@ -44,25 +59,23 @@ namespace sg
         , m_rc('\0')
         , m_bs(BS_NO)
     {
-        WINDOW *handle = (WINDOW*)extern_handle;
-        scrollok(handle, TRUE);
-        keypad(handle, TRUE);
+        WINDOW *wnd = sHandle2Win(extern_handle);
+        scrollok(wnd, TRUE);
+        keypad(wnd, TRUE);
 
-        getmaxyx(handle, m_height, m_width);
+        getmaxyx(wnd, m_height, m_width);
         m_top = m_left = 0;
 
-        m_native_handle = handle;
+        m_native = wnd;
     }
 
     ConsoleWindow::~ConsoleWindow()
     {
-        if (m_native_handle)
-        {
-            delwin((WINDOW*)m_native_handle);
-        }
+        delwin(sHandle2Win(m_native));
+        m_native = nullptr;
     }
 
-    void ConsoleWindow::GetMargin(uint32_t &t, uint32_t &b, uint32_t &l, uint32_t &r) const
+    void ConsoleWindow::GetMargin(uint &t, uint &b, uint &l, uint &r) const
     {
         t = m_top_margin;
         b = m_bot_margin;
@@ -72,37 +85,37 @@ namespace sg
 
     void ConsoleWindow::Update()
     {
-        wnoutrefresh((WINDOW*)m_native_handle);
+        wnoutrefresh(sHandle2Win(m_native));
     }
 
     void ConsoleWindow::Render()
     {
-        wrefresh((WINDOW*)m_native_handle);
+        wrefresh(sHandle2Win(m_native));
     }
 
     void ConsoleWindow::Clear()
     {
-        wclear((WINDOW*)m_native_handle);
+        wclear(sHandle2Win(m_native));
     }
 
     int ConsoleWindow::Row() const
     {
-        return getcury((WINDOW*)m_native_handle);
+        return getcury(sHandle2Win(m_native));
     }
 
     int ConsoleWindow::Coloumn() const
     {
-        return getcurx((WINDOW*)m_native_handle);
+        return getcurx(sHandle2Win(m_native));
     }
 
     void ConsoleWindow::CurCoord(int &row, int &col) const
     {
-        getyx((WINDOW*)m_native_handle, row, col);
+        getyx(sHandle2Win(m_native), row, col);
     }
 
     void ConsoleWindow::MoveTo(int row, int col) const
     {
-        wmove((WINDOW*)m_native_handle, row, col);
+        wmove(sHandle2Win(m_native), row, col);
     }
 
     int ConsoleWindow::CursMode(int visibility) const
@@ -117,32 +130,35 @@ namespace sg
 
     void ConsoleWindow::AddStr(const std::string &str) const
     {
-        waddstr((WINDOW*)m_native_handle, str.c_str());
+        waddstr(sHandle2Win(m_native), str.c_str());
     }
 
     void ConsoleWindow::AddStr(const char *str, int n) const
     {
-        waddnstr((WINDOW*)m_native_handle, str, n);
+        waddnstr(sHandle2Win(m_native), str, n);
     }
 
     void ConsoleWindow::AddStrTo(int row, int col, const std::string &str) const
     {
-        mvwaddstr((WINDOW*)m_native_handle, row, col, str.c_str());
+        mvwaddstr(sHandle2Win(m_native), row, col, str.c_str());
     }
 
     void ConsoleWindow::AddStrTo(int row, int col, const char *str, int n) const
     {
-        mvwaddnstr((WINDOW*)m_native_handle, row, col, str, n);
+        mvwaddnstr(sHandle2Win(m_native), row, col, str, n);
     }
 
-    void ConsoleWindow::ColorOn(int16_t index) const
+    void ConsoleWindow::ColorOn(ConsoleColorHandle const& h) const
     {
-        wattron((WINDOW*)m_native_handle, COLOR_PAIR(index));
+        s_color = h.i;
+        BOOST_ASSERT(s_color > 0 && s_color < COLOR_PAIRS);
+        wattron(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 
-    void ConsoleWindow::ColorOff(int16_t index) const
+    void ConsoleWindow::ColorOff(ConsoleColorHandle const& h) const
     {
-        wattroff((WINDOW*)m_native_handle, COLOR_PAIR(index));
+        BOOST_ASSERT(s_color > 0 && s_color < COLOR_PAIRS);
+        wattroff(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 
     void ConsoleWindow::ClearBorder()
@@ -152,16 +168,16 @@ namespace sg
             int row, col;
             CurCoord(row, col);
 
-            WINDOW *handle = (WINDOW*)m_native_handle;
+            WINDOW *wnd = sHandle2Win(m_native);
             if (m_top_margin)
             {
                 if (m_bs == BS_TB)
                 {
-                    mvwhline(handle, 0, 0, ' ', m_width);
+                    mvwhline(wnd, 0, 0, ' ', m_width);
                 }
                 else if (m_width > 2)
                 {
-                    mvwhline(handle, 0, 1, ' ', m_width - 2);
+                    mvwhline(wnd, 0, 1, ' ', m_width - 2);
                 }
                 m_top_margin = 0;
             }
@@ -170,11 +186,11 @@ namespace sg
             {
                 if (m_bs == BS_TB)
                 {
-                    mvwhline(handle, m_height - 1, 0, ' ', m_width);
+                    mvwhline(wnd, m_height - 1, 0, ' ', m_width);
                 }
                 else if (m_width > 2)
                 {
-                    mvwhline(handle, m_height - 1, 1, ' ', m_width - 2);
+                    mvwhline(wnd, m_height - 1, 1, ' ', m_width - 2);
                 }
                 m_bot_margin = 0;
             }
@@ -183,11 +199,11 @@ namespace sg
             {
                 if (m_bs == BS_LR)
                 {
-                    mvwvline(handle, 0, 0, ' ', m_height);
+                    mvwvline(wnd, 0, 0, ' ', m_height);
                 }
                 else if (m_height > 2)
                 {
-                    mvwvline(handle, 1, 0, ' ', m_height -2);
+                    mvwvline(wnd, 1, 0, ' ', m_height -2);
                 }
                 m_lef_margin = 0;
             }
@@ -196,11 +212,11 @@ namespace sg
             {
                 if (m_bs == BS_LR)
                 {
-                    mvwvline(handle, 0, m_width - 1, ' ', m_height);
+                    mvwvline(wnd, 0, m_width - 1, ' ', m_height);
                 }
                 else if (m_height > 2)
                 {
-                    mvwvline(handle, 1, m_width - 1, ' ', m_height - 2);
+                    mvwvline(wnd, 1, m_width - 1, ' ', m_height - 2);
                 }
                 m_rht_margin = 0;
             }
@@ -209,7 +225,7 @@ namespace sg
         }
     }
 
-    void ConsoleWindow::Border(BorderStyle bs, uint64_t t, uint64_t b, uint64_t l, uint64_t r)
+    void ConsoleWindow::Border(BorderStyle bs, cwctype t, cwctype b, cwctype l, cwctype r)
     {
         ClearBorder();
 
@@ -241,13 +257,13 @@ namespace sg
         MoveTo(row, col);
     }
 
-    void ConsoleWindow::TBBorder(uint64_t t, uint64_t b, uint64_t l, uint64_t r)
+    void ConsoleWindow::TBBorder(cwctype t, cwctype b, cwctype l, cwctype r)
     {
-        WINDOW *handle = (WINDOW*)m_native_handle;
+        WINDOW *wnd = sHandle2Win(m_native);
 
         if (t != '\0')
         {
-            mvwhline(handle, 0, 0, t, m_width);
+            mvwhline(wnd, 0, 0, t, m_width);
             m_top_margin = 1;
         }
         else
@@ -255,7 +271,7 @@ namespace sg
 
         if (b != '\0')
         {
-            mvwhline(handle, m_height - 1, 0, b, m_width);
+            mvwhline(wnd, m_height - 1, 0, b, m_width);
             m_bot_margin = 1;
         }
         else
@@ -263,7 +279,7 @@ namespace sg
 
         if (l != '\0' && m_height > 2)
         {
-            mvwvline(handle, 1, 0, l, m_height - 2);
+            mvwvline(wnd, 1, 0, l, m_height - 2);
             m_lef_margin = 1;
         }
         else
@@ -271,20 +287,20 @@ namespace sg
 
         if (r != '\0' && m_height > 2)
         {
-            mvwvline(handle, 1, m_width - 1, r, m_height - 2);
+            mvwvline(wnd, 1, m_width - 1, r, m_height - 2);
             m_rht_margin = 1;
         }
         else
             m_rht_margin = 0;
     }
 
-    void ConsoleWindow::LRBorder(uint64_t t, uint64_t b, uint64_t l, uint64_t r)
+    void ConsoleWindow::LRBorder(cwctype t, cwctype b, cwctype l, cwctype r)
     {
-        WINDOW *handle = (WINDOW*)m_native_handle;
+        WINDOW *wnd = sHandle2Win(m_native);
 
         if (l != '\0')
         {
-            mvwvline(handle, 0, 0, l, m_height);
+            mvwvline(wnd, 0, 0, l, m_height);
             m_lef_margin = 1;
         }
         else
@@ -292,7 +308,7 @@ namespace sg
 
         if (r != '\0')
         {
-            mvwvline(handle, 0, m_width - 1, r, m_height);
+            mvwvline(wnd, 0, m_width - 1, r, m_height);
             m_rht_margin = 1;
         }
         else
@@ -300,7 +316,7 @@ namespace sg
 
         if (t != '\0' && m_width > 2)
         {
-            mvwhline(handle, 0, 1, t, m_width - 2);
+            mvwhline(wnd, 0, 1, t, m_width - 2);
             m_top_margin = 1;
         }
         else
@@ -308,20 +324,20 @@ namespace sg
 
         if (b != '\0' && m_width > 2)
         {
-            mvwhline(handle, m_height - 1, 1, b, m_width - 2);
+            mvwhline(wnd, m_height - 1, 1, b, m_width - 2);
             m_bot_margin = 1;
         }
         else
             m_bot_margin = 0;
     }
 
-    void ConsoleWindow::CRBorder(uint64_t t, uint64_t b, uint64_t l, uint64_t r)
+    void ConsoleWindow::CRBorder(cwctype t, cwctype b, cwctype l, cwctype r)
     {
-        WINDOW *handle = (WINDOW*)m_native_handle;
+        WINDOW *wnd = sHandle2Win(m_native);
 
         if (t != '\0' && m_width > 2)
         {
-            mvwhline(handle, 0, 1, t, m_width - 2);
+            mvwhline(wnd, 0, 1, t, m_width - 2);
             m_top_margin = 1;
         }
         else
@@ -329,7 +345,7 @@ namespace sg
 
         if (b != '\0' && m_width > 2)
         {
-            mvwhline(handle, m_height - 1, 1, b, m_width - 2);
+            mvwhline(wnd, m_height - 1, 1, b, m_width - 2);
             m_bot_margin = 1;
         }
         else
@@ -337,7 +353,7 @@ namespace sg
 
         if (l != '\0' && m_height > 2)
         {
-            mvwvline(handle, 1, 0, l, m_height - 2);
+            mvwvline(wnd, 1, 0, l, m_height - 2);
             m_lef_margin = 1;
         }
         else
@@ -345,7 +361,7 @@ namespace sg
 
         if (r != '\0' && m_height > 2)
         {
-            mvwvline(handle, 1, m_width - 1, r, m_height - 2);
+            mvwvline(wnd, 1, m_width - 1, r, m_height - 2);
             m_rht_margin = 1;
         }
         else
@@ -355,18 +371,18 @@ namespace sg
 
     void ConsoleWindow::Scroll(int n)
     {
-        wscrl((WINDOW*)m_native_handle, n);
+        wscrl(sHandle2Win(m_native), n);
         Border(m_bs, m_tc, m_bc, m_lc, m_rc);
     }
 
     void ConsoleWindow::ClearHLine(int row, int col, int n) const
     {
-        mvwhline((WINDOW*)m_native_handle, row, col, ' ', n);
+        mvwhline(sHandle2Win(m_native), row, col, ' ', n);
     }
 
     void ConsoleWindow::ClearVLine(int row, int col, int n) const
     {
-        mvwvline((WINDOW*)m_native_handle, row, col, ' ', n);
+        mvwvline(sHandle2Win(m_native), row, col, ' ', n);
     }
 
     void ConsoleWindow::MsgProc(const ConsoleEvent &event)
@@ -383,6 +399,6 @@ namespace sg
 
     void NextEvent(ConsoleWindow const& win, ConsoleEvent &event)
     {
-        event.ch = wgetch((WINDOW*)win.m_native_handle);
+        event.ch = wgetch(sHandle2Win(win.m_native));
     }
 }

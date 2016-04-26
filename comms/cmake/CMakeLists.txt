@@ -25,33 +25,50 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(LIB_NAME comms)
 
 set(COMMS_HEADER_FILES
-    ${COMMS_PROJECT_DIR}/include/comms_predeclare.hpp
-    ${COMMS_PROJECT_DIR}/include/comms.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom_general_status.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom_broadcast_seek.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom_broadcast.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom_egm_config_req.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom_egm_config.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom_game_config.hpp
-    ${COMMS_PROJECT_DIR}/include/qcom/qogr/qogr_crc.h
-    ${COMMS_PROJECT_DIR}/include/qcom/qogr/qogr_qcom.h
-    ${COMMS_PROJECT_DIR}/include/qcom/qcom_inline.h
-)
+    ${COMMS_PROJECT_DIR}/include/CommsPredeclare.hpp
+    ${COMMS_PROJECT_DIR}/include/Comms.hpp
+    )
+
 set(COMMS_SOURCE_FILES
-    ${COMMS_PROJECT_DIR}/src/comms.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qcom.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qcom_general_status.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qcom_broadcast_seek.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qcom_broadcast.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qcom_egm_config_req.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qcom_egm_config.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qcom_game_config.cpp
-    ${COMMS_PROJECT_DIR}/src/qcom/qogr/qogr_crc.c
-)
+    ${COMMS_PROJECT_DIR}/src/Comms.cpp
+    )
+
+set(COMMS_QCOM_HEADER_FILES
+    ${COMMS_PROJECT_DIR}/include/Qcom/Qcom.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomInline.h
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomGeneralStatus.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomBroadcastSeek.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomBroadcast.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomEgmConfigReq.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomEgmConfig.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomGameConfig.hpp
+    )
+
+set(COMMS_QCOM_SOURCE_FILES
+    ${COMMS_PROJECT_DIR}/src/Qcom/Qcom.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomGeneralStatus.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomBroadcastSeek.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomBroadcast.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmConfigReq.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmConfig.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomGameConfig.cpp
+    )
+
+set(COMMS_QCOM_QOGR_HEADER_FILES
+    ${COMMS_PROJECT_DIR}/include/Qcom/qogr/qogr_crc.h
+    ${COMMS_PROJECT_DIR}/include/Qcom/qogr/qogr_qcom.h
+    )
+
+set(COMMS_QCOM_QOGR_SOURCE_FILES
+    ${COMMS_PROJECT_DIR}/src/Qcom/qogr/qogr_crc.c
+    )
 
 source_group("Source Files" FILES ${COMMS_SOURCE_FILES})
+source_group("Source Files\\Qcom" FILES ${COMMS_QCOM_SOURCE_FILES})
+source_group("Source Files\\Qcom\\qorg" FILES ${COMMS_QCOM_QOGR_SOURCE_FILES})
 source_group("Header Files" FILES ${COMMS_HEADER_FILES})
+source_group("Header Files\\Qcom" FILES ${COMMS_QCOM_HEADER_FILES})
+source_group("Header Files\\Qcom\\qorg" FILES ${COMMS_QCOM_QOGR_HEADER_FILES})
 
 add_definitions(-DCOMMS_SOURCE)
 
@@ -65,7 +82,12 @@ include_directories(${COMMS_PROJECT_DIR}/include/comms/qcom/qogr)
 link_directories(${Boost_LIBRARY_DIR})
 
 add_library(${LIB_NAME} SHARED 
-	${COMMS_SOURCE_FILES} ${COMMS_HEADER_FILES}
+	${COMMS_SOURCE_FILES} 
+    ${COMMS_QCOM_SOURCE_FILES}
+    ${COMMS_QCOM_QOGR_SOURCE_FILES}
+    ${COMMS_HEADER_FILES} 
+    ${COMMS_QCOM_HEADER_FILES} 
+    ${COMMS_QCOM_QOGR_HEADER_FILES}
 )
 
 target_link_libraries(${LIB_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX})

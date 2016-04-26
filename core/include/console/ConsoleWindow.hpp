@@ -1,24 +1,24 @@
 #ifndef __CORE_CONSOLE_WINDOW_HPP__
 #define __CORE_CONSOLE_WINDOW_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
 #include "boost/signals2.hpp"
 #include "boost/format.hpp"
 
-#include "core/core_window.hpp"
+#include "Window.hpp"
+#include "Console.hpp"
 
-#define CONSOLE_KEY_DOWN                        0402
-#define CONSOLE_KEY_UP                          0403
-#define CONSOLE_KEY_LEFT                        0404
-#define CONSOLE_KEY_RIGHT                       0405
-#define CONSOLE_KEY_BACKSPACE                   0407
-#define CONSOLE_KEY_DC                          0512
-#define CONSOLE_KEY_ENTER                       0527
+#define SG_CONSOLE_KEY_DOWN                        0402
+#define SG_CONSOLE_KEY_UP                          0403
+#define SG_CONSOLE_KEY_LEFT                        0404
+#define SG_CONSOLE_KEY_RIGHT                       0405
+#define SG_CONSOLE_KEY_BACKSPACE                   0407
+#define SG_CONSOLE_KEY_DC                          0512
+#define SG_CONSOLE_KEY_ENTER                       0527
 
 namespace sg
 {
-
     struct ConsoleEvent
     {
         int     ch;
@@ -27,7 +27,7 @@ namespace sg
     class ConsoleWindow : public Window
     {
     private:
-        ConsoleWindow(std::string const& name, uint32_t width, uint32_t height, int32_t x, int32_t y);
+        ConsoleWindow(std::string const& name, uint width, uint height, int x, int y);
         ConsoleWindow(std::string const& name, void *extern_handle);
 
     public:
@@ -65,8 +65,8 @@ namespace sg
         void    AddStrTo(int row, int col, std::string const& str) const;
         void    AddStrTo(int row, int col, const char *str, int n) const;
 
-        void    GetMargin(uint32_t &t, uint32_t &b, uint32_t &l, uint32_t &r) const;
-        void    Border(BorderStyle bs, uint64_t t, uint64_t b, uint64_t l, uint64_t r);
+        void    GetMargin(uint &t, uint &b, uint &l, uint &r) const;
+        void    Border(BorderStyle bs, cwctype t, cwctype b, cwctype l, cwctype r);
         void    ClearBorder();
 
         void    ClearHLine(int row, int col, int n) const;
@@ -74,11 +74,8 @@ namespace sg
 
         void    Scroll(int n);
 
-        void    ColorOn(int16_t index) const;
-        void    ColorOff(int16_t index) const;
-
-        void    ActiveOutput(bool active) { m_active_output = active; }
-        bool    ActiveOutput() const { return m_active_output; }
+        void    ColorOn(ConsoleColorHandle const& h) const;
+        void    ColorOff(ConsoleColorHandle const& h) const;
 
         friend  void NextEvent(ConsoleWindow const& win, ConsoleEvent &event);
 
@@ -92,23 +89,22 @@ namespace sg
         void    MsgProc(ConsoleEvent const& event);
 
     private:
-        void    TBBorder(uint64_t t, uint64_t b, uint64_t l, uint64_t r);
-        void    LRBorder(uint64_t t, uint64_t b, uint64_t l, uint64_t r);
-        void    CRBorder(uint64_t t, uint64_t b, uint64_t l, uint64_t r);
+        void    TBBorder(cwctype t, cwctype b, cwctype l, cwctype r);
+        void    LRBorder(cwctype t, cwctype b, cwctype l, cwctype r);
+        void    CRBorder(cwctype t, cwctype b, cwctype l, cwctype r);
 
     private:
         CharEventType       m_char_event;
         KeyEventType        m_key_event;
-        uint32_t            m_top_margin;
-        uint32_t            m_lef_margin;
-        uint32_t            m_bot_margin;
-        uint32_t            m_rht_margin;
-        uint64_t            m_tc;
-        uint64_t            m_lc;
-        uint64_t            m_bc;
-        uint64_t            m_rc;
+        uint                m_top_margin;
+        uint                m_lef_margin;
+        uint                m_bot_margin;
+        uint                m_rht_margin;
+        cwctype             m_tc;
+        cwctype             m_lc;
+        cwctype             m_bc;
+        cwctype             m_rc;
         BorderStyle         m_bs;
-        bool                m_active_output;
     };
 
 }

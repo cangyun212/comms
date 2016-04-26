@@ -117,7 +117,7 @@ class build_info:
         try:
             cfg_build.config
         except:
-            cfg_build.config = ("Debug", "Release")
+            cfg_build.config = ("Debug", )
         try:
             cfg_build.target
         except:
@@ -176,7 +176,7 @@ class build_info:
         if "" == cfg:
             cfg = cfg_build.config
             if "" == cfg:
-                cfg = ("Debug", "Release")
+                cfg = ("Debug", )
 
         multi_config = False
         compilers = []

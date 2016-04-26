@@ -53,6 +53,7 @@
     #define SG_WARN_CONVERSION          "-Wconversion"
 
 #elif defined(_MSC_VER)
+
     #define SG_COMPILER_MSVC
     #define SG_COMPILER_NAME vc
 
@@ -89,6 +90,7 @@
                                             __pragma(warning(pop))
 
     #define SG_WARN_CONVERSION              4244
+    #define SG_WARN_DYNA_INITIALIZE         4592
 #else
     #error Unknown compiler.
 #endif

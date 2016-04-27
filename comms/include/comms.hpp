@@ -1,19 +1,29 @@
 #ifndef __SG_COMMS_HPP__
 #define __SG_COMMS_HPP__
 
-#include "core/core.hpp"
-#include "core/core_thread.hpp"
+#include "Core.hpp"
 
+#include <thread>
 #include <string>
+#include <memory>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
 
-#include "comms/comms_predeclare.hpp"
+#include "Console/ConsolePrinter.hpp"
+#include "CommsPredeclare.hpp"
 
 #define TIMEOUT_USEC    100000 // microseconds
 #define BUFF_SIZE       256
 
+#define COMMS_LOG(t, l)             SG_WS_SAFE_LOG(t, l)
+#define COMMS_START_LOG_BLOCK()     SG_START_WS_LOG_BLOCK()
+#define COMMS_LOG_BLOCK(t, l)       SG_WS_LOG_BLOCK(t, l)
+#define COMMS_END_LOG_BLOCK()       SG_END_WS_LOG_BLOCK()
+
 namespace sg {
 
-    class COMMS_API Comms : public enable_shared_from_this<Comms>
+    class COMMS_API Comms : public std::enable_shared_from_this<Comms>
     {
     public:
         enum CommsType
@@ -61,18 +71,18 @@ namespace sg {
         void    StopCheckTimeoutThread();
         int     OpenDevFile();
     protected:
-        int             m_fd;
-        std::string     m_dev;
-        std::string     m_slave;
-        bool            m_init;
-        atomic<bool>    m_start;
-        CommsType       m_type;
-        thread          m_reader;
-        //bool        m_resp_received;
-        //bool        m_resp_timeout;
-        //mutex       m_response;
+        int                 m_fd;
+        std::string         m_dev;
+        std::string         m_slave;
+        bool                m_init;
+        std::atomic<bool>   m_start;
+        CommsType           m_type;
+        std::thread         m_reader;
+        //bool              m_resp_received;
+        //bool              m_resp_timeout;
+        //mutex             m_response;
         //condition_variable  m_response_cond;
-        thread          m_checker;
+        std::thread         m_checker;
 
     };
 
@@ -102,11 +112,11 @@ namespace sg {
                 void        AddJob();
 
     protected:
-        mutex   m_sub;
-        condition_variable  m_sub_cond;
-        thread  m_job;
-        bool    m_has_sub_stage;
-        int     m_job_num;
+        std::mutex              m_sub;
+        std::condition_variable m_sub_cond;
+        std::thread             m_job;
+        bool                    m_has_sub_stage;
+        int                     m_job_num;
     };
 
 }

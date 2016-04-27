@@ -4,6 +4,8 @@
 
 namespace sg
 {
+    std::mutex g_log_guard;
+
     void ConsolePrinter::Init(ConsoleLogLevel level, std::string const & prompt)
     {
         m_level = level;

@@ -5,7 +5,7 @@
 
 namespace sg {
 
-    class Timer
+    class CORE_API Timer
     {
     public:
         Timer();

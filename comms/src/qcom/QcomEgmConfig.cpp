@@ -1,12 +1,12 @@
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
+#include "Core.hpp"
+#include "Utils.hpp"
 
-#include "comms/qcom/qcom_broadcast.hpp"
-#include "comms/qcom/qcom_egm_config.hpp"
-#include "comms/qcom/qogr/qogr_crc.h"
+#include "Qcom/QcomBroadcast.hpp"
+#include "Qcom/QcomEgmConfig.hpp"
+#include "Qcom/qogr/qogr_crc.h"
 
-namespace sg {
-
+namespace sg 
+{
     uint8_t QcomEgmConfiguration::Id() const
     {
         return QCOM_EGMCP_FC;
@@ -14,8 +14,8 @@ namespace sg {
 
     bool QcomEgmConfiguration::Parse(uint8_t buf[], int length)
     {
-        CORE_UNREF_PARAM(buf);
-        CORE_UNREF_PARAM(length);
+        SG_UNREF_PARAM(buf);
+        SG_UNREF_PARAM(length);
 
         return true;
 
@@ -54,24 +54,23 @@ namespace sg {
 
     void QcomEgmConfiguration::BuildEGMConfigPoll(std::vector<QcomEGMConfigCustomData> const& data)
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             bool pac_sent = false;
 
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
 
-            typedef CORE_DECLTYPE(data) CustomDataTypes;
-            CORE_FOREACH(CustomDataTypes::const_reference d, data)
+            for(auto const& d : data)
             {
                 QcomDataPtr p = it->GetEgmData(d.egm);
 
                 if (p)
                 {
-                    unique_lock<shared_mutex> lock(p->locker);
+                    std::unique_lock<std::mutex> lock(p->locker);
 
                     if (!pac_sent && p->data.poll_address == 0)
                     {
-                        QcomBroadcastPtr pb = static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
+                        QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
                         if (pb)
                         {
                             // TODO : it's better broadcast supply a function that
@@ -92,7 +91,22 @@ namespace sg {
                     if (p->data.resp_funcode == QCOM_NO_RESPONSE)
                         p->data.last_control ^= (QCOM_ACK_MASK);
 
-                    job->AddPoll(MakeEGMConfigPoll(d.egm, p->data.last_control, p->data.serialMidBCD, d.data.jur, d.data.den, d.data.tok, d.data.maxden, d.data.minrtp, d.data.maxrtp, d.data.maxsd, d.data.maxlines, d.data.maxbet, d.data.maxnpwin, d.data.maxpwin, d.data.maxect));
+                    job->AddPoll(this->MakeEGMConfigPoll(
+                        d.egm, 
+                        p->data.last_control, 
+                        p->data.serialMidBCD, 
+                        d.data.jur, 
+                        d.data.den, 
+                        d.data.tok, 
+                        d.data.maxden, 
+                        d.data.minrtp, 
+                        d.data.maxrtp, 
+                        d.data.maxsd, 
+                        d.data.maxlines, 
+                        d.data.maxbet, 
+                        d.data.maxnpwin, 
+                        d.data.maxpwin, 
+                        d.data.maxect));
 
                     // store the data to egm data
                     p->data.resp_funcode = QCOM_NO_RESPONSE;
@@ -119,18 +133,18 @@ namespace sg {
 
     void QcomEgmConfiguration::BuildEGMConfigPoll(uint8_t poll_address, uint8_t jur, uint32_t den, uint32_t tok, uint32_t maxden, uint16_t minrtp, uint16_t maxrtp, uint16_t maxsd, uint16_t maxlines, uint32_t maxbet, uint32_t maxnpwin, uint32_t maxpwin, uint32_t maxect)
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomDataPtr p = it->GetEgmData(poll_address);
             if (p)
             {
                 QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
 
-                unique_lock<shared_mutex> lock(p->locker);
+                std::unique_lock<std::mutex> lock(p->locker);
 
                 if (p->data.poll_address == 0)
                 {
-                    QcomBroadcastPtr pb = static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
+                    QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
                     if (pb)
                     {
                         pb->BuildPollAddressPoll();

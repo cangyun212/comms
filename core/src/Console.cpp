@@ -306,7 +306,7 @@ namespace sg
 
     ConsoleWindowPtr Console::MakeWindow(const std::string &name, uint32_t width, uint32_t height, int32_t x, int32_t y)
     {
-        auto res = m_wnds.insert(std::make_pair(name, MakeSharedPtr<ConsoleWindow>(width, height, x, y)));
+        auto res = m_wnds.insert(std::make_pair(name, ConsoleWindowPtr(new ConsoleWindow(name, width, height, x, y), std::default_delete<ConsoleWindow>())));
 
         BOOST_ASSERT(res.second);
 
@@ -315,7 +315,7 @@ namespace sg
 
     ConsoleWindowPtr Console::MakeWindow(const std::string &name, void *extern_handle)
     {
-        auto res = m_wnds.insert(std::make_pair(name, MakeSharedPtr<ConsoleWindow>(extern_handle)));
+        auto res = m_wnds.insert(std::make_pair(name, ConsoleWindowPtr(new ConsoleWindow(name, extern_handle), std::default_delete<ConsoleWindow>())));
 
         BOOST_ASSERT(res.second);
 
@@ -355,12 +355,12 @@ namespace sg
 
     ConsoleColorHandle Console::RegisterColorGroup(ConsoleColorGroup const & group)
     {
-        BOOST_ASSERT((COLOR_PAIRS > 0) && (m_colId < COLOR_PAIRS));
+        BOOST_ASSERT((COLOR_PAIRS > 0) && (m_colId < (uint)COLOR_PAIRS));
 
         m_groups.push_back(group);
-        if (m_type = CT_Custom)
+        if (m_type == CT_Custom)
         {
-            BOOST_ASSERT(init_pair(m_colId, static_cast<short>(group.f), static_cast<short>(group.b)) != ERR);
+            BOOST_ASSERT(init_pair(static_cast<short>(m_colId), static_cast<short>(group.f), static_cast<short>(group.b)) != ERR);
         }
 
         ConsoleColorHandle h = { m_colId++ };

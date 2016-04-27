@@ -91,6 +91,9 @@
 
     #define SG_WARN_CONVERSION              4244
     #define SG_WARN_DYNA_INITIALIZE         4592
+
+    #pragma warning(disable:4251) // STL class are not dllexport
+
 #else
     #error Unknown compiler.
 #endif

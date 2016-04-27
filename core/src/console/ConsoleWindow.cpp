@@ -6,6 +6,7 @@
 #include <ncurses.h>
 #endif
 
+#include "Utils.hpp"
 #include "Console/ConsoleWindow.hpp"
 
 namespace
@@ -151,13 +152,15 @@ namespace sg
     void ConsoleWindow::ColorOn(ConsoleColorHandle const& h) const
     {
         s_color = h.i;
-        BOOST_ASSERT(s_color > 0 && s_color < COLOR_PAIRS);
+        BOOST_ASSERT(s_color > 0 && s_color < (uint)COLOR_PAIRS);
         wattron(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 
     void ConsoleWindow::ColorOff(ConsoleColorHandle const& h) const
     {
-        BOOST_ASSERT(s_color > 0 && s_color < COLOR_PAIRS);
+        SG_UNREF_PARAM(h);
+
+        BOOST_ASSERT(s_color > 0 && s_color < (uint)COLOR_PAIRS);
         wattroff(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 

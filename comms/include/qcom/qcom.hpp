@@ -1,16 +1,16 @@
 #ifndef __SG_QCOM_HPP__
 #define __SG_QCOM_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
 #include <algorithm>
 #include <vector>
 #include <list>
 #include <map>
 
-#include "comms/comms_predeclare.hpp"
-#include "comms/comms.hpp"
-#include "comms/qcom/qogr/qogr_qcom.h"
+#include "CommsPredeclare.hpp"
+#include "Comms.hpp"
+#include "Qcom/qogr/qogr_qcom.h"
 
 #define QCOM_MSG_EXTEND_SIZE 4 // (CNTL+FC+CRC) = (1 + 1 + 2)
 #define QCOM_GET_PACKET_LENGTH(MSG_SIZE) (MSG_SIZE + QCOM_MSG_EXTEND_SIZE)
@@ -66,8 +66,8 @@ namespace sg {
         uint8_t         last_control; // ACK/NAK bit
         int8_t          resp_funcode; // store the function code of poll which has the response otherwise -1
         uint8_t         poll_address; // 1 <= valid address <= 250
-        uint8_t         machine_enable; // if equal 1, then egm enable, otherwise egm disable
-        uint8_t         game_config_req; // if set, the egm will queue the egm game configuration response
+        uint16_t        machine_enable; // if equal 1, then egm enable, otherwise egm disable
+        uint16_t        game_config_req; // if set, the egm will queue the egm game configuration response
         uint8_t         poll_seq_num[PSN_NUM]; // poll sequence number, ref Qcom1.6-15.1.9
         uint8_t         protocol_ver; // 0x00 for Qcom1.5.x egm and 0x01 for Qcom1.6.x egms
         uint8_t         egm_config_flag_a; // flag indicates which device are expected
@@ -85,17 +85,17 @@ namespace sg {
     struct QcomData
     {
         EGMData data;
-        shared_mutex locker;
+        std::mutex locker;
     };
 
-    typedef shared_ptr<QcomData>    QcomDataPtr;
+    typedef std::shared_ptr<QcomData>    QcomDataPtr;
 
     struct QcomEGMConifgReqCustomData
     {
-        uint16_t     mef;
-        uint16_t     gcr;
-        uint16_t     psn;
-        uint8_t      egm;
+        uint16_t    mef;
+        uint16_t    gcr;
+        uint16_t    psn;
+        uint8_t     egm;
     };
 
     struct QcomEGMConfigCustomData
@@ -124,7 +124,7 @@ namespace sg {
         };
     };
 
-    typedef shared_ptr<QcomPoll>    QcomPollPtr;
+    typedef std::shared_ptr<QcomPoll>    QcomPollPtr;
 
     class QcomJobData
     {
@@ -158,7 +158,7 @@ namespace sg {
         JobType     m_type;
     };
 
-    typedef shared_ptr<QcomJobData>     QcomJobDataPtr;
+    typedef std::shared_ptr<QcomJobData>     QcomJobDataPtr;
 
     class COMMS_API CommsQcom : public Comms
     {
@@ -188,18 +188,18 @@ namespace sg {
         template<typename Predicate>
         QcomDataPtr FindEgmData(Predicate const & p)
         {
-           shared_lock<shared_mutex> lock(m_egms_guard);
+           std::unique_lock<std::mutex> lock(m_egms_guard);
 
-            CORE_AUTO(it, std::find_if(m_egms.begin(), m_egms.end(), p));
+           auto it = std::find_if(m_egms.begin(), m_egms.end(), p);
 
-            if (it != m_egms.end())
-            {
-                return *it;
-            }
-            else
-            {
-                return nullptr;
-            }
+           if (it != m_egms.end())
+           {
+               return *it;
+           }
+           else
+           {
+               return nullptr;
+           }
         }
 
     public:
@@ -210,13 +210,13 @@ namespace sg {
         CommsPacketHandlerPtr   GetHandler(uint8_t id) const;
 
     protected:
-        void    DoInit() CORE_OVERRIDE;
-        void    DoStart() CORE_OVERRIDE;
-        void    DoStop() CORE_OVERRIDE;
-        void    DoCheckCommsTimeout() CORE_OVERRIDE;
-        bool    IsPacketComplete(uint8_t buf[], int length) CORE_OVERRIDE;
-        bool    IsCRCValid(uint8_t buf[], int length) CORE_OVERRIDE;
-        void    HandlePacket(uint8_t buf[], int length) CORE_OVERRIDE;
+        void    DoInit() override;
+        void    DoStart() override;
+        void    DoStop() override;
+        void    DoCheckCommsTimeout() override;
+        bool    IsPacketComplete(uint8_t buf[], int length) override;
+        bool    IsCRCValid(uint8_t buf[], int length) override;
+        void    HandlePacket(uint8_t buf[], int length) override;
 
     private:
         void    StartJobThread();
@@ -233,11 +233,11 @@ namespace sg {
         typedef std::vector<QcomDataPtr>    EgmPoolType;
         EgmPoolType     m_egms;
 
-        shared_mutex    m_egms_guard;
+        std::mutex      m_egms_guard;
 
-        thread          m_worker;
-        mutex           m_job;
-        condition_variable  m_job_cond;
+        std::thread     m_worker;
+        std::mutex      m_job;
+        std::condition_variable  m_job_cond;
 
         typedef std::list<QcomJobDataPtr>   JobQueue;
         JobQueue        m_jobs;

@@ -15,7 +15,7 @@
 
 namespace sg
 {
-    extern std::mutex               g_log_guard;
+    extern CORE_API std::mutex               g_log_guard;
 
 
     enum ConsoleLogLevel
@@ -25,7 +25,7 @@ namespace sg
         CLL_Error
     };
 
-    class ConsolePrinter : public Singleton<ConsolePrinter>
+    class CORE_API ConsolePrinter : public Singleton<ConsolePrinter>
     {
     public:
         ConsolePrinter()

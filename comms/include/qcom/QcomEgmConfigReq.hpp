@@ -1,10 +1,10 @@
 #ifndef __SG_QCOM_EGM_CONFIG_REQ_HPP__
 #define __SG_QCOM_EGM_CONFIG_REQ_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
-#include "comms/comms_predeclare.hpp"
-#include "comms/qcom/qcom.hpp"
+#include "CommsPredeclare.hpp"
+#include "Qcom/Qcom.hpp"
 
 
 namespace sg {
@@ -20,8 +20,8 @@ namespace sg {
         }
 
     public:
-        uint8_t     Id() const CORE_OVERRIDE;
-        bool        Parse(uint8_t buf[], int length) CORE_OVERRIDE;
+        uint8_t     Id() const override;
+        bool        Parse(uint8_t buf[], int length) override;
 
     public:
         void        BuildEGMConfigReqPoll(std::vector<QcomEGMConifgReqCustomData> const& data);
@@ -31,10 +31,10 @@ namespace sg {
         QcomPollPtr MakeEGMConfigReqPoll(uint8_t poll_address, uint8_t last_control, uint16_t mef, uint16_t gcr, uint16_t psn);
 
     private:
-        weak_ptr<CommsQcom>     m_qcom;
+        std::weak_ptr<CommsQcom>     m_qcom;
     };
 
-    typedef shared_ptr<QcomEgmConfigurationRequest> QcomEgmConfigurationRequestPtr;
+    typedef std::shared_ptr<QcomEgmConfigurationRequest> QcomEgmConfigurationRequestPtr;
 
 }
 

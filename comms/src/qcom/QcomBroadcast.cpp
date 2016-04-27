@@ -1,11 +1,12 @@
  
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
+#include "Core.hpp"
+#include "Utils.hpp"
 
-#include "comms/qcom/qcom_broadcast.hpp"
-#include "comms/qcom/qogr/qogr_crc.h"
+#include "Qcom/QcomBroadcast.hpp"
+#include "Qcom/qogr/qogr_crc.h"
 
-namespace sg {
+namespace sg 
+{
 
     uint8_t QcomBroadcast::Id() const
     {
@@ -27,8 +28,8 @@ namespace sg {
 
         poll->poll.Data.Broadcast.ESIZ = sizeof(qc_egmpactype);
         poll->poll.Data.Broadcast.extd.EXTD.egmpac.EFUNC = QCOM_BMEGMPAC_FC;
-        poll->poll.Data.Broadcast.extd.EXTD.egmpac.ESIZ = size * sizeof(qc_egmpacretype);
-        poll->poll.Data.Broadcast.extd.EXTD.egmpac.NUM = size;
+        poll->poll.Data.Broadcast.extd.EXTD.egmpac.ESIZ = static_cast<u8>(size * sizeof(qc_egmpacretype));
+        poll->poll.Data.Broadcast.extd.EXTD.egmpac.NUM = static_cast<u8>(size);
 
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
@@ -37,7 +38,7 @@ namespace sg {
 
     QcomJobDataPtr QcomBroadcast::MakePollAddressJob()
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             std::vector<QcomDataPtr> egmDatas;
             it->GetEgmData(egmDatas);
@@ -54,28 +55,28 @@ namespace sg {
             size_t group = size / QCOM_REMAX_BMEGMPAC;
             size_t extra = size % QCOM_REMAX_BMEGMPAC;
 
-            QcomPollPtr poll_extra = MakePollAddressPoll(extra);
+            QcomPollPtr poll_extra = this->MakePollAddressPoll(extra);
             for (size_t i = 0; i < extra; ++i)
             {
-                unique_lock<shared_mutex> lock(egmDatas[i]->locker);
+                std::unique_lock<std::mutex> lock(egmDatas[i]->locker);
                 poll_extra->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].SN.SER =egmDatas[i]->data.serialMidBCD;
-                poll_extra->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = i + 1;
-                egmDatas[i]->data.poll_address = i + 1;
+                poll_extra->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = static_cast<u8>(i + 1);
+                egmDatas[i]->data.poll_address = static_cast<u8>(i + 1);
             }
             PutCRC_LSBfirst(poll_extra->data, poll_extra->poll.DLL.Length);
             job->AddBroadcast(poll_extra);
 
             for (size_t j = 0; j < group; ++j)
             {
-                QcomPollPtr poll = MakePollAddressPoll(QCOM_REMAX_BMEGMPAC);
+                QcomPollPtr poll = this->MakePollAddressPoll(QCOM_REMAX_BMEGMPAC);
                 size_t low_bound = extra + j * QCOM_REMAX_BMEGMPAC;
                 size_t high_bound = low_bound + QCOM_REMAX_BMEGMPAC;
                 for (size_t i = low_bound; i < high_bound; ++i)
                 {
-                    unique_lock<shared_mutex> lock(egmDatas[i]->locker);
+                    std::unique_lock<std::mutex> lock(egmDatas[i]->locker);
                     poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].SN.SER =egmDatas[i]->data.serialMidBCD;
-                    poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = i + 1;
-                    egmDatas[i]->data.poll_address = i + 1;
+                    poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = static_cast<u8>(i + 1);
+                    egmDatas[i]->data.poll_address = static_cast<u8>(i + 1);
                 }
                 PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
                 job->AddBroadcast(poll);
@@ -89,9 +90,9 @@ namespace sg {
 
     void QcomBroadcast::BuildPollAddressPoll()
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
-            QcomJobDataPtr job = MakePollAddressJob();
+            QcomJobDataPtr job = this->MakePollAddressJob();
             if (job)
             {
                 it->AddJob(job);
@@ -101,7 +102,7 @@ namespace sg {
 
     void QcomBroadcast::BuildPollAddressPoll(uint8_t poll_address)
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomDataPtr d = it->GetEgmData(poll_address);
 
@@ -109,9 +110,9 @@ namespace sg {
             {
                 QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
-                QcomPollPtr poll = MakePollAddressPoll(1);
+                QcomPollPtr poll = this->MakePollAddressPoll(1);
 
-                unique_lock<shared_mutex> lock(d->locker);
+                std::unique_lock<std::mutex> lock(d->locker);
                 poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[0].SN.SER = d->data.serialMidBCD;
                 poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[0].PADR = poll_address;
                 d->data.poll_address = poll_address;
@@ -126,7 +127,7 @@ namespace sg {
         }
     }
 
-//Time Data broadcast
+    //Time Data broadcast
     QcomPollPtr QcomBroadcast::MakeTimeDataBroadcast()
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
@@ -161,11 +162,11 @@ namespace sg {
 
     void QcomBroadcast::BuildTimeDataBroadcast()
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
-            QcomPollPtr poll = MakeTimeDataBroadcast();
+            QcomPollPtr poll = this->MakeTimeDataBroadcast();
 
             PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
@@ -174,7 +175,8 @@ namespace sg {
             it->AddJob(job);
         }
     }
-//Link Progressive Current Amount broadcast
+
+    //Link Progressive Current Amount broadcast
     QcomPollPtr QcomBroadcast::MakeLinkProgressiveCurrentAmountBroadcast()
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
@@ -192,7 +194,7 @@ namespace sg {
         WORD tmp_pgid = 0x0001;
         unsigned int tmp_jackpot_levels = 3;
         unsigned int tmp_jackpot_amounts[3] = {100001, 10002, 1003};
-        poll->poll.Data.Broadcast.ESIZ = sizeof(qc_lpcatype) + sizeof(qc_lpcaretype) * (tmp_jackpot_levels);
+        poll->poll.Data.Broadcast.ESIZ = static_cast<u8>(sizeof(qc_lpcatype) + sizeof(qc_lpcaretype) * (tmp_jackpot_levels));
         poll->poll.Data.Broadcast.extd.EXTD.lpca.EFUNC = QCOM_BMLPCA_FC;
         poll->poll.Data.Broadcast.extd.EXTD.lpca.NUM.bits.levels = tmp_jackpot_levels - 1;
         size_t i = 0;
@@ -210,11 +212,11 @@ namespace sg {
 
     void QcomBroadcast::BuildLinkProgressiveCurrentAmountBroadcast()
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
-            QcomPollPtr poll = MakeLinkProgressiveCurrentAmountBroadcast();
+            QcomPollPtr poll = this->MakeLinkProgressiveCurrentAmountBroadcast();
 
             PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
@@ -225,7 +227,7 @@ namespace sg {
     }
 
     //General Promotional Message broadcast
-    QcomPollPtr QcomBroadcast::MakeGeneralPromotionalMessageBroadcast(uint16_t gpm_text_length, const char * gpm_text)
+    QcomPollPtr QcomBroadcast::MakeGeneralPromotionalMessageBroadcast(u8 gpm_text_length, const char * gpm_text)
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
         std::memset(poll.get(), 0, sizeof(QcomPoll));
@@ -256,13 +258,13 @@ namespace sg {
         return poll;
     }
 
-    void QcomBroadcast::BuildGeneralPromotionalMessageBroadcast(uint16_t gpm_text_length, const char * gpm_text)
+    void QcomBroadcast::BuildGeneralPromotionalMessageBroadcast(u8 gpm_text_length, const char * gpm_text)
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
-            QcomPollPtr poll = MakeGeneralPromotionalMessageBroadcast(gpm_text_length, gpm_text);
+            QcomPollPtr poll = this->MakeGeneralPromotionalMessageBroadcast(gpm_text_length, gpm_text);
 
             PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
@@ -273,7 +275,7 @@ namespace sg {
     }
 
     //Site Details broadcast
-    QcomPollPtr QcomBroadcast::MakeSiteDetailsBroadcast(uint16_t sds_text_length, uint16_t sdl_text_length, const char* sds_text, const char* sdl_text)
+    QcomPollPtr QcomBroadcast::MakeSiteDetailsBroadcast(u8 sds_text_length, u8 sdl_text_length, const char* sds_text, const char* sdl_text)
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
         std::memset(poll.get(), 0, sizeof(QcomPoll));
@@ -299,13 +301,13 @@ namespace sg {
         return poll;
     }
 
-    void QcomBroadcast::BuildSiteDetailsBroadcast(uint16_t sd_stext_length, uint16_t sd_ltext_length, const char* sds_text, const char* sdl_text)
+    void QcomBroadcast::BuildSiteDetailsBroadcast(u8 sd_stext_length, u8 sd_ltext_length, const char* sds_text, const char* sdl_text)
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
-            QcomPollPtr poll = MakeSiteDetailsBroadcast(sd_stext_length, sd_ltext_length, sds_text, sdl_text);
+            QcomPollPtr poll = this->MakeSiteDetailsBroadcast(sd_stext_length, sd_ltext_length, sds_text, sdl_text);
 
             PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 

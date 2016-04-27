@@ -43,10 +43,10 @@ namespace sg
         uint            i;
     };
 
-    bool operator==(ConsoleColorHandle const& left, ConsoleColorHandle const& right);
-    bool operator!=(ConsoleColorHandle const& left, ConsoleColorHandle const& right);
+    bool CORE_API operator==(ConsoleColorHandle const& left, ConsoleColorHandle const& right);
+    bool CORE_API operator!=(ConsoleColorHandle const& left, ConsoleColorHandle const& right);
 
-    class Console : public Singleton<Console>
+    class CORE_API Console : public Singleton<Console>
     {
     public:
         void    Init(ConsoleType type); // must be called before everything else

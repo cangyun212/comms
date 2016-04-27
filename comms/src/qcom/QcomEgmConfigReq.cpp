@@ -1,19 +1,19 @@
 
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
-#include "core/console/core_console_printer.hpp"
+#include "Core.hpp"
+#include "Utils.hpp"
 
-#include "comms/qcom/qcom_broadcast.hpp"
-#include "comms/qcom/qcom_egm_config_req.hpp"
-#include "comms/qcom/qogr/qogr_crc.h"
+#include "Qcom/QcomBroadcast.hpp"
+#include "Qcom/QcomEgmConfigReq.hpp"
+#include "Qcom/qogr/qogr_crc.h"
 
-namespace sg {
+namespace sg 
+{
 
-    namespace {
-
+    namespace 
+    {
         bool FindEGMDataBySER(uint32_t ser, QcomDataPtr p)
         {
-            shared_lock<shared_mutex> lock(p->locker);
+            std::unique_lock<std::mutex> lock(p->locker);
             if (p->data.serialMidBCD == ser)
             {
                 return true;
@@ -30,18 +30,18 @@ namespace sg {
 
     bool QcomEgmConfigurationRequest::Parse(uint8_t buf[], int length)
     {
-        CORE_UNREF_PARAM(length);
+        SG_UNREF_PARAM(length);
 
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
             if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_egmcrtype2)))
             {
-                QcomDataPtr pd = it->FindEgmData(bind(&FindEGMDataBySER, p->Data.egmcr2.SN.SER, placeholders::_1));
+                QcomDataPtr pd = it->FindEgmData(std::bind(&FindEGMDataBySER, p->Data.egmcr2.SN.SER, std::placeholders::_1));
 
                 if (pd)
                 {
-                    unique_lock<shared_mutex> lock(pd->locker);
+                    std::unique_lock<std::mutex> _lock(pd->locker);
 
                     pd->data.last_control ^= (QCOM_ACK_MASK);
 
@@ -60,95 +60,95 @@ namespace sg {
 
                     // The following fields are set via the EGM Configuration Poll and reported
                     // back here for verification
-                    CORE_START_LOG_BLOCK(); // TODO : we need to prevent potential dead lock here when lock pd->locker at the same
+                    COMMS_START_LOG_BLOCK(); // TODO : we need to prevent potential dead lock here when lock pd->locker at the same time
                     if (pd->data.egm_config.den != p->Data.egmcr2.DEN2)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
-                                 boost::format("Invalid den value %1% is returned from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.DEN2 %
-                                 pd->data.egm_config.den);
+                        COMMS_LOG_BLOCK(
+                            boost::format("Invalid den value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.DEN2 %
+                            pd->data.egm_config.den, CLL_Error);
                     }
 
                     if (pd->data.egm_config.tok != p->Data.egmcr2.TOK2)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid tok value %1% is returned from EGM, should be %2%\n") %
                                  p->Data.egmcr2.TOK2 %
-                                 pd->data.egm_config.tok);
+                                 pd->data.egm_config.tok, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxden != p->Data.egmcr2.MAXDEN)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxden value %1% is returned from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXDEN %
-                                 pd->data.egm_config.maxden);
+                                 pd->data.egm_config.maxden, CLL_Error);
                     }
 
                     if (pd->data.egm_config.minrtp != p->Data.egmcr2.MINRTP)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid minrtp value %1% is returned from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MINRTP %
-                                 pd->data.egm_config.minrtp);
+                                 pd->data.egm_config.minrtp, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxrtp != p->Data.egmcr2.MAXRTP)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxrtp value %1% return from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXRTP%
-                                 pd->data.egm_config.maxrtp);
+                                 pd->data.egm_config.maxrtp, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxsd != p->Data.egmcr2.MAXSD)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxsd value %1% return from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXSD%
-                                 pd->data.egm_config.maxsd);
+                                 pd->data.egm_config.maxsd, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxlines != p->Data.egmcr2.MAXLINES)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxlines value %1% return from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXLINES %
-                                 pd->data.egm_config.maxlines);
+                                 pd->data.egm_config.maxlines, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxbet != p->Data.egmcr2.MAXBET)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxbet value %1% return from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXBET %
-                                 pd->data.egm_config.maxbet);
+                                 pd->data.egm_config.maxbet, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxnpwin != p->Data.egmcr2.MAXNPWIN)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxnpwin value %1% return from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXNPWIN %
-                                 pd->data.egm_config.maxnpwin);
+                                 pd->data.egm_config.maxnpwin, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxpwin != p->Data.egmcr2.MAXPWIN)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxpwin value %1% return from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXPWIN %
-                                 pd->data.egm_config.maxpwin);
+                                 pd->data.egm_config.maxpwin, CLL_Error);
                     }
 
                     if (pd->data.egm_config.maxect != p->Data.egmcr2.MAXECT)
                     {
-                        CORE_LOG_BLOCK(LL_Error,
+                        COMMS_LOG_BLOCK(
                                  boost::format("Invalid maxect value %1% return from EGM, should be %2%\n") %
                                  p->Data.egmcr2.MAXECT %
-                                 pd->data.egm_config.maxect);
+                                 pd->data.egm_config.maxect, CLL_Error);
                     }
-                    CORE_END_LOG_BLOCK();
+                    COMMS_END_LOG_BLOCK();
 
                     return true;
                 }
@@ -181,18 +181,18 @@ namespace sg {
 
     void QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(uint8_t poll_address, uint8_t mef, uint8_t gcr, uint8_t psn)
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomDataPtr p = it->GetEgmData(poll_address);
             if (p)
             {
                 QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
 
-                unique_lock<shared_mutex> lock(p->locker);
+                std::unique_lock<std::mutex> lock(p->locker);
 
                 if (p->data.poll_address == 0)
                 {
-                    QcomBroadcastPtr pb = static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
+                    QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
                     if (pb)
                     {
                         pb->BuildPollAddressPoll();
@@ -202,7 +202,7 @@ namespace sg {
                 if (p->data.resp_funcode == QCOM_NO_RESPONSE)
                     p->data.last_control ^= (QCOM_ACK_MASK);
 
-                job->AddPoll(MakeEGMConfigReqPoll(poll_address, p->data.last_control, mef, gcr, psn));
+                job->AddPoll(this->MakeEGMConfigReqPoll(poll_address, p->data.last_control, mef, gcr, psn));
 
                 p->data.resp_funcode = QCOM_EGMCRP_FC;
                 p->data.machine_enable = mef;
@@ -221,24 +221,23 @@ namespace sg {
 
     void QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(std::vector<QcomEGMConifgReqCustomData> const& data)
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             bool pac_sent = false;
 
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
 
-            typedef CORE_DECLTYPE(data) CustomDataTypes;
-            CORE_FOREACH(CustomDataTypes::const_reference d, data)
+            for(auto const& d : data)
             {
                 QcomDataPtr p = it->GetEgmData(d.egm);
 
                 if (p)
                 {
-                    unique_lock<shared_mutex> lock(p->locker);
+                    std::unique_lock<std::mutex> lock(p->locker);
 
                     if (!pac_sent && p->data.poll_address == 0)
                     {
-                        QcomBroadcastPtr pb = static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
+                        QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
                         if (pb)
                         {
                             // TODO : it's better broadcast supply a function that
@@ -252,7 +251,7 @@ namespace sg {
                     if (p->data.resp_funcode == QCOM_NO_RESPONSE)
                         p->data.last_control ^= (QCOM_ACK_MASK);
 
-                    job->AddPoll(MakeEGMConfigReqPoll(d.egm, p->data.last_control, d.mef, d.gcr, d.psn));
+                    job->AddPoll(this->MakeEGMConfigReqPoll(d.egm, p->data.last_control, d.mef, d.gcr, d.psn));
 
                     p->data.resp_funcode = QCOM_EGMCRP_FC;
                     p->data.machine_enable = d.mef;

@@ -11,7 +11,7 @@
 
 namespace sg
 {
-    class ConsoleWindowStream
+    class CORE_API ConsoleWindowStream
     {
     public:
         enum { colorable = true };
@@ -36,21 +36,21 @@ namespace sg
     };
 
     template<>
-    ConsoleWindowStream& ConsoleWindowStream::operator<< (boost::format const& fmt)
+    inline ConsoleWindowStream& ConsoleWindowStream::operator<< (boost::format const& fmt)
     {
         m_wnd->AddStr(fmt.str());
         return *this;
     }
 
     template<>
-    ConsoleWindowStream& ConsoleWindowStream::operator<< (std::string const& str)
+    inline ConsoleWindowStream& ConsoleWindowStream::operator<< (std::string const& str)
     {
         m_wnd->AddStr(str);
         return *this;
     }
 
     template<>
-    ConsoleWindowStream& ConsoleWindowStream::operator<< (ConsoleColorHandle const& h)
+    inline ConsoleWindowStream& ConsoleWindowStream::operator<< (ConsoleColorHandle const& h)
     {
         if (h == Console::Instance().OffHandle())
             m_wnd->ColorOff(h);
@@ -60,7 +60,7 @@ namespace sg
         return *this;
     }
 
-    class ConsoleStdColorStream
+    class CORE_API ConsoleStdColorStream
     {
     public:
         enum { colorable = true };
@@ -79,7 +79,7 @@ namespace sg
     };
 
     template<>
-    ConsoleStdColorStream& ConsoleStdColorStream::operator<< (ConsoleColorHandle const& h)
+    inline ConsoleStdColorStream& ConsoleStdColorStream::operator<< (ConsoleColorHandle const& h)
     {
         Console & c = Console::Instance();
         if (h == c.OffHandle())
@@ -111,8 +111,8 @@ namespace sg
         static const bool value = false;
     };
 
-    extern ConsoleWindowStream      g_winstream;
-    extern ConsoleStdColorStream    g_colstream;
+    extern CORE_API ConsoleWindowStream      g_winstream;
+    extern CORE_API ConsoleStdColorStream    g_colstream;
 
 }
 

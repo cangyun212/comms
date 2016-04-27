@@ -178,14 +178,14 @@ namespace sg
         }
     }
 
-    void ConsoleTable::PrepareCell(ConsoleTableRowPtr const& r, size_t col, ConsoleTableFormatConstPtr & def_fmt) const
+    void ConsoleTable::PrepareCell(ConsoleTableRowPtr const& r, size_t col, ConsoleTableFormatConstPtr const& def_fmt) const
     {
         ConsoleTableCell &c = r->GetCell(col);
         ConsoleTableFormatConstPtr fmt = this->GetCellFormat(r, col, def_fmt);
         c.str = (boost::format(fmt->spec) % c.val).str();
     }
 
-    ConsoleTableFormatConstPtr ConsoleTable::GetCellFormat(ConsoleTableRowPtr const&r, size_t col, ConsoleTableFormatConstPtr & def_fmt) const
+    ConsoleTableFormatConstPtr ConsoleTable::GetCellFormat(ConsoleTableRowPtr const&r, size_t col, ConsoleTableFormatConstPtr const& def_fmt) const
     {
         ConsoleTableFormatPtr fmt = nullptr;
 

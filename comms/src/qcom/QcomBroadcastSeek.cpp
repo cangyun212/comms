@@ -1,14 +1,15 @@
  
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
+#include "Core.hpp"
+#include "Utils.hpp"
 
-#include "comms/qcom/qcom_broadcast_seek.hpp"
-#include "comms/qcom/qogr/qogr_crc.h"
+#include "Qcom/QcomBroadcastSeek.hpp"
+#include "Qcom/qogr/qogr_crc.h"
 
-namespace sg {
+namespace sg 
+{
 
-    namespace {
-
+    namespace 
+    {
         bool CheckSerialMidBCD(uint32_t ser, QcomDataPtr p)
         {
             // unique_lock lock(p->locker);
@@ -32,9 +33,9 @@ namespace sg {
 
     bool QcomBroadcastSeek::Parse(uint8_t buf[], int length)
     {
-        CORE_UNREF_PARAM(length);
+        SG_UNREF_PARAM(length);
 
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
 
@@ -43,9 +44,9 @@ namespace sg {
             {
 
                 if (it->FindEgmData(
-                            bind(&CheckSerialMidBCD,
+                            std::bind(&CheckSerialMidBCD,
                                  p->Data.segmbr.SN.SER,
-                                 placeholders::_1)) == nullptr)
+                                 std::placeholders::_1)) == nullptr)
                 {
                     QcomDataPtr pd = it->AddNewEgm();
 
@@ -66,7 +67,7 @@ namespace sg {
 
     void QcomBroadcastSeek::BuildSeekEGMPoll()
     {
-        if (CORE_AUTO(it, m_qcom.lock()))
+        if (auto it = m_qcom.lock())
         {
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST_SEEK);
 

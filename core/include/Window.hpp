@@ -7,7 +7,7 @@
 
 namespace sg
 {
-    class Window
+    class CORE_API Window
     {
     public:
         Window(std::string const& name)

@@ -24,7 +24,7 @@ namespace sg
         int     ch;
     };
 
-    class ConsoleWindow : public Window
+    class CORE_API ConsoleWindow : public Window
     {
     private:
         ConsoleWindow(std::string const& name, uint width, uint height, int x, int y);

@@ -63,9 +63,9 @@ extern "C" {
 
 // failsafe check for type sizes
 #ifndef __GNUC__                // GNUC doesnt support sizeof in directives
-#if (sizeof(ULONG) != 4)
-#error long int must be 4 bytes for this module to function
-#endif
+//#if (sizeof(ULONG) != 4)
+//#error long int must be 4 bytes for this module to function
+//#endif
 #endif
 
 #define BYTE    UCHAR
@@ -76,9 +76,9 @@ extern "C" {
                                 // However sizeof(var:x) where x <= 8 must be 1
 
 #ifndef __GNUC__                // GNUC doesnt support sizeof in directives
-#if (sizeof(WORD) != 2)
-#error short integers must be 2 bytes for this module to function
-#endif
+//#if (sizeof(WORD) != 2)
+//#error short integers must be 2 bytes for this module to function
+//#endif
 #endif
 
 //#define FALSE   0
@@ -503,9 +503,9 @@ typedef struct {
 // If byte alignment is on, then this struct will be 3 bytes in size
 
 #ifndef __GNUC__                // GNUC doesnt support sizeof in directives
-#if (sizeof(qc_testaligntype) != 3)
-#error Byte Alignment Required
-#endif
+//#if (sizeof(qc_testaligntype) != 3)
+//#error Byte Alignment Required
+//#endif
 #endif
 //--------------------------------------------------------------------------
 

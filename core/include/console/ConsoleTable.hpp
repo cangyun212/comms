@@ -302,7 +302,7 @@ namespace sg {
                 if (r->IsSeparator())
                     this->PrintSeparator(s);
                 else
-                    this->PrintRow(s, r, defmt);
+                    this->PrintRow(s, std::static_pointer_cast<ConsoleTableRow>(r), defmt);
 
             }
 
@@ -313,7 +313,7 @@ namespace sg {
 
     private:
         void PreparePrint() const;
-        void PrepareCell(ConsoleTableRowPtr const& r, size_t col, ConsoleTableFormatConstPtr & def_fmt) const;
+        void PrepareCell(ConsoleTableRowPtr const& r, size_t col, ConsoleTableFormatConstPtr const& def_fmt) const;
 
         template <typename Stream>
         Stream& PrintSeparator(Stream & s) const
@@ -345,7 +345,7 @@ namespace sg {
         }
 
         template <typename Stream>
-        Stream& PrintRow(Stream & s, ConsoleTableRowPtr const& r, ConsoleTableFormatConstPtr & fmt) const
+        Stream& PrintRow(Stream & s, ConsoleTableRowPtr const& r, ConsoleTableFormatConstPtr const& fmt) const
         {
             size_t col_num = m_col_width.size();
             if (0 == col_num)
@@ -365,20 +365,20 @@ namespace sg {
         }
 
         template <typename Stream>
-        Stream& PrintCell(Stream & s, ConsoleTableRowPtr const& row, size_t col, ConsoleTableFormatConstPtr & fmt) const
+        Stream& PrintCell(Stream & s, ConsoleTableRowPtr const& row, size_t col, ConsoleTableFormatConstPtr const& fmt) const
         {
             std::string cell;
             if (col < row->col)
                 cell = row->GetCell(col).str;
 
-            fmt = this->GetCellFormat(row, col, fmt);
+            ConsoleTableFormatConstPtr _fmt = this->GetCellFormat(row, col, fmt);
             size_t width = m_col_width[col];
             std::string pad_fmt;
-            if (CTPT_AlignCentered == fmt->pad)
+            if (CTPT_AlignCentered == _fmt->pad)
             {
                 pad_fmt = (boost::format("%%|=%1%|") % width).str();
             }
-            else if (CTPT_AlignLeft == fmt->pad)
+            else if (CTPT_AlignLeft == _fmt->pad)
             {
                 pad_fmt = (boost::format("%%|-%1%|") % width).str();
             }
@@ -392,7 +392,7 @@ namespace sg {
             return s;
         }
 
-       ConsoleTableFormatConstPtr GetCellFormat(ConsoleTableRowPtr const& r, size_t col, ConsoleTableFormatConstPtr & def_fmt) const;
+       ConsoleTableFormatConstPtr GetCellFormat(ConsoleTableRowPtr const& r, size_t col, ConsoleTableFormatConstPtr const& def_fmt) const;
 
     private:
         ConsoleTableStylePtr                    m_style;

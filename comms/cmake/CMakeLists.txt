@@ -77,7 +77,7 @@ include(${SG_PROJECT_DIR}/cmake/configboost.cmake)
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${CORE_PROJECT_DIR}/include)
 include_directories(${COMMS_PROJECT_DIR}/include)
-include_directories(${COMMS_PROJECT_DIR}/include/comms/qcom/qogr)
+include_directories(${COMMS_PROJECT_DIR}/include/Qcom/qogr)
 
 link_directories(${Boost_LIBRARY_DIR})
 

@@ -1,6 +1,8 @@
-#include "core/core.hpp"
+#include "Core.hpp"
 
-#ifdef CORE_PLATFORM_LINUX
+#include <functional>
+
+#ifdef SG_PLATFORM_LINUX
 //    #ifndef _XOPEN_SOURCE
 //        #define _XOPEN_SOURCE 600
 //    #endif
@@ -16,10 +18,9 @@
     #include <errno.h>
 #endif
 
+#include "Utils.hpp"
 
-#include "core/console/core_console_printer.hpp"
-
-#include "comms/comms.hpp"
+#include "Comms.hpp"
 
 
 namespace sg {
@@ -44,14 +45,15 @@ namespace sg {
     {
         if (m_start)
         {
-            CORE_LOG(LL_Info, "Comms is stopping...\n");
-            Stop();
+            COMMS_LOG("Comms is stopping...\n", CLL_Info);
+            this->Stop();
             this->DoQuit();
         }
-#ifdef CORE_PLATFORM_LINUX
+
+#ifdef SG_PLATFORM_LINUX
         if (m_init)
         {
-            CORE_LOG(LL_Info, "Comms is shutting down...\n");
+            COMMS_LOG("Comms is shutting down...\n", CLL_Info);
             if (m_fd >= 0)
                 close(m_fd);
             m_init = false;
@@ -62,31 +64,31 @@ namespace sg {
 
     bool Comms::ChangeDev(std::string dev)
     {
-        Quit();
+        this->Quit();
         m_dev = dev;
-        if (!Init())
+        if (!this->Init())
         {
-            CORE_LOG(LL_Error, boost::format("Change device to %1% failed\n") % m_dev);
+            COMMS_LOG(boost::format("Change device to %1% failed\n") % m_dev, CLL_Error);
             return false;
         }
 
-        Start();
+        this->Start();
         return true;
     }
 
     int Comms::OpenDevFile() 
     {
         int fd = -1;
-#ifdef CORE_PLATFORM_LINUX
+#ifdef SG_PLATFORM_LINUX
         fd = open(m_dev.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 
         if (fd < 0)
         {
-            CORE_LOG(LL_Error, boost::format("%d\n") % strerror(errno));
+            COMMS_LOG(boost::format("%d\n") % strerror(errno), CLL_Error);
         }
         else
         {
-            CORE_LOG(LL_Info, boost::format("Comms open device %1%\n") % m_dev);
+            COMMS_LOG(boost::format("Comms open device %1%\n") % m_dev, CLL_Info);
             struct termios oldtio, newtio;
             tcgetattr(fd, &oldtio);
             memset(&newtio, 0, sizeof(newtio));
@@ -111,7 +113,7 @@ namespace sg {
     {
         if (!m_init)
         {
-            m_fd = OpenDevFile();
+            m_fd = this->OpenDevFile();
             if (m_fd >= 0)
             {
                 m_init = true;
@@ -127,7 +129,7 @@ namespace sg {
     {
         if (!m_start)
         {
-            CORE_LOG(LL_Info, "Comms start\n");
+            COMMS_LOG("Comms start\n", CLL_Info);
             m_start = true;
             this->StartResponseThread();
             this->StartCheckTimeoutThread();
@@ -137,12 +139,12 @@ namespace sg {
 
     void Comms::StartResponseThread()
     {
-        m_reader = thread(bind(&Comms::ReceiveResponse, this));
+        m_reader = std::thread(std::bind(&Comms::ReceiveResponse, this));
     }
 
     void Comms::StartCheckTimeoutThread()
     {
-        m_checker = thread(bind(&Comms::CheckCommsTimeout, this));
+        m_checker = std::thread(std::bind(&Comms::CheckCommsTimeout, this));
     }
 
     void Comms::Stop()
@@ -179,7 +181,7 @@ namespace sg {
 
     void Comms::ReceiveResponse()
     {
-#ifdef CORE_PLATFORM_LINUX
+#ifdef SG_PLATFORM_LINUX
         fd_set  read_fds;
         int ret;
         struct timeval  timeout;
@@ -208,7 +210,7 @@ namespace sg {
 
     void Comms::Read()
     {
-#ifdef CORE_PLATFORM_LINUX
+#ifdef SG_PLATFORM_LINUX
         static uint8_t  *ptr;
         static uint8_t  msg_buf[BUFF_SIZE];
         static int length;
@@ -276,22 +278,25 @@ namespace sg {
         {
             for (int i = 0; i < length; ++i)
             {
-#ifdef CORE_PLATFORM_LINUX
+#ifdef SG_PLATFORM_LINUX
                 write(m_fd, &buf[i], 1);
+#else
+                SG_UNREF_PARAM(buf); // TOOD later
 #endif
             }
         }
         else
         {
-            CORE_LOG(LL_Error, "Comms send package failed, invalid device\n");
+            COMMS_LOG("Comms send package failed, invalid device\n", CLL_Error);
         }
     }
 
     void CommsPacketHandler::RunSubStage()
     {
-        while (1) {
+        while (1) 
+        {
             {
-                unique_lock<mutex> lock(m_sub);
+                std::unique_lock<std::mutex> lock(m_sub);
                 while(!m_job_num) // TODO : can we use lambda ?
                 {
                     m_sub_cond.wait(lock);
@@ -311,7 +316,7 @@ namespace sg {
     {
         if (m_has_sub_stage)
         {
-            m_job = thread(bind(&CommsPacketHandler::RunSubStage, this));
+            m_job = std::thread(std::bind(&CommsPacketHandler::RunSubStage, this));
         }
     }
 
@@ -327,7 +332,7 @@ namespace sg {
     {
         if (m_has_sub_stage)
         {
-            unique_lock<mutex> lock(m_sub);
+            std::unique_lock<std::mutex> lock(m_sub);
 
             ++m_job_num;
 

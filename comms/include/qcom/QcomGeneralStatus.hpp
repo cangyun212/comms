@@ -1,13 +1,14 @@
-#ifndef QCOM_GENERAL_STATUS_HPP
-#define QCOM_GENERAL_STATUS_HPP
+#ifndef __SG_QCOM_GENERAL_STATUS_HPP__
+#define __SG_QCOM_GENERAL_STATUS_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
-#include "comms/comms_predeclare.hpp"
-#include "comms/qcom/qcom.hpp"
+#include "CommsPredeclare.hpp"
+#include "Qcom/Qcom.hpp"
 
 
-namespace sg {
+namespace sg 
+{
 
     class QcomGeneralStatus : public CommsPacketHandler
     {
@@ -20,21 +21,22 @@ namespace sg {
         }
 
     public:
-        uint8_t     Id() const CORE_OVERRIDE;
-        bool        Parse(uint8_t buf[], int length) CORE_OVERRIDE;
+        uint8_t     Id() const override;
+        bool        Parse(uint8_t buf[], int length) override;
 
     public:
-//        void        BuildGeneralStatusPoll(std::vector<QcomEGMConfigCustomData> const& data);
-        void        BuildGeneralStatusPoll(uint8_t poll_address);
-         QcomJobDataPtr  MakeGeneralStatusJob();
-    private:
-        QcomPollPtr MakeGeneralStatusPoll(uint8_t poll_address, uint8_t last_control);
+        //void            BuildGeneralStatusPoll(std::vector<QcomEGMConfigCustomData> const& data);
+        void            BuildGeneralStatusPoll(uint8_t poll_address);
+        QcomJobDataPtr  MakeGeneralStatusJob();
 
     private:
-        weak_ptr<CommsQcom>     m_qcom;
+        QcomPollPtr     MakeGeneralStatusPoll(uint8_t poll_address, uint8_t last_control);
+
+    private:
+        std::weak_ptr<CommsQcom>     m_qcom;
     };
 
-    typedef shared_ptr<QcomGeneralStatus> QcomGenerlStatusPtr;
+    typedef std::shared_ptr<QcomGeneralStatus> QcomGenerlStatusPtr;
 
 }
 

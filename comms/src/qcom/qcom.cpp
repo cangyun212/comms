@@ -73,11 +73,11 @@ namespace sg
 
         CommsPacketHandlerPtr p = MakeSharedPtr<QcomBroadcastSeek>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
-        m_resp_handler.insert(std::make_pair(QCOM_SEEKEGM_FC, p));
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
 
         p = MakeSharedPtr<QcomEgmConfigurationRequest>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
-        m_resp_handler.insert(std::make_pair(QCOM_EGMCR_FC, p));
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
 
         p = MakeSharedPtr<QcomEgmConfiguration>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));

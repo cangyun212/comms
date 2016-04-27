@@ -103,6 +103,7 @@ namespace sg {
 
     public:
         virtual uint8_t     Id() const = 0;
+        virtual uint8_t     RespId() const { BOOST_ASSERT(false); return 0; }
         virtual bool        Parse(uint8_t buf[], int length) = 0;
         virtual void        DoSubStage() {}
                 bool        HasSubStage() const { return m_has_sub_stage; }

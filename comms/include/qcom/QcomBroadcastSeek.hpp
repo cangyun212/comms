@@ -20,6 +20,7 @@ namespace sg {
 
     public:
         uint8_t     Id() const override;
+        uint8_t     RespId() const override { return QCOM_SEEKEGM_FC; }
         bool        Parse(uint8_t buf[], int length) override;
 
     public:

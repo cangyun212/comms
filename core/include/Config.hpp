@@ -36,6 +36,8 @@
         #error "-std=c++11 or -std=c++0x must be turned on."
     #endif
 
+    #define _GLIBCXX_USE_NANOSLEEP// fix gcc thread bug for sleep_for
+
     #define SG_EXPORT   __attribute__((__visibility__("default")))
     #define SG_IMPORT
 

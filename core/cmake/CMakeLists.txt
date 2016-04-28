@@ -25,19 +25,19 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(LIB_NAME core)
 
 set(CORE_CONSOLE_HEADER_FILES
-    ${CORE_PROJECT_DIR}/include/console/ConsoleTable.hpp
-    ${CORE_PROJECT_DIR}/include/console/ConsoleProgressbar.hpp
-    ${CORE_PROJECT_DIR}/include/console/ConsoleWindow.hpp
-    ${CORE_PROJECT_DIR}/include/console/ConsolePrinter.hpp
-    ${CORE_PROJECT_DIR}/include/console/ConsoleStream.hpp
+    ${CORE_PROJECT_DIR}/include/Console/ConsoleTable.hpp
+    ${CORE_PROJECT_DIR}/include/Console/ConsoleProgressbar.hpp
+    ${CORE_PROJECT_DIR}/include/Console/ConsoleWindow.hpp
+    ${CORE_PROJECT_DIR}/include/Console/ConsolePrinter.hpp
+    ${CORE_PROJECT_DIR}/include/Console/ConsoleStream.hpp
     )
 
 set(CORE_CONSOLE_SOURCE_FILES
-    ${CORE_PROJECT_DIR}/src/console/ConsoleTable.cpp
-    ${CORE_PROJECT_DIR}/src/console/ConsoleProgressbar.cpp
-    ${CORE_PROJECT_DIR}/src/console/ConsoleWindow.cpp
-    ${CORE_PROJECT_DIR}/src/console/ConsolePrinter.cpp
-    ${CORE_PROJECT_DIR}/src/console/ConsoleStream.cpp
+    ${CORE_PROJECT_DIR}/src/Console/ConsoleTable.cpp
+    ${CORE_PROJECT_DIR}/src/Console/ConsoleProgressbar.cpp
+    ${CORE_PROJECT_DIR}/src/Console/ConsoleWindow.cpp
+    ${CORE_PROJECT_DIR}/src/Console/ConsolePrinter.cpp
+    ${CORE_PROJECT_DIR}/src/Console/ConsoleStream.cpp
     )
 
 set(CORE_HEADER_FILES

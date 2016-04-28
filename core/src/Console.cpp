@@ -22,7 +22,7 @@ namespace
 {
 #ifdef SG_PLATFORM_LINUX
 
-    std::string sd("\033[0m")
+    std::string sd("\033[0m");
 
     void sEscapeColorCode(sg::ConsoleColorGroup const& group, std::string &code)
     {

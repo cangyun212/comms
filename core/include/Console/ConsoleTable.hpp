@@ -222,7 +222,7 @@ namespace sg {
 
     struct ConsoleTableRow : public ConsoleTableSeparator
     {
-        ConsoleTableRow(): cells(nullptr), col(0), fmt(nullptr) {}
+        ConsoleTableRow(): cells(nullptr), fmt(nullptr), col(0) {}
 
         bool IsSeparator() const override { return false; }
 

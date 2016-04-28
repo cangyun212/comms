@@ -1,7 +1,7 @@
 #ifndef __CORE_UTILS_HPP__
 #define __CORE_UTILS_HPP__
 
-#include "core.hpp"
+#include "Core.hpp"
 
 #define SG_UNREF_PARAM(x) (void)(x)
 

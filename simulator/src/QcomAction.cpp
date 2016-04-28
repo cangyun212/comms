@@ -221,19 +221,7 @@ namespace sg
         po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
         po::notify(vm);
 
-        if (!vm.count("help"))
-        {
-            if (m_jur >=0 && m_den >=0 && m_tok >= 0 &&
-                    m_maxden >= 0 && m_minrtp >=0 &&
-                    m_maxrtp >= 0 && m_maxsd >=0 &&
-                    m_maxlines >= 0 && m_maxbet >= 0 &&
-                    m_maxnpwin >= 0 && m_maxpwin >= 0 &&
-                    m_maxect >= 0)
-            {
-                res = true;
-            }
-        }
-        else
+        if (vm.count("help"))
         {
             COMMS_START_LOG_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: egmconfig [options]\n");
@@ -241,6 +229,8 @@ namespace sg
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
         }
+
+        res = true;
 
         if (err)
         {
@@ -306,11 +296,7 @@ namespace sg
         po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
         po::notify(vm);
 
-        if (!vm.count("help"))
-        {
-            res = true;
-        }
-        else
+        if (vm.count("help"))
         {
             COMMS_START_LOG_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: broadcast [options]\n");
@@ -318,6 +304,8 @@ namespace sg
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
         }
+
+        res = true;
 
         if (err)
         {
@@ -389,36 +377,7 @@ namespace sg
         po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
         po::notify(vm);
 
-        if (!vm.count("help"))
-        {
-            if (m_var >= 0 && m_var_lock >= 0 && m_game_enable >= 0 && m_pnum >= 0)
-            {
-                bool check = true;
-                for (size_t i = 0; i < m_lp.size(); ++i)
-                {
-                    if (m_lp[i] < 0)
-                    {
-                        check = false;
-                        break;
-                    }
-                }
-
-                if (check)
-                {
-                    for (size_t i = 0; i < m_camt.size(); ++i)
-                    {
-                        if (m_camt[i] < 0)
-                        {
-                            check = false;
-                            break;
-                        }
-                    }
-
-                    res = check;
-                }
-            }
-        }
-        else
+        if (vm.count("help"))
         {
             COMMS_START_LOG_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
@@ -426,6 +385,8 @@ namespace sg
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
         }
+
+        res = true;
 
         if (err)
         {

@@ -16,7 +16,7 @@ namespace sg
 
 #ifdef SG_COMPILER_MSVC
     typedef ulong                                   cwctype;
-#else defined(SG_COMPILER_GCC)
+#elif defined(SG_COMPILER_GCC)
 #ifdef SG_CPU_X64
     typedef uint                                    cwctype;
 #else

@@ -1,69 +1,50 @@
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
-#include "core/console/core_console_printer.hpp"
-#include "core/core_console.hpp"
-#include "core/core_debug.hpp"
-#include <string>
-
-#include "simulator/predeclare.hpp"
-
-#include "simulator/action_center.hpp"
-#include "simulator/action.hpp"
-#include "simulator/action_factory.hpp"
-#include "simulator/simulator.hpp"
-#include "simulator/utils.hpp"
-#include "simulator/cmd_parser.hpp"
-#include "simulator/line_reader.hpp"
-#include <ncurses.h>
-#include <string.h>
-#include <ctype.h>
+#include "core.hpp"
 
 #include <string>
 #include <vector>
 #include <list>
 
+#include "Utils.hpp"
+#include "Console.hpp"
+#include "Console/ConsolePrinter.hpp"
+#include "Console/ConsoleWindow.hpp"
+
+#include "Predeclare.hpp"
+#include "ActionCenter.hpp"
+#include "Action.hpp"
+#include "ActionFactory.hpp"
+#include "Simulator.hpp"
+#include "SimUtils.hpp"
+#include "CmdParser.hpp"
+#include "LineReader.hpp"
+
+
 
 int main(int argc, char *argv[])
 {
-#ifdef CORE_DEBUG
-    setup_sig_segv();
-#endif
-
     int ret = 0;
 
-    sg::CmdParser::Instance().Parse(argc, argv);
-
-#ifdef CORE_DEBUG
-    if (sg::CmdParser::Instance().UseCustomWin())
+    if (!sg::CmdParser::Instance().Parse(argc, argv)) // console is not ready, use std::cout instead
     {
-#endif
-        sg::Console::Instance().Init(true); // must be called first
-
-        sg::ConsoleWindow *p = sg::Console::Instance().GetActiveOutputWnd();
-        uint32_t width = p->Width();
-        uint32_t height = p->Height();
-
-        sg::ConsoleWindow *input = sg::Console::Instance().MakeWindow(std::string("input"), width, 4, 0, height -4);
-        sg::ConsoleWindow *output = sg::Console::Instance().MakeWindow(std::string("output"), width, height - 4, 0, 0);
-        sg::Console::Instance().SetActiveOutputWnd(output); // must be set before printer init if you don't like the default one
-        input->Border(sg::ConsoleWindow::BS_TB, '=', '\0', '\0', '\0');
-
-        sg::LineReader::Instance().Init(input);
-#ifdef CORE_DEBUG
+        sg::CmdParser::Instance().ShowHelp();
+        ret = 1;
+        return ret;
     }
-    else
-    {
-        sg::LineReader::Instance().Init(nullptr);
-    }
-#endif
 
-    sg::ConsolePrinter::Instance().Init((sg::LogLevel)sg::CmdParser::Instance().GetLogLevel(),
-#ifdef CORE_DEBUG
-                      sg::CmdParser::Instance().ShowDebugOutputDetail(),
-                      sg::CmdParser::Instance().EnableDebugOutput(),
-#endif
-                      "Sim>> "
-                      );
+    sg::Console::Instance().Init(sg::CT_Custom); // must be called first
+
+    sg::ConsoleWindowPtr p = sg::Console::Instance().GetActiveOutputWnd();
+    sg::uint width = p->Width();
+    sg::uint height = p->Height();
+
+    sg::ConsoleWindowPtr input = sg::Console::Instance().MakeWindow(std::string("input"), width, 4, 0, height - 4);
+    sg::ConsoleWindowPtr output = sg::Console::Instance().MakeWindow(std::string("output"), width, height - 4, 0, 0);
+    sg::Console::Instance().SetActiveOutputWnd(output); // must be set before printer init if you don't like the default one
+    input->Border(sg::ConsoleWindow::BS_TB, '=', '\0', '\0', '\0');
+
+    sg::LineReader::Instance().Init(input);
+
+    sg::ConsolePrinter::Instance().Init((sg::ConsoleLogLevel)sg::CmdParser::Instance().GetLogLevel(), "Sim>> ");
 
     sg::SimulatorPtr sim = sg::setup_sim();
     sg::ActionFactoryPtr fac = sg::setup_action_factory();
@@ -71,7 +52,6 @@ int main(int argc, char *argv[])
 
     sim->Init();
     fac->Init();
-
 
     std::string line;
     sg::Action::ActionArgs args;

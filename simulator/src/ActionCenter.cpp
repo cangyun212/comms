@@ -1,11 +1,11 @@
 
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
+#include "Core.hpp"
 
 #include <utility>
 
-#include "simulator/action.hpp"
-#include "simulator/action_center.hpp"
+#include "Utils.hpp"
+#include "Action.hpp"
+#include "ActionCenter.hpp"
 
 namespace sg {
 
@@ -21,26 +21,28 @@ namespace sg {
 
     void ActionCenter::SendAction(const ActionPtr &action)
     {
-        if (HasEvent(action->GetType()))
+        auto it = m_signals.find(action->GetType());
+        if (it != m_signals.end())
         {
-            (*(this->GetEvent(action->GetType())))(*this, action);
+            (*(it->second))(*this, action);
         }
     }
 
-    void ActionCenter::Install(int32_t type)
+    void ActionCenter::Install(uint type)
     {
         BOOST_ASSERT(m_signals.insert(std::make_pair(type, MakeSharedPtr<ActionEvent>())).second);
     }
 
-    bool ActionCenter::HasEvent(int32_t type) const
+    bool ActionCenter::HasEvent(uint type) const
     {
         return m_signals.find(type) != m_signals.end();
     }
 
-    ActionCenter::ActionEventPtr ActionCenter::GetEvent(int32_t type)
+    ActionCenter::ActionEventPtr ActionCenter::GetEvent(uint type)
     {
-        BOOST_ASSERT(this->HasEvent(type));
-        return m_signals[type];
+        auto it = m_signals.find(type);
+        BOOST_ASSERT(it != m_signals.end());
+        return it->second;
     }
 }
 

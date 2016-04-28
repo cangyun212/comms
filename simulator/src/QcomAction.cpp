@@ -1,16 +1,17 @@
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
-#include "core/console/core_console_printer.hpp"
+#include "Core.hpp"
 
 #include <algorithm>
 
 #include "boost/program_options.hpp"
 
-#include "simulator/qcom_action.hpp"
+#include "Utils.hpp"
+#include "Comms.hpp"
+#include "QcomAction.hpp"
 
 namespace po = boost::program_options;
 
-namespace sg {
+namespace sg 
+{
 
     QcomSeekEGMAction::QcomSeekEGMAction()
         : Action(Action::AT_QCOM_SEEKEGM)
@@ -122,11 +123,11 @@ namespace sg {
         }
         else
         {
-            CORE_START_PRINT_BLOCK();
-            CORE_PRINT_BLOCK("\nUsage: configreq [options]\n");
-            CORE_PRINT_BLOCK(vis_desc);
-            CORE_PRINT_BLOCK("\n");
-            CORE_END_PRINT_BLOCK();
+            COMMS_START_LOG_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: configreq [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
         }
 
         if (err)
@@ -186,18 +187,18 @@ namespace sg {
         po::positional_options_description pos_desc;
 
         desc.add_options()
-                ("jur", po::value<int>(&m_jur)->default_value(0), "")
-                ("den", po::value<int>(&m_den)->default_value(1), "")
-                ("tok", po::value<int>(&m_tok)->default_value(100), "")
-                ("maxden", po::value<int>(&m_maxden)->default_value(100), "")
-                ("minrtp", po::value<int>(&m_minrtp)->default_value(8500), "")
-                ("maxrtp", po::value<int>(&m_maxrtp)->default_value(10000), "")
-                ("maxsd", po::value<int>(&m_maxsd)->default_value(15), "")
-                ("maxlines", po::value<int>(&m_maxlines)->default_value(243), "")
-                ("maxbet", po::value<int>(&m_maxbet)->default_value(5000), "")
-                ("maxnpwin", po::value<int>(&m_maxnpwin)->default_value(1000000), "")
-                ("maxpwin", po::value<int>(&m_maxpwin)->default_value(2500000), "")
-                ("maxect", po::value<int>(&m_maxect)->default_value(1000000), "")
+                ("jur", po::value<uint8_t>(&m_jur)->default_value(0), "")
+                ("den", po::value<uint32_t>(&m_den)->default_value(1), "")
+                ("tok", po::value<uint32_t>(&m_tok)->default_value(100), "")
+                ("maxden", po::value<uint32_t>(&m_maxden)->default_value(100), "")
+                ("minrtp", po::value<uint16_t>(&m_minrtp)->default_value(8500), "")
+                ("maxrtp", po::value<uint16_t>(&m_maxrtp)->default_value(10000), "")
+                ("maxsd", po::value<uint16_t>(&m_maxsd)->default_value(15), "")
+                ("maxlines", po::value<uint16_t>(&m_maxlines)->default_value(243), "")
+                ("maxbet", po::value<uint32_t>(&m_maxbet)->default_value(5000), "")
+                ("maxnpwin", po::value<uint32_t>(&m_maxnpwin)->default_value(1000000), "")
+                ("maxpwin", po::value<uint32_t>(&m_maxpwin)->default_value(2500000), "")
+                ("maxect", po::value<uint32_t>(&m_maxect)->default_value(1000000), "")
                 ("help,h", "")
                 ("dummy", po::value< std::vector<std::string> >(), "");
 
@@ -234,11 +235,11 @@ namespace sg {
         }
         else
         {
-            CORE_START_PRINT_BLOCK();
-            CORE_PRINT_BLOCK("\nUsage: egmconfig [options]\n");
-            CORE_PRINT_BLOCK(vis_desc);
-            CORE_PRINT_BLOCK("\n");
-            CORE_END_PRINT_BLOCK();
+            COMMS_START_LOG_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: egmconfig [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
         }
 
         if (err)
@@ -311,11 +312,11 @@ namespace sg {
         }
         else
         {
-            CORE_START_PRINT_BLOCK();
-            CORE_PRINT_BLOCK("\nUsage: broadcast [options]\n");
-            CORE_PRINT_BLOCK(vis_desc);
-            CORE_PRINT_BLOCK("\n");
-            CORE_END_PRINT_BLOCK();
+            COMMS_START_LOG_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: broadcast [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
         }
 
         if (err)
@@ -366,12 +367,12 @@ namespace sg {
         po::positional_options_description pos_desc;
 
         desc.add_options()
-                ("var", po::value<int>(&m_var)->default_value(0), "")
-                ("varlock", po::value<int>(&m_var_lock)->default_value(0), "")
-                ("gameenable", po::value<int>(&m_game_enable)->default_value(1), "")
-                ("pnum", po::value<int>(&m_pnum)->default_value(0), "")
-                ("linkJackpot", po::value< std::vector<int> >(&m_lp)->multitoken(), "")
-                ("amount", po::value< std::vector<int> >(&m_camt)->multitoken(), "")
+                ("var", po::value<uint8_t>(&m_var)->default_value(0), "")
+                ("varlock", po::value<uint8_t>(&m_var_lock)->default_value(0), "")
+                ("gameenable", po::value<uint8_t>(&m_game_enable)->default_value(1), "")
+                ("pnum", po::value<uint8_t>(&m_pnum)->default_value(0), "")
+                ("linkJackpot", po::value< std::vector<uint8_t> >(&m_lp)->multitoken(), "")
+                ("amount", po::value< std::vector<uint32_t> >(&m_camt)->multitoken(), "")
                 ("help,h", "")
                 ("dummy", po::value< std::vector<std::string> >(), "");
 
@@ -419,11 +420,11 @@ namespace sg {
         }
         else
         {
-            CORE_START_PRINT_BLOCK();
-            CORE_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
-            CORE_PRINT_BLOCK(vis_desc);
-            CORE_PRINT_BLOCK("\n");
-            CORE_END_PRINT_BLOCK();
+            COMMS_START_LOG_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
         }
 
         if (err)

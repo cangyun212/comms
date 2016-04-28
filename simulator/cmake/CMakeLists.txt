@@ -35,7 +35,7 @@ set(SIMULATOR_HEADER_FILES
     ${SIMULATOR_PROJECT_DIR}/include/QcomActionFactory.hpp
     ${SIMULATOR_PROJECT_DIR}/include/ActionCenter.hpp
     ${SIMULATOR_PROJECT_DIR}/include/Predeclare.hpp
-    ${SIMULATOR_PROJECT_DIR}/include/Utils.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/SimUtils.hpp
     ${SIMULATOR_PROJECT_DIR}/include/CmdParser.hpp
     )
 
@@ -49,7 +49,7 @@ set(SIMULATOR_SOURCE_FILES
     ${SIMULATOR_PROJECT_DIR}/src/ActionFactory.cpp
     ${SIMULATOR_PROJECT_DIR}/src/QcomActionFactory.cpp
     ${SIMULATOR_PROJECT_DIR}/src/ActionCenter.cpp
-    ${SIMULATOR_PROJECT_DIR}/src/Utils.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/SimUtils.cpp
     ${SIMULATOR_PROJECT_DIR}/src/CmdParser.cpp
     )
 

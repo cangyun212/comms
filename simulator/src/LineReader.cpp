@@ -1,55 +1,41 @@
-#include "core/core.hpp"
-#include "core/core_console.hpp"
+#include "Core.hpp"
 
-#ifdef CORE_DEBUG
-    #include <readline/readline.h>
-    #include <readline/history.h>
-#endif
-
-#include "simulator/line_reader.hpp"
+#include "Utils.hpp"
+#include "Comms.hpp"
+#include "LineReader.hpp"
 
 namespace sg
 {
 
-    void LineReader::Init(ConsoleWindow *input_wnd, std::string const& prompt)
+    void LineReader::Init(ConsoleWindowPtr &input_wnd, std::string const& prompt)
     {
-#ifdef CORE_DEBUG
-        if (input_wnd)
-        {
-#endif
+
         BOOST_ASSERT(input_wnd);
+
         m_input_wnd = input_wnd;
         m_prompt = prompt;
 
-        uint32_t t, b, l, r;
+        uint t, b, l, r;
         m_input_wnd->GetMargin(t, b, l, r);
 
-        NextLine(m_input_wnd->Row(), t, b, l);
+        this->NextLine(m_input_wnd->Row(), t, b, l);
 
         // TODO
-        m_buf_len = m_input_wnd->Width() - l - r - m_prompt.size();
-        m_buffer = new char[m_buf_len];
+        m_buf_len = m_input_wnd->Width() - l - r - static_cast<uint>(m_prompt.size());
+        m_buffer = MakeArraryPtr(char, m_buf_len);
 
         m_input_wnd->CharEvent().connect(
-                    bind(&LineReader::OnChar, this, placeholders::_1, placeholders::_2));
+            std::bind(&LineReader::OnChar, this, std::placeholders::_1, std::placeholders::_2));
         m_input_wnd->KeyEvent().connect(
-                    bind(&LineReader::OnKey, this, placeholders::_1, placeholders::_2));
-#ifdef CORE_DEBUG
-        }
-        else
-        {
-            m_prompt = prompt;
-        }
-#endif
+            std::bind(&LineReader::OnKey, this, std::placeholders::_1, std::placeholders::_2));
+
     }
 
     std::string LineReader::ReadLine()
     {
-#ifdef CORE_DEBUG
-        if (m_input_wnd)
-        {
-#endif
-        memset(m_buffer, '\0', m_buf_len);
+
+        std::memset(m_buffer.get(), '\0', m_buf_len);
+
         m_finish = false;
         m_pos = m_len = 0;
         m_input_wnd->CurCoord(m_row, m_col);
@@ -57,8 +43,8 @@ namespace sg
 
         while (!m_finish)
         {
-            m_buffer[m_len] = ' ';
-            m_input_wnd->AddStrTo(m_row, m_col, m_buffer, m_len + 1);
+            m_buffer.get()[m_len] = ' ';
+            m_input_wnd->AddStrTo(m_row, m_col, m_buffer.get(), m_len + 1);
             m_input_wnd->MoveTo(m_row, m_col + m_pos);
             m_input_wnd->Render();
 
@@ -68,11 +54,11 @@ namespace sg
             m_input_wnd->MsgProc(event);
         }
 
-        NextLine();
+        this->NextLine();
 
-        m_buffer[m_len] = '\0';
+        m_buffer.get()[m_len] = '\0';
 
-        std::string line(m_buffer);
+        std::string line(m_buffer.get());
 
         if (!line.empty())
         {
@@ -92,29 +78,17 @@ namespace sg
         m_curr_hist = m_hists.rbegin();
 
         return line;
-#ifdef CORE_DEBUG
-        }
-        else
-        {
-            std::string line;
-            char *p = readline(m_prompt.c_str());
-            if (p)
-            {
-                line = p;
-                free(p);
-                add_history(line.c_str());
-            }
-            return line;
-        }
-#endif
+
     }
 
     void LineReader::OnChar(const ConsoleWindow &wnd, int ch)
     {
+        SG_UNREF_PARAM(wnd);
+
         if (m_pos < m_buf_len - 1)
         {
-            memmove(m_buffer + m_pos + 1, m_buffer + m_pos, m_len - m_pos);
-            m_buffer[m_pos++] = ch;
+            memmove(m_buffer.get() + m_pos + 1, m_buffer.get() + m_pos, m_len - m_pos);
+            m_buffer.get()[m_pos++] = static_cast<char>(ch);
             ++m_len;
         }
         else
@@ -125,54 +99,56 @@ namespace sg
 
     void LineReader::OnKey(const ConsoleWindow &wnd, int key)
     {
+        SG_UNREF_PARAM(wnd);
+
         switch(key)
         {
-        case CONSOLE_KEY_ENTER:
+        case SG_CONSOLE_KEY_ENTER:
         case '\n':
         case '\r':
             m_finish = true;
             break;
-        case CONSOLE_KEY_LEFT:
+        case SG_CONSOLE_KEY_LEFT:
             if (m_pos > 0) --m_pos;
             break;
-        case CONSOLE_KEY_RIGHT:
+        case SG_CONSOLE_KEY_RIGHT:
             if (m_pos < m_len) ++m_pos;
             break;
-        case CONSOLE_KEY_BACKSPACE:
+        case SG_CONSOLE_KEY_BACKSPACE:
             if (m_pos > 0)
             {
-                memmove(m_buffer + m_pos - 1, m_buffer + m_pos, m_len - m_pos);
+                memmove(m_buffer.get() + m_pos - 1, m_buffer.get() + m_pos, m_len - m_pos);
                 --m_pos;
                 --m_len;
             }
             break;
-        case CONSOLE_KEY_DC:
+        case SG_CONSOLE_KEY_DC:
             if (m_pos < m_len)
             {
-                memmove(m_buffer + m_pos, m_buffer + m_pos + 1, m_len - m_pos - 1);
+                memmove(m_buffer.get() + m_pos, m_buffer.get() + m_pos + 1, m_len - m_pos - 1);
                 --m_len;
             }
             break;
-        case CONSOLE_KEY_UP:
+        case SG_CONSOLE_KEY_UP:
             if (m_curr_hist != m_hists.rend())
             {
                 m_input_wnd->ClearHLine(m_row, m_col, m_len);
-                memmove(m_buffer, m_curr_hist->c_str(), m_curr_hist->size());
-                m_pos = m_len = m_curr_hist->size();
+                memmove(m_buffer.get(), m_curr_hist->c_str(), m_curr_hist->size());
+                m_pos = m_len = static_cast<uint>(m_curr_hist->size());
                 ++m_curr_hist;
                 if (m_curr_hist == m_hists.rend())
                     --m_curr_hist;
             }
             break;
-        case CONSOLE_KEY_DOWN:
+        case SG_CONSOLE_KEY_DOWN:
             if (!m_hists.empty())
             {
                 if (m_curr_hist != m_hists.rbegin())
                 {
                     --m_curr_hist;
                     m_input_wnd->ClearHLine(m_row, m_col, m_len);
-                    memmove(m_buffer, m_curr_hist->c_str(), m_curr_hist->size());
-                    m_pos = m_len = m_curr_hist->size();
+                    memmove(m_buffer.get(), m_curr_hist->c_str(), m_curr_hist->size());
+                    m_pos = m_len = static_cast<uint>(m_curr_hist->size());
                     if (m_curr_hist == m_hists.rbegin())
                         ++m_curr_hist;
                 }
@@ -187,34 +163,34 @@ namespace sg
     {
         int row = m_input_wnd->Row();
 
-        uint32_t t, b, l, r;
+        uint t, b, l, r;
         m_input_wnd->GetMargin(t, b, l, r);
 
         this->NextLine(row, t, b, l);
     }
 
-    void LineReader::NextLine(int row, uint32_t t, uint32_t b, uint32_t l)
+    void LineReader::NextLine(int row, uint t, uint b, uint l)
     {
-        uint32_t height = m_input_wnd->Height();
+        uint height = m_input_wnd->Height();
 
-        int to_row = row + 1;
-        int to_col = l + m_prompt.size();
+        uint to_row = row + 1;
+        uint to_col = l + static_cast<uint>(m_prompt.size());
 
-        if ((uint32_t)to_row >= height - b) // reach to bottom
+        if (to_row >= (height - b)) // reach to bottom
         {
             // make the window scroll
             //m_input_wnd->AddStrTo(row, l + m_prompt.size() + m_len, "\n", 1);
             m_input_wnd->Scroll(1);
             to_row = row;
         }
-        else if ((uint32_t)to_row < t) // above the top margin
+        else if (to_row < t) // above the top margin
         {
             to_row = t;
         }
 
         if (!m_prompt.empty())
         {
-            m_input_wnd->AddStrTo(to_row, l, m_prompt);
+            m_input_wnd->AddStrTo(static_cast<int>(to_row), l, m_prompt);
         }
 
         m_input_wnd->MoveTo(to_row, to_col);
@@ -223,31 +199,12 @@ namespace sg
 
     std::string LineReader::ReadPreLine()
     {
-#ifdef CORE_DEBUG
-        if (m_input_wnd)
-        {
-#endif
         if (!m_hists.empty())
         {
             return *m_curr_hist;
         }
 
         return std::string();
-#ifdef CORE_DEBUG
-        }
-        else
-        {
-            HIST_ENTRY *hist = previous_history();
-            if (hist)
-            {
-                if (hist->line)
-                {
-                    return std::string(hist->line);
-                }
-            }
-            return std::string();
-        }
-#endif
     }
 }
 

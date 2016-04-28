@@ -1,12 +1,13 @@
-#ifndef __QCOM_ACTION_FACTORY_HPP__
-#define __QCOM_ACTION_FACTORY_HPP__
+#ifndef __SG_QCOM_ACTION_FACTORY_HPP__
+#define __SG_QCOM_ACTION_FACTORY_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
-#include "simulator/predeclare.hpp"
-#include "simulator/action_factory.hpp"
+#include "Predeclare.hpp"
+#include "ActionFactory.hpp"
 
-namespace sg {
+namespace sg 
+{
 
     class QcomActionFactory : public ActionFactory
     {
@@ -15,7 +16,7 @@ namespace sg {
         ~QcomActionFactory();
 
     public:
-        void        Init() CORE_OVERRIDE;
+        void        Init() override;
         
     private:
     };

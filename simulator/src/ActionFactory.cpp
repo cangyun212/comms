@@ -1,15 +1,15 @@
-#include "core/core.hpp"
-#include "core/core_types.hpp"
-#include "core/console/core_console_printer.hpp"
+#include "Core.hpp"
 
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/split.hpp"
 
 #include <algorithm>
 
-#include "simulator/action.hpp"
-#include "simulator/action_factory.hpp"
-#include "simulator/line_reader.hpp"
+#include "Utils.hpp"
+#include "Comms.hpp"
+#include "Action.hpp"
+#include "ActionFactory.hpp"
+#include "LineReader.hpp"
 
 namespace sg {
 
@@ -89,17 +89,17 @@ namespace sg {
 
         ActionPtr help_action = nullptr;
 
-        CORE_START_PRINT_BLOCK();
-        CORE_PRINT_BLOCK("\nList of all commands :\n");
+        COMMS_START_PRINT_BLOCK();
+        COMMS_PRINT_BLOCK("\nList of all commands :\n");
 
-        CORE_FOREACH(ActionMap::const_reference it, m_actions)
+        for (auto const& it : m_actions)
         {
             if (std::find(as.begin(), as.end(), it.second->GetType()) == as.end())
             {
                 as.push_back(it.second->GetType());
                 if (Action::AT_HELP != it.second->GetType()) // print the help description at last
                 {
-                    CORE_PRINT_BLOCK(it.second->Description());
+                    COMMS_PRINT_BLOCK(it.second->Description());
                 }
                 else
                 {
@@ -108,10 +108,10 @@ namespace sg {
             }
         }
 
-        CORE_PRINT_BLOCK(help_action->Description());
-        CORE_PRINT_BLOCK("\n");
+        COMMS_PRINT_BLOCK(help_action->Description());
+        COMMS_PRINT_BLOCK("\n");
 
-        CORE_END_PRINT_BLOCK();
+        COMMS_END_PRINT_BLOCK();
     }
 }
 

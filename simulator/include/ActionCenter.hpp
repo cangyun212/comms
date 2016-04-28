@@ -1,15 +1,15 @@
-#ifndef __ACTION_CENTER_HPP__
-#define __ACTION_CENTER_HPP__
+#ifndef __SG_ACTION_CENTER_HPP__
+#define __SG_ACTION_CENTER_HPP__
 
-#include "core/core.hpp"
-#include "core/core_singleton.hpp"
+#include "Core.hpp"
 
 #include <string>
 #include <map>
 
 #include "boost/signals2.hpp"
 
-#include "simulator/predeclare.hpp"
+#include "Singleton.hpp"
+#include "Predeclare.hpp"
 
 namespace sg {
 
@@ -25,14 +25,14 @@ namespace sg {
 
     public:
         typedef boost::signals2::signal<void(const ActionCenter &sender, ActionPtr const& action)> ActionEvent;
-        typedef shared_ptr<ActionEvent> ActionEventPtr;
+        typedef std::shared_ptr<ActionEvent> ActionEventPtr;
 
-        void            Install(int32_t type);
-        bool            HasEvent(int32_t type) const;
-        ActionEventPtr  GetEvent(int32_t type);
+        void            Install(uint type);
+        bool            HasEvent(uint type) const;
+        ActionEventPtr  GetEvent(uint type);
 
     private:
-        typedef std::map<int32_t, ActionEventPtr>      SignalType;
+        typedef std::map<uint, ActionEventPtr>      SignalType;
         SignalType      m_signals;
     };
 

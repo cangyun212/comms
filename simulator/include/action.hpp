@@ -1,16 +1,16 @@
 #ifndef __ACTION_HPP__
 #define __ACTION_HPP__
 
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
+#include "Core.hpp"
 
 #include <string>
 #include <vector>
 
-#include "simulator/predeclare.hpp"
+#include "Utils.hpp"
+#include "Predeclare.hpp"
 
-namespace sg {
-
+namespace sg 
+{
     struct ActionError
     {
         enum ErrorType
@@ -75,7 +75,7 @@ namespace sg {
         template<typename T>
         ActionPtr   DoClone()
         {
-            shared_ptr<T> ptr = MakeSharedPtr<T>(*((T*)this));
+            std::shared_ptr<T> ptr = MakeSharedPtr<T>(*((T*)this));
 
             return ptr;
         }
@@ -92,8 +92,8 @@ namespace sg {
        ~QuitAction();
 
     public:
-        ActionPtr   Clone() CORE_OVERRIDE;
-        const char* Description() const CORE_OVERRIDE;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
     };
 
     class ListEGMAction : public Action
@@ -103,9 +103,9 @@ namespace sg {
        ~ListEGMAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) CORE_OVERRIDE;
-        ActionPtr   Clone() CORE_OVERRIDE;
-        const char* Description() const CORE_OVERRIDE;
+        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
 
     public:
         bool        ListAll() const { return m_list_all; }
@@ -121,15 +121,15 @@ namespace sg {
        ~PickEGMAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) CORE_OVERRIDE;
-        ActionPtr   Clone() CORE_OVERRIDE;
-        const char* Description() const CORE_OVERRIDE;
+        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
 
     public:
-        int         Target() const { return m_egm; }
+        uint8_t     Target() const { return m_egm; }
 
     private:
-        int         m_egm;
+        uint8_t     m_egm;
     };
 
     class HelpAction : public Action
@@ -139,8 +139,8 @@ namespace sg {
        ~HelpAction();
 
     public:
-        ActionPtr   Clone() CORE_OVERRIDE;
-        const char* Description() const CORE_OVERRIDE;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
     };
 
     class ResetDevAction : public Action
@@ -150,9 +150,9 @@ namespace sg {
             ~ResetDevAction();
 
         public:
-            ActionPtr Clone() CORE_OVERRIDE;
-            bool      Parse(const ActionArgs &args, const ActionError **err) CORE_OVERRIDE;
-            const char* Description() const CORE_OVERRIDE;
+            ActionPtr Clone() override;
+            bool      Parse(const ActionArgs &args, const ActionError **err) override;
+            const char* Description() const override;
 
             const std::string  & GetDev()  { return m_dev; }
         private:

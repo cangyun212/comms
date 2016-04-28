@@ -1,11 +1,12 @@
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
+#include "Core.hpp"
+#include "Utils.hpp"
 
-#include "simulator/qcom_action.hpp"
-#include "simulator/qcom_action_factory.hpp"
+#include "QcomAction.hpp"
+#include "QcomActionFactory.hpp"
 
 
-namespace sg {
+namespace sg 
+{
 
     QcomActionFactory::QcomActionFactory()
     {

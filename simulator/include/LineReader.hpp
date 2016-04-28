@@ -1,20 +1,19 @@
-#ifndef __LINE_READER_HPP__
-#define __LINE_READER_HPP__
+#ifndef __SG_LINE_READER_HPP__
+#define __SG_LINE_READER_HPP__
 
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
-#include "core/core_singleton.hpp"
+#include "Core.hpp"
 
 #include <string>
 
 #include "boost/circular_buffer.hpp"
 
+#include "Utils.hpp"
+#include "Singleton.hpp"
+
 #define SG_CMD_HISTORY_LEN  100
 
 namespace sg
 {
-    class ConsoleWindow;
-
     class LineReader : public Singleton<LineReader>
     {
     public:
@@ -31,13 +30,8 @@ namespace sg
         {
         }
 
-       ~LineReader()
-        {
-            CORE_SAFE_DELETE_ARRAY(m_buffer);
-        }
-
     public:
-        void Init(ConsoleWindow *input_wnd, std::string const& prompt = "(Sim) ");
+        void Init(ConsoleWindowPtr & input_wnd, std::string const& prompt = "(Sim) ");
         std::string const& GetPrompt() const { return m_prompt; }
 
     public:
@@ -51,17 +45,19 @@ namespace sg
 
     private:
         void NextLine();
-        void NextLine(int row, uint32_t t, uint32_t b, uint32_t l);
+        void NextLine(int row, uint t, uint b, uint l);
 
     private:
 
+        typedef std::shared_ptr<char>   BufferType;
+
         std::string             m_prompt;
-        ConsoleWindow          *m_input_wnd;
-        char*                   m_buffer;
-        uint32_t                m_buf_len;
+        ConsoleWindowPtr        m_input_wnd;
+        BufferType              m_buffer;
+        uint                    m_buf_len;
         bool                    m_finish;
-        uint32_t                m_pos;
-        uint32_t                m_len;
+        uint                    m_pos;
+        uint                    m_len;
         int                     m_row;
         int                     m_col;
         boost::circular_buffer<std::string> m_hists;

@@ -1,13 +1,13 @@
-#ifndef __ACTION_FACTORY_HPP__
-#define __ACTION_FACTORY_HPP__
+#ifndef __SG_ACTION_FACTORY_HPP__
+#define __SG_ACTION_FACTORY_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
-#include "simulator/predeclare.hpp"
+#include "Predeclare.hpp"
 
 namespace sg {
 
@@ -30,7 +30,7 @@ namespace sg {
         bool    PreParse(std::string & line) const;
 
     protected:
-        typedef unordered_map<std::string, ActionPtr>   ActionMap;
+        typedef std::unordered_map<std::string, ActionPtr>   ActionMap;
         ActionMap   m_actions;
     };
 

@@ -1,17 +1,18 @@
-#ifndef __SIMULATOR_HPP__
-#define __SIMULATOR_HPP__
+#ifndef __SG_SIMULATOR_HPP__
+#define __SG_SIMULATOR_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
 #include <string>
 #include <map>
 
 #include "boost/signals2.hpp"
 
-#include "simulator/predeclare.hpp"
+#include "Predeclare.hpp"
 
 
-namespace sg {
+namespace sg 
+{
 
     class Simulator
     {
@@ -24,10 +25,10 @@ namespace sg {
         bool    IsReady();
 
         typedef boost::signals2::connection Connection;
-        Connection&     GetConnection(int32_t type);
-        bool            HasConnection(int32_t type) const;
+        Connection&     GetConnection(uint type);
+        bool            HasConnection(uint type) const;
         void            ResetConnections();
-        void            Install(int32_t type);
+        void            Install(uint type);
        
     public:
         virtual void    DoInit() { }
@@ -37,7 +38,7 @@ namespace sg {
 
         int     m_fd;
 
-        typedef std::map<int32_t, Connection>  SlotsType;
+        typedef std::map<uint, Connection>  SlotsType;
         SlotsType   m_slots;
 
     };

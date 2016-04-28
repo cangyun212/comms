@@ -77,7 +77,7 @@ namespace sg
         void    ColorOn(ConsoleColorHandle const& h) const;
         void    ColorOff(ConsoleColorHandle const& h) const;
 
-        friend  void NextEvent(ConsoleWindow const& win, ConsoleEvent &event);
+        friend CORE_API  void NextEvent(ConsoleWindow const& win, ConsoleEvent &event);
 
     public:
         typedef boost::signals2::signal<void(ConsoleWindow const& wnd, int ch)> CharEventType;

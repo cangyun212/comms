@@ -1,17 +1,17 @@
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
-#include "core/console/core_console_printer.hpp"
-#include "core/console/core_console_table.hpp"
+#include "Core.hpp"
 
 #include <string>
 
-#include "comms/qcom/qcom.hpp"
-#include "simulator/cmd_parser.hpp"
-#include "simulator/action.hpp"
-#include "simulator/qcom_action.hpp"
-#include "simulator/qcom_simulator.hpp"
+#include "Utils.hpp"
+#include "Console/ConsoleTable.hpp"
+#include "Qcom/Qcom.hpp"
+#include "CmdParser.hpp"
+#include "Action.hpp"
+#include "QcomAction.hpp"
+#include "QcomSimulator.hpp"
 
-namespace sg {
+namespace sg 
+{
 
     QcomSim::QcomSim()
         : m_curr_egm(0)
@@ -39,12 +39,12 @@ namespace sg {
 
     void QcomSim::SeekEGM(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
-        CORE_UNREF_PARAM(action);
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
 
         m_qcom->SeekEGM();
 
-        CORE_LOG(LL_Info, "Seek EGM Done [Note: EGM will not always response the seek command if it has responsed one]\n");
+        COMMS_LOG("Seek EGM Done [Note: EGM will not always response the seek command if it has responsed one]\n", CLL_Info);
     }
 
     bool QcomSim::Pick(uint8_t target)
@@ -54,13 +54,13 @@ namespace sg {
         if (target > 0 && target <= num)
         {
             m_curr_egm = target;
-            CORE_LOG(LL_Info, boost::format("Pick EGM %d\n") % (uint32_t)m_curr_egm);
+            COMMS_LOG(boost::format("Pick EGM %d\n") % static_cast<uint32_t>(m_curr_egm), CLL_Info);
             return true;
         }
         else if (target == 0 && num == 1)
         {
-            m_curr_egm = num;
-            CORE_LOG(LL_Info, boost::format("Auto pick EGM %d\n") % (uint32_t)m_curr_egm);
+            m_curr_egm = 1;
+            COMMS_LOG(boost::format("Auto pick EGM %d\n") % static_cast<uint32_t>(m_curr_egm), CLL_Info);
             return true;
         }
 
@@ -69,39 +69,58 @@ namespace sg {
 
     void QcomSim::PickEGM(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(sender);
 
-        PickEGMActionPtr p = static_pointer_cast<PickEGMAction>(action);
+        PickEGMActionPtr p = std::static_pointer_cast<PickEGMAction>(action);
 
-        Pick(p->Target());
+        this->Pick(p->Target());
     }
 
     void QcomSim::ListEGM(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(sender);
 
-        ListEGMActionPtr p = static_pointer_cast<ListEGMAction>(action);
+        ListEGMActionPtr p = std::static_pointer_cast<ListEGMAction>(action);
 
-        ListEGMInfo(p->ListAll());
+        this->ListEGMInfo(p->ListAll());
     }
 
     void QcomSim::ListEGMInfo(bool show_all)
     {
+        SG_UNREF_PARAM(show_all); // TODO
+
         std::vector<QcomDataPtr> data;
         m_qcom->GetEgmData(data);
 
         ConsoleTable t;
         t.SetStyle("compact");
-        CTableItem header[] = { "EGM", "SERMID", "JUR", "DEN", "TOK", "MAXDEN", "MINRTP", "MAXRTP", "MAXSD", "MAXLINES", "MAXBET", "MAXNPWIN", "MAXPWIN", "MAXECT" };
+        ConsoleTableItem header[] = 
+        {
+            std::string("EGM"), 
+            std::string("SERMID"),
+            std::string("JUR"),
+            std::string("DEN"),
+            std::string("TOK"),
+            std::string("MAXDEN"),
+            std::string("MINRTP"),
+            std::string("MAXRTP"), 
+            std::string("MAXSD"), 
+            std::string("MAXLINES"), 
+            std::string("MAXBET"), 
+            std::string("MAXNPWIN"), 
+            std::string("MAXPWIN"), 
+            std::string("MAXECT")
+        };
+
         t.SetHeader(&header);
 
-        t.SetHeaderCellFormat(1, CTableFormat(" %|#x| ", TPT_AlignLeft));
+        t.SetHeaderCellFormat(1, ConsoleTableFormat(" %|#x| ", CTPT_AlignLeft));
 
         for (size_t i = 0; i < data.size(); ++i)
         {
-            shared_lock<shared_mutex> lock(data[i]->locker);
+            std::unique_lock<std::mutex> lock(data[i]->locker);
 
-            CTableItem row[] = {
+            ConsoleTableItem row[] = {
                 (i + 1),
                 data[i]->data.serialMidBCD,
                 (uint32_t)data[i]->data.egm_config.jur,
@@ -121,32 +140,32 @@ namespace sg {
             t.AddRow(&row);
         }
 
-        CORE_START_PRINT_BLOCK();
-        CORE_PRINT_BLOCK("\n");
-        CORE_PRINT_BLOCK(t);
-        CORE_PRINT_BLOCK("\n");
-        CORE_END_PRINT_BLOCK();
+        COMMS_START_PRINT_BLOCK();
+        COMMS_PRINT_BLOCK("\n");
+        COMMS_PRINT_BLOCK(t);
+        COMMS_PRINT_BLOCK("\n");
+        COMMS_END_PRINT_BLOCK();
     }
 
     void QcomSim::EGMPollAddConf(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
-        CORE_UNREF_PARAM(action);
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
 
         m_qcom->PollAddress(m_curr_egm);
-        CORE_LOG(LL_Info, boost::format("Config the poll address of EGM %1%\n") % (uint32_t)(m_curr_egm+1));
+        COMMS_LOG(boost::format("Config the poll address of EGM %1%\n") % static_cast<uint32_t>(m_curr_egm + 1), CLL_Info);
     }
 
     void QcomSim::EGMConfRequest(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(sender);
 
         if (m_curr_egm == 0)
             Pick(0);
 
         if (m_curr_egm > 0)
         {
-            QcomEGMConfRequestActionPtr p = static_pointer_cast<QcomEGMConfRequestAction>(action);
+            QcomEGMConfRequestActionPtr p = std::static_pointer_cast<QcomEGMConfRequestAction>(action);
 
             m_qcom->EGMConfRequest(m_curr_egm, p->MEF(), p->GCR(), p->PSN());
         }
@@ -154,35 +173,49 @@ namespace sg {
 
     void QcomSim::EGMConfiguration(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(sender);
 
         if (m_curr_egm == 0)
             Pick(0);
 
         if (m_curr_egm > 0)
         {
-            QcomEGMConfActionPtr p = static_pointer_cast<QcomEGMConfAction>(action);
+            QcomEGMConfActionPtr p = std::static_pointer_cast<QcomEGMConfAction>(action);
 
-            m_qcom->EGMConfiguration(m_curr_egm, (uint8_t)p->JUR(), (uint32_t)p->DEN(), (uint32_t)p->TOK(), (uint32_t)p->MAXDEN(), (uint16_t)p->MINRTP(), (uint16_t)p->MAXRTP(), (uint16_t)p->MAXSD(),
-                            (uint16_t)p->MAXLINES(), (uint32_t)p->MAXBET(), (uint32_t)p->MAXNPWIN(), (uint32_t)p->MAXPWIN(), (uint32_t)p->MAXECT());
+            m_qcom->EGMConfiguration(m_curr_egm, 
+                p->JUR(), 
+                p->DEN(), 
+                p->TOK(), 
+                p->MAXDEN(), 
+                p->MINRTP(), 
+                p->MAXRTP(), 
+                p->MAXSD(),
+                p->MAXLINES(), 
+                p->MAXBET(), 
+                p->MAXNPWIN(), 
+                p->MAXPWIN(), 
+                p->MAXECT());
         }
     }
 
     void QcomSim::GameConfiguration(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(sender);
 
         if (m_curr_egm == 0)
             Pick(0);
 
         if (m_curr_egm > 0)
         {
-            QcomGameConfigurationActionPtr p = static_pointer_cast<QcomGameConfigurationAction>(action);
+            QcomGameConfigurationActionPtr p = std::static_pointer_cast<QcomGameConfigurationAction>(action);
 
-            std::vector<uint8_t> lp(p->LP().begin(), p->LP().end());
-            std::vector<uint32_t> camt(p->CAMT().begin(), p->CAMT().end());
-
-            m_qcom->GameConfiguration(m_curr_egm, (uint8_t)p->VAR(), (uint8_t)p->VAR_LOCK(), (uint8_t)p->GAME_ENABLE(), (uint8_t)p->PNMUM(), lp, camt);
+            m_qcom->GameConfiguration(m_curr_egm, 
+                p->VAR(), 
+                p->VAR_LOCK(), 
+                p->GAME_ENABLE(), 
+                p->PNMUM(), 
+                p->LP(), 
+                p->CAMT());
         }
     }
 
@@ -190,22 +223,28 @@ namespace sg {
 
     void QcomSim::SendBroadcast(const ActionCenter &sender, const ActionPtr &action)
     {
-        CORE_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(sender);
 
         //if (m_curr_egm == 0)
         //    Pick(0);
 
         //if (m_curr_egm > 0)
         {
-            QcomBroadcastActionPtr p = static_pointer_cast<QcomBroadcastAction>(action);
+            QcomBroadcastActionPtr p = std::static_pointer_cast<QcomBroadcastAction>(action);
 
-            m_qcom->SendBroadcast(p->GetBroadcastType(), p->GetGPMBroadcastText(), p->GetSDSBroadcastText(), p->GetSDLBroadcastText());
+            m_qcom->SendBroadcast(
+                p->GetBroadcastType(), 
+                p->GetGPMBroadcastText(), 
+                p->GetSDSBroadcastText(), 
+                p->GetSDLBroadcastText());
         }
     }
 
     void QcomSim::ChangeDev(const ActionCenter &sender, const ActionPtr &action)
     {
-        ResetDevActionPtr a = static_pointer_cast<ResetDevAction>(action);
+        SG_UNREF_PARAM(sender);
+
+        ResetDevActionPtr a = std::static_pointer_cast<ResetDevAction>(action);
         m_qcom->ChangeDev(a->GetDev());
     }
 }

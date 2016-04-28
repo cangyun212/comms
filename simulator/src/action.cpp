@@ -1,17 +1,18 @@
 
-#include "core/core.hpp"
-#include "core/core_utils.hpp"
-#include "core/console/core_console_printer.hpp"
+#include "Core.hpp"
 
 #include <algorithm>
 
 #include "boost/program_options.hpp"
 
-#include "simulator/action.hpp"
+#include "Utils.hpp"
+#include "Comms.hpp"
+#include "Action.hpp"
 
 namespace po = boost::program_options;
 
-namespace sg {
+namespace sg 
+{
 
     std::string ActionError::GetErrStr() const
     {
@@ -25,7 +26,7 @@ namespace sg {
 
     bool Action::Parse(const ActionArgs &args, const ActionError **err)
     {
-        CORE_UNREF_PARAM(args);
+        SG_UNREF_PARAM(args);
 
         m_err.code = ActionError::ET_NO_ERROR;
 
@@ -123,11 +124,11 @@ namespace sg {
         }
         else
         {
-            CORE_START_PRINT_BLOCK();
-            CORE_PRINT_BLOCK("\nUsage: list [options]\n");
-            CORE_PRINT_BLOCK(vis_desc);
-            CORE_PRINT_BLOCK("\n");
-            CORE_END_PRINT_BLOCK();
+            COMMS_START_LOG_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: list [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
 
             res = false;
         }
@@ -179,7 +180,7 @@ namespace sg {
 
         desc.add_options()
                 ("help,h", "")
-                ("egm", po::value<int>(&m_egm)->default_value(0), "")
+                ("egm", po::value<uint8_t>(&m_egm)->default_value(0), "")
                 ("dummy", po::value< std::vector<std::string> >(), "");
         pos_desc.add("egm", 1).add("dummy", -1);
         vis_desc.add_options()
@@ -204,11 +205,11 @@ namespace sg {
         }
         else
         {
-            CORE_START_PRINT_BLOCK();
-            CORE_PRINT_BLOCK("\nUsage: pick <egm>\n");
-            CORE_PRINT_BLOCK(vis_desc);
-            CORE_PRINT_BLOCK("\n");
-            CORE_END_PRINT_BLOCK();
+            COMMS_START_LOG_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: pick <egm>\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
         }
 
         if (err)
@@ -281,9 +282,9 @@ namespace sg {
         }
         else
         {
-            CORE_START_PRINT_BLOCK();
-            CORE_PRINT_BLOCK("\nUsage: resetdev/dev --dev/-d dev_path\n");
-            CORE_END_PRINT_BLOCK();
+            COMMS_START_LOG_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: dev/d --dev/-d dev_path\n");
+            COMMS_END_PRINT_BLOCK();
         }
 
         if (err)

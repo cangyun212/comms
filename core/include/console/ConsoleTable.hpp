@@ -138,7 +138,7 @@ namespace sg {
 
         template <typename T>
         ConsoleTableItem(T const& value)
-            : m_stream(MakeStream())
+            : m_stream(MakeStream<T>())
             , m_val(value)
         {
 
@@ -236,7 +236,7 @@ namespace sg {
     typedef std::shared_ptr<ConsoleTableSeparator> ConsoleTableSeparatorPtr;
     typedef std::shared_ptr<ConsoleTableRow> ConsoleTableRowPtr;
 
-    class ConsoleTable
+    class CORE_API ConsoleTable
     {
     public:
         ConsoleTable();
@@ -267,7 +267,7 @@ namespace sg {
         {
             BOOST_ASSERT(it);
 
-            ConsoleTableRowPrt r = MakeSharedPtr<ConsoleTableRow>();
+            ConsoleTableRowPtr r = MakeSharedPtr<ConsoleTableRow>();
             m_rows.push_back(r);
 
             r->col = N;
@@ -405,8 +405,8 @@ namespace sg {
 
     class ConsoleWindowStream;
     class ConsoleStdColorStream;
-    ConsoleWindowStream& operator<<(ConsoleWindowStream & s, ConsoleTable const& t);
-    ConsoleStdColorStream& operator<<(ConsoleStdColorStream & s, ConsoleTable const& t);
+    CORE_API ConsoleWindowStream& operator<<(ConsoleWindowStream & s, ConsoleTable const& t);
+    CORE_API ConsoleStdColorStream& operator<<(ConsoleStdColorStream & s, ConsoleTable const& t);
 }
 
 #endif

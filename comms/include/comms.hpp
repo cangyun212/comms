@@ -21,6 +21,11 @@
 #define COMMS_LOG_BLOCK(t, l)       SG_WS_LOG_BLOCK(t, l)
 #define COMMS_END_LOG_BLOCK()       SG_END_WS_LOG_BLOCK()
 
+#define COMMS_PRINT(t)              SG_WS_SAFE_PRINT(t)
+#define COMMS_START_PRINT_BLOCK()   SG_START_WS_PRINT_BLOCK()
+#define COMMS_PRINT_BLOCK(t)        SG_WS_PRINT_BLOCK(t)
+#define COMMS_END_PRINT_BLOCK()     SG_END_WS_PRINT_BLOCK()
+
 namespace sg {
 
     class COMMS_API Comms : public std::enable_shared_from_this<Comms>

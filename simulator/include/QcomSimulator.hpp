@@ -1,12 +1,12 @@
-#ifndef __QCOM_SIMULATOR_HPP__
-#define __QCOM_SIMULATOR_HPP__
+#ifndef __SG_QCOM_SIMULATOR_HPP__
+#define __SG_QCOM_SIMULATOR_HPP__
 
-#include "core/core.hpp"
+#include "Core.hpp"
 
-#include "comms/comms_predeclare.hpp"
-#include "simulator/predeclare.hpp"
-#include "simulator/action_center.hpp"
-#include "simulator/simulator.hpp"
+#include "CommsPredeclare.hpp"
+#include "Predeclare.hpp"
+#include "ActionCenter.hpp"
+#include "Simulator.hpp"
 
 namespace sg {
 
@@ -17,7 +17,7 @@ namespace sg {
         ~QcomSim();
 
     public:
-        void    DoInit() CORE_OVERRIDE;
+        void    DoInit() override;
 
     public:
         void    SeekEGM(const ActionCenter &sender, const ActionPtr &action);
@@ -29,6 +29,7 @@ namespace sg {
         void    GameConfiguration(const ActionCenter &sender, const ActionPtr &action);
         void    SendBroadcast(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);
+
     private:
         void    ListEGMInfo(bool show_all = true);
         bool    Pick(uint8_t target);

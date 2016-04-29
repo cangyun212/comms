@@ -70,7 +70,7 @@ namespace sg
 
     public:
         Console();
-       ~Console() {}
+       ~Console();
 
     private:
         typedef std::unordered_map<std::string, ConsoleWindowPtr>  WndMap;
@@ -83,6 +83,7 @@ namespace sg
         ConsoleWindowPtr    m_active;
         ConsoleType         m_type;
         bool                m_has_color;
+        bool                m_init;
     };
 }
 

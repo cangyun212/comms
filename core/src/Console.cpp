@@ -241,6 +241,8 @@ namespace sg
         default:
             break;
         }
+
+        m_init = true;
     }
 
     void Console::Shutdown()
@@ -251,6 +253,8 @@ namespace sg
             m_wnds.clear();
 
             endwin();
+
+            m_init = false;
         }
     }
 
@@ -302,6 +306,14 @@ namespace sg
         , m_has_color(false)
     {
 
+    }
+
+    Console::~Console()
+    {
+        if (m_init)
+        {
+            this->Shutdown();
+        }
     }
 
     ConsoleWindowPtr Console::MakeWindow(const std::string &name, uint32_t width, uint32_t height, int32_t x, int32_t y)

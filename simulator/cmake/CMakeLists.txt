@@ -67,10 +67,17 @@ link_directories(${Boost_LIBRARY_DIR})
 
 add_executable(${EXE_NAME} ${SIMULATOR_SOURCE_FILES} ${SIMULATOR_HEADER_FILES})
 
+set(SIM_EXTRA_LINK_LIB)
+if(SG_PLATFORM_LINUX)
+    set(SIM_EXTRA_LINK_LIB ${SIM_EXTRA_LINK_LIB} pthread)
+endif()
+
 target_link_libraries(${EXE_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX}
     debug comms${SG_OUTPUT_SUFFIX}_d optimized comms${SG_OUTPUT_SUFFIX}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    ${SIM_EXTRA_LINK_LIB}
     )
+
 
 set_target_properties(${EXE_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${SG_BIN_DIR}

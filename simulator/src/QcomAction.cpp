@@ -104,7 +104,7 @@ namespace sg
         }
         catch (po::error const& error)
         {
-            COMMS_LOG(error.what(), CLL_Error);
+            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
             return false;
         }
         catch (nm::bad_numeric_cast const&)
@@ -237,7 +237,7 @@ namespace sg
         }
         catch (po::error const& error)
         {
-            COMMS_LOG(error.what(), CLL_Error);
+            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
             return false;
         }
         catch (nm::bad_numeric_cast const&)
@@ -327,7 +327,7 @@ namespace sg
         }
         catch (po::error const& error)
         {
-            COMMS_LOG(error.what(), CLL_Error);
+            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
             return false;
         }
         catch (nm::bad_numeric_cast const&)
@@ -422,7 +422,7 @@ namespace sg
         }
         catch (po::error const& error)
         {
-            COMMS_LOG(error.what(), CLL_Error);
+            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
             return false;
         }
         catch (nm::bad_numeric_cast const&)

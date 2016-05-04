@@ -83,13 +83,12 @@ namespace sg
 
         try
         {
-            po::store(
-                po::command_line_parser(argv).options(desc).run(),
-                vm);
+            po::store(po::command_line_parser(argv).options(desc).run(), vm);
+            po::notify(vm);
         }
-        catch(po::error const& e)
+        catch(po::error const& error)
         {
-            COMMS_LOG(e.what(), CLL_Error);
+            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
             return false;
         }
 
@@ -163,10 +162,11 @@ namespace sg
         try
         {
             po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).run(), vm);
+            po::notify(vm);
         }
         catch (po::error const& error)
         {
-            COMMS_LOG(error.what(), CLL_Error);
+            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
             return false;
         }
         catch (nm::bad_numeric_cast const& )
@@ -262,10 +262,11 @@ namespace sg
         try
         {
             po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).run(), vm);
+            po::notify(vm);
         }
         catch (po::error const& error)
         {
-            COMMS_LOG(error.what(), CLL_Error);
+            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
             return false;
         }
         catch (nm::bad_numeric_cast const& )

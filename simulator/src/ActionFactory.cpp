@@ -48,15 +48,17 @@ namespace sg {
         if (this->PreParse(line))
         {
             boost::algorithm::split(arg, line, boost::is_any_of(" "));
+            return true;
         }
-
-        return true;
+        
+        return false;
     }
 
     ActionPtr ActionFactory::CreateAction(const std::string &act)
     {
-        BOOST_ASSERT(this->IsValidAction(act));
-        return m_actions[act]->Clone();
+        auto it = m_actions.find(act);
+        BOOST_ASSERT(it != m_actions.end());
+        return it->second->Clone();
     }
 
     void ActionFactory::Init()

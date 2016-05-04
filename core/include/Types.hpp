@@ -7,7 +7,10 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/assert.hpp>
+#include <iostream>
+#include "boost/assert.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/numeric/conversion/cast.hpp"
 
 namespace sg
 {
@@ -23,6 +26,118 @@ namespace sg
     typedef ulong                                   cwctype;
 #endif // SG_CPU_X64
 #endif
+
+    struct uint8
+    {
+        uint8_t value;
+
+        uint8(): value() {}
+        uint8(uint8_t const& v) : value(v) {}
+        uint8(uint8 const& arg) : value(arg.value) {}
+
+        operator uint8_t() const { return value; }
+
+        friend std::istream& operator>> (std::istream & in, uint8 & value)
+        {
+            std::string _v;
+            in >> _v;
+
+            // boost::numeric_cast won't raise exception for negative number, so we use
+            // signed value first to cover this
+            int _t;
+            if (boost::conversion::try_lexical_convert(_v, _t))
+            {
+                value = boost::numeric_cast<uint8_t>(_t); // exception if _t is negative value or out of range
+            }
+            else
+            {
+                unsigned int _ut = boost::lexical_cast<unsigned int>(_v); // exception if failed
+                value = boost::numeric_cast<uint8_t>(_ut); // exception if out of range
+            }
+
+            return in;
+        }
+
+        friend std::ostream& operator<< (std::ostream & out, uint8 const& value)
+        {
+            out << static_cast<unsigned int>(value.value); // static_cast is enough
+            return out;
+        }
+
+    };
+
+    struct uint16
+    {
+        uint16_t value;
+
+        uint16() : value() {}
+        uint16(uint16_t const& v) : value(v) {}
+        uint16(uint16 const& arg) : value(arg.value) {}
+
+        operator uint16_t() const { return value; }
+
+        friend std::istream& operator>> (std::istream & in, uint16 & value)
+        {
+            std::string _v;
+            in >> _v;
+
+            int _t;
+            if (boost::conversion::try_lexical_convert(_v, _t))
+            {
+                value = boost::numeric_cast<uint16_t>(_t);
+            }
+            else
+            {
+                unsigned int _ut = boost::lexical_cast<unsigned int>(_v);
+                value = boost::numeric_cast<uint16_t>(_ut);
+            }
+
+            return in;
+        }
+
+        friend std::ostream& operator<< (std::ostream & out, uint16 const& value)
+        {
+            out << static_cast<unsigned int>(value.value);
+            return out;
+        }
+    };
+    
+    struct uint32
+    {
+        uint32_t value;
+
+        uint32() : value() {}
+        uint32(uint32_t const& v) : value(v) {}
+        uint32(uint32 const& arg) : value(arg.value) {}
+
+        operator uint32_t() const { return value; }
+
+        friend std::istream& operator>> (std::istream & in, uint32 & value)
+        {
+            std::string _v;
+            in >> _v;
+
+            int _t;
+            if (boost::conversion::try_lexical_convert(_v, _t))
+            {
+                value = boost::numeric_cast<uint32_t>(_t);
+            }
+            else
+            {
+                unsigned int _ut = boost::lexical_cast<unsigned int>(_v);
+                value = boost::numeric_cast<uint32_t>(_ut);
+            }
+
+            return in;
+        }
+
+        friend std::ostream& operator<< (std::ostream & out, uint32 const& value)
+        {
+            out << static_cast<unsigned int>(value.value);
+            return out;
+        }
+    };
+
 
     class Window;
     class ConsoleWindow;

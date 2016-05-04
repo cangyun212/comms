@@ -9,6 +9,7 @@
 #include "QcomAction.hpp"
 
 namespace po = boost::program_options;
+namespace nm = boost::numeric;
 
 namespace sg 
 {
@@ -72,7 +73,7 @@ namespace sg
 
     }
 
-    bool QcomEGMConfRequestAction::Parse(const ActionArgs &args, const ActionError **err)
+    bool QcomEGMConfRequestAction::Parse(const ActionArgs &args)
     {
         bool res = false;
 
@@ -84,56 +85,70 @@ namespace sg
         po::variables_map vm;
         po::options_description desc;
         po::options_description vis_desc;
-        po::positional_options_description pos_desc;
         desc.add_options()
-                ("mef,m", "")
-                ("gcr,g", "")
-                ("psn,p", "")
-                ("help,h", "")
-                ("dummy", po::value< std::vector<std::string> >(), "");
+            ("mef,m", "")
+            ("gcr,g", "")
+            ("psn,p", "")
+            ("help,h", "");
 
-        pos_desc.add("dummy", -1);
         vis_desc.add_options()
                 ("mef,m", "enable egm machine")
                 ("gcr,g", "commands egm queue the EGM Game configuration Response")
                 ("psn,p", "reset all Poll Sequence Numbers")
                 ("help,h", "help message");
 
-        po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
-        po::notify(vm);
-
-        if (!vm.count("help"))
+        try
         {
-            if (vm.count("mef"))
-            {
-                m_mef = 1;
-                res = true;
-            }
-            if (vm.count("gcr"))
-            {
-                m_gcr = 1;
-                res = true;
-            }
-            if (vm.count("psn"))
-            {
-                m_psn = 1;
-                res = true;
-            }
-
+            po::store(po::command_line_parser(argv).options(desc).run(), vm);
+            po::notify(vm);
         }
-        else
+        catch (po::error const& error)
         {
-            COMMS_START_LOG_BLOCK();
+            COMMS_LOG(error.what(), CLL_Error);
+            return false;
+        }
+        catch (nm::bad_numeric_cast const&)
+        {
+            COMMS_LOG("Option value is out of range\n", CLL_Error);
+            return false;
+        }
+        catch (boost::bad_lexical_cast const&)
+        {
+            COMMS_LOG("Invalid option value\n", CLL_Error);
+            return false;
+        }
+
+        if (vm.count("mef"))
+        {
+            m_mef = 1;
+        }
+
+        if (vm.count("gcr"))
+        {
+            m_gcr = 1;
+        }
+
+        if (vm.count("psn"))
+        {
+            m_psn = 1;
+        }
+
+        if (!vm.count("help") || (!m_mef && !m_gcr && !m_psn))
+        {
+            COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: configreq [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
+
+            res = false;
+        }
+        else
+        {
+            res = true;
         }
 
-        if (err)
-        {
-            *err = &m_err;
-        }
+
 
         return res;
     }
@@ -172,7 +187,7 @@ namespace sg
 
     }
 
-    bool QcomEGMConfAction::Parse(const Action::ActionArgs &args, const ActionError **err)
+    bool QcomEGMConfAction::Parse(const Action::ActionArgs &args)
     {
         bool res = false;
 
@@ -184,25 +199,22 @@ namespace sg
         po::variables_map vm;
         po::options_description desc;
         po::options_description vis_desc;
-        po::positional_options_description pos_desc;
 
         desc.add_options()
-                ("jur", po::value<uint8_t>(&m_jur)->default_value(0), "")
-                ("den", po::value<uint32_t>(&m_den)->default_value(1), "")
-                ("tok", po::value<uint32_t>(&m_tok)->default_value(100), "")
-                ("maxden", po::value<uint32_t>(&m_maxden)->default_value(100), "")
-                ("minrtp", po::value<uint16_t>(&m_minrtp)->default_value(8500), "")
-                ("maxrtp", po::value<uint16_t>(&m_maxrtp)->default_value(10000), "")
-                ("maxsd", po::value<uint16_t>(&m_maxsd)->default_value(15), "")
-                ("maxlines", po::value<uint16_t>(&m_maxlines)->default_value(243), "")
-                ("maxbet", po::value<uint32_t>(&m_maxbet)->default_value(5000), "")
-                ("maxnpwin", po::value<uint32_t>(&m_maxnpwin)->default_value(1000000), "")
-                ("maxpwin", po::value<uint32_t>(&m_maxpwin)->default_value(2500000), "")
-                ("maxect", po::value<uint32_t>(&m_maxect)->default_value(1000000), "")
-                ("help,h", "")
-                ("dummy", po::value< std::vector<std::string> >(), "");
+            ("jur", po::value<uint8>(&m_jur)->default_value(0), "")
+            ("den", po::value<uint32>(&m_den)->default_value(1), "")
+            ("tok", po::value<uint32>(&m_tok)->default_value(100), "")
+            ("maxden", po::value<uint32>(&m_maxden)->default_value(100), "")
+            ("minrtp", po::value<uint16>(&m_minrtp)->default_value(8500), "")
+            ("maxrtp", po::value<uint16>(&m_maxrtp)->default_value(10000), "")
+            ("maxsd", po::value<uint16>(&m_maxsd)->default_value(15), "")
+            ("maxlines", po::value<uint16>(&m_maxlines)->default_value(243), "")
+            ("maxbet", po::value<uint32>(&m_maxbet)->default_value(5000), "")
+            ("maxnpwin", po::value<uint32>(&m_maxnpwin)->default_value(1000000), "")
+            ("maxpwin", po::value<uint32>(&m_maxpwin)->default_value(2500000), "")
+            ("maxect", po::value<uint32>(&m_maxect)->default_value(1000000), "")
+            ("help,h", "");
 
-        pos_desc.add("dummy", -1);
         vis_desc.add_options()
                 ("jur", "jurisdictions")
                 ("den", "credit denomination")
@@ -218,24 +230,42 @@ namespace sg
                 ("maxect", "regulatory maximum allowable ECT to/from the EGM")
                 ("help,h", "help message");
 
-        po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
-        po::notify(vm);
+        try
+        {
+            po::store(po::command_line_parser(argv).options(desc).run(), vm);
+            po::notify(vm);
+        }
+        catch (po::error const& error)
+        {
+            COMMS_LOG(error.what(), CLL_Error);
+            return false;
+        }
+        catch (nm::bad_numeric_cast const&)
+        {
+            COMMS_LOG("Option value is out of range\n", CLL_Error);
+            return false;
+        }
+        catch (boost::bad_lexical_cast const&)
+        {
+            COMMS_LOG("Invalid option value\n", CLL_Error);
+            return false;
+        }
 
         if (vm.count("help"))
         {
-            COMMS_START_LOG_BLOCK();
+            COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: egmconfig [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
+
+            res = false;
         }
-
-        res = true;
-
-        if (err)
+        else
         {
-            *err = &m_err;
+            res = true;
         }
+
 
         return res;
     }
@@ -263,7 +293,7 @@ namespace sg
 
     }
 
-    bool QcomBroadcastAction::Parse(const Action::ActionArgs &args, const ActionError **err)
+    bool QcomBroadcastAction::Parse(const Action::ActionArgs &args)
     {
         bool res = false;
 
@@ -275,17 +305,14 @@ namespace sg
         po::variables_map vm;
         po::options_description desc;
         po::options_description vis_desc;
-        po::positional_options_description pos_desc;
 
         desc.add_options()
-                ("type,t", po::value<uint32_t>(&m_broadcast_type)->default_value(0), "")
-                ("gpmtext,g", po::value<std::string>(&m_gpm_text), "")
-                ("sdstext,s", po::value<std::string>(&m_sds_text), "")
-                ("sdltext,l", po::value<std::string>(&m_sdl_text), "")
-                ("help,h", "")
-                ("dummy", po::value< std::vector<std::string> >(), "");
+            ("type,t", po::value<uint32>(&m_broadcast_type)->default_value(0), "")
+            ("gpmtext,g", po::value<std::string>(&m_gpm_text), "")
+            ("sdstext,s", po::value<std::string>(&m_sds_text), "")
+            ("sdltext,l", po::value<std::string>(&m_sdl_text), "")
+            ("help,h", "");
 
-        pos_desc.add("dummy", -1);
         vis_desc.add_options()
                 ("type,t", "what is the type of broadcast \nSEEK_EGM = 1,\nTIME_DATA = 2,\nLJP_CUR_AMOUNT = 3,\nGPM = 4,\nPOLL_ADDRESS = 5,\nSITE_DETAILS = 6,")
                 ("gpmtext,g", "gpm text")
@@ -293,23 +320,40 @@ namespace sg
                 ("sdltext,l", "site details / Address  Contact details of licensed venue")
                 ("help,h", "help message");
 
-        po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
-        po::notify(vm);
+        try
+        {
+            po::store(po::command_line_parser(argv).options(desc).run(), vm);
+            po::notify(vm);
+        }
+        catch (po::error const& error)
+        {
+            COMMS_LOG(error.what(), CLL_Error);
+            return false;
+        }
+        catch (nm::bad_numeric_cast const&)
+        {
+            COMMS_LOG("Option value is out of range\n", CLL_Error);
+            return false;
+        }
+        catch (boost::bad_lexical_cast const&)
+        {
+            COMMS_LOG("Invalid option value\n", CLL_Error);
+            return false;
+        }
 
         if (vm.count("help"))
         {
-            COMMS_START_LOG_BLOCK();
+            COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: broadcast [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
+
+            res = false;
         }
-
-        res = true;
-
-        if (err)
+        else
         {
-            *err = &m_err;
+            res = true;
         }
 
         return res;
@@ -340,7 +384,7 @@ namespace sg
 
     }
 
-    bool QcomGameConfigurationAction::Parse(const Action::ActionArgs &args, const ActionError **err)
+    bool QcomGameConfigurationAction::Parse(const Action::ActionArgs &args)
     {
         bool res = false;
 
@@ -352,19 +396,16 @@ namespace sg
         po::variables_map vm;
         po::options_description desc;
         po::options_description vis_desc;
-        po::positional_options_description pos_desc;
 
         desc.add_options()
-                ("var", po::value<uint8_t>(&m_var)->default_value(0), "")
-                ("varlock", po::value<uint8_t>(&m_var_lock)->default_value(0), "")
-                ("gameenable", po::value<uint8_t>(&m_game_enable)->default_value(1), "")
-                ("pnum", po::value<uint8_t>(&m_pnum)->default_value(0), "")
-                ("linkJackpot", po::value< std::vector<uint8_t> >(&m_lp)->multitoken(), "")
-                ("amount", po::value< std::vector<uint32_t> >(&m_camt)->multitoken(), "")
-                ("help,h", "")
-                ("dummy", po::value< std::vector<std::string> >(), "");
+            ("var", po::value<uint8>(&m_var)->default_value(0), "")
+            ("varlock", po::value<uint8>(&m_var_lock)->default_value(0), "")
+            ("gameenable", po::value<uint8>(&m_game_enable)->default_value(1), "")
+            ("pnum", po::value<uint8>(&m_pnum)->default_value(0), "")
+            ("linkJackpot", po::value< std::vector<uint8> >(&m_lp)->multitoken(), "")
+            ("amount", po::value< std::vector<uint32> >(&m_camt)->multitoken(), "")
+            ("help,h", "");
 
-        pos_desc.add("dummy", -1);
         vis_desc.add_options()
                 ("var", "define jurisdictions if set")
                 ("varlock", "define credit denomination if set")
@@ -374,23 +415,40 @@ namespace sg
                 ("amount", "define max denomination if set")
                 ("help,h", "help message");
 
-        po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
-        po::notify(vm);
+        try
+        {
+            po::store(po::command_line_parser(argv).options(desc).run(), vm);
+            po::notify(vm);
+        }
+        catch (po::error const& error)
+        {
+            COMMS_LOG(error.what(), CLL_Error);
+            return false;
+        }
+        catch (nm::bad_numeric_cast const&)
+        {
+            COMMS_LOG("Option value is out of range\n", CLL_Error);
+            return false;
+        }
+        catch (boost::bad_lexical_cast const&)
+        {
+            COMMS_LOG("Invalid option value\n", CLL_Error);
+            return false;
+        }
 
         if (vm.count("help"))
         {
-            COMMS_START_LOG_BLOCK();
+            COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
+
+            res = false;
         }
-
-        res = true;
-
-        if (err)
+        else
         {
-            *err = &m_err;
+            res = true;
         }
 
         return res;
@@ -405,6 +463,20 @@ namespace sg
     {
         static const char* des = "\tGame configuration :\n\t\tgconf,gameconfig\n";
         return des;
+    }
+
+    void QcomGameConfigurationAction::LP(std::vector<uint8_t>& lp) const
+    {
+        lp.clear();
+        lp.reserve(m_lp.size());
+        std::for_each(m_lp.begin(), m_lp.end(), [&](auto const&_lp) { lp.push_back(_lp.value); });
+    }
+
+    void QcomGameConfigurationAction::CAMT(std::vector<uint32_t>& camt) const
+    {
+        camt.clear();
+        camt.reserve(m_camt.size());
+        std::for_each(m_camt.begin(), m_camt.end(), [&](auto const& _camt) { camt.push_back(_camt.value); });
     }
 
 }

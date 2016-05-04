@@ -11,27 +11,6 @@
 
 namespace sg 
 {
-    struct ActionError
-    {
-        enum ErrorType
-        {
-            ET_UNKNOWN = 0,
-            ET_NO_ERROR,
-
-            ET_NUM
-        };
-
-        ActionError()
-            : code(ET_UNKNOWN)
-        {
-
-        }
-
-        ErrorType   code;
-
-        std::string GetErrStr() const;
-    };
-
     class Action
     {
     public:
@@ -62,11 +41,10 @@ namespace sg
 
     public:
         ActionType  GetType() const { return m_type; }
-        ActionError const& GetCurrErr() const { return m_err; }
 
     public:
         typedef std::vector<std::string>    ActionArgs;
-        virtual bool    Parse(ActionArgs const& args, ActionError const** err = nullptr);
+        virtual bool Parse(ActionArgs const& args);
         virtual const char* Description() const = 0;
 
         virtual ActionPtr Clone() = 0;
@@ -82,7 +60,6 @@ namespace sg
 
     protected:
         ActionType  m_type;
-        ActionError m_err;
     };
 
     class QuitAction : public Action
@@ -103,7 +80,7 @@ namespace sg
        ~ListEGMAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        bool        Parse(const ActionArgs &args) override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -121,7 +98,7 @@ namespace sg
        ~PickEGMAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        bool        Parse(const ActionArgs &args) override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -129,7 +106,7 @@ namespace sg
         uint8_t     Target() const { return m_egm; }
 
     private:
-        uint8_t     m_egm;
+        uint8       m_egm;
     };
 
     class HelpAction : public Action
@@ -150,8 +127,8 @@ namespace sg
             ~ResetDevAction();
 
         public:
-            ActionPtr Clone() override;
-            bool      Parse(const ActionArgs &args, const ActionError **err) override;
+            ActionPtr   Clone() override;
+            bool        Parse(const ActionArgs &args) override;
             const char* Description() const override;
 
             const std::string  & GetDev()  { return m_dev; }

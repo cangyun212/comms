@@ -152,7 +152,7 @@ namespace sg
     void ConsoleWindow::ColorOn(ConsoleColorHandle const& h) const
     {
         s_color = h.i;
-        BOOST_ASSERT(s_color > 0 && s_color < (uint)COLOR_PAIRS);
+        BOOST_ASSERT(s_color > 0 && s_color < static_cast<uint>(COLOR_PAIRS));
         wattron(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 
@@ -160,7 +160,7 @@ namespace sg
     {
         SG_UNREF_PARAM(h);
 
-        BOOST_ASSERT(s_color > 0 && s_color < (uint)COLOR_PAIRS);
+        BOOST_ASSERT(s_color > 0 && s_color < static_cast<uint>(COLOR_PAIRS));
         wattroff(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 

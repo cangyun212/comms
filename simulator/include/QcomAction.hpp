@@ -47,7 +47,7 @@ namespace sg
        ~QcomEGMConfRequestAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        bool        Parse(const ActionArgs &args) override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -57,9 +57,9 @@ namespace sg
         uint8_t     PSN() const { return m_psn; }
 
     private:
-        uint8_t    m_mef;
-        uint8_t    m_gcr;
-        uint8_t    m_psn;
+        uint8       m_mef;
+        uint8       m_gcr;
+        uint8       m_psn;
 
     };
 
@@ -70,7 +70,7 @@ namespace sg
         ~QcomEGMConfAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        bool        Parse(const ActionArgs &args) override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -89,18 +89,18 @@ namespace sg
         uint32_t    MAXECT() const { return m_maxect; }
 
     private:
-        uint8_t   m_jur;
-        uint32_t  m_den;
-        uint32_t  m_tok;
-        uint32_t  m_maxden;
-        uint16_t  m_minrtp;
-        uint16_t  m_maxrtp;
-        uint16_t  m_maxsd;
-        uint16_t  m_maxlines;
-        uint32_t  m_maxbet;
-        uint32_t  m_maxnpwin;
-        uint32_t  m_maxpwin;
-        uint32_t  m_maxect;
+        uint8   m_jur;
+        uint32  m_den;
+        uint32  m_tok;
+        uint32  m_maxden;
+        uint16  m_minrtp;
+        uint16  m_maxrtp;
+        uint16  m_maxsd;
+        uint16  m_maxlines;
+        uint32  m_maxbet;
+        uint32  m_maxnpwin;
+        uint32  m_maxpwin;
+        uint32  m_maxect;
     };
 
     class QcomBroadcastAction : public Action
@@ -110,7 +110,7 @@ namespace sg
         ~QcomBroadcastAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        bool        Parse(const ActionArgs &args) override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -121,7 +121,7 @@ namespace sg
         std::string GetSDLBroadcastText() const { return m_sdl_text; }
 
     private:
-        uint32_t  m_broadcast_type;
+        uint32      m_broadcast_type;
         std::string m_gpm_text;
         std::string m_sds_text;
         std::string m_sdl_text;
@@ -134,25 +134,25 @@ namespace sg
         ~QcomGameConfigurationAction();
 
     public:
-        bool        Parse(const ActionArgs &args, const ActionError **err) override;
+        bool        Parse(const ActionArgs &args) override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
     public:
-        uint8_t    VAR() const { return m_var; }
-        uint8_t    VAR_LOCK() const { return m_var_lock; }
-        uint8_t    GAME_ENABLE() const { return m_game_enable; }
-        uint8_t    PNMUM() const { return m_pnum; }
-        std::vector<uint8_t> const&    LP() const { return m_lp; }
-        std::vector<uint32_t> const&   CAMT() const { return m_camt; }
+        uint8_t     VAR() const { return m_var; }
+        uint8_t     VAR_LOCK() const { return m_var_lock; }
+        uint8_t     GAME_ENABLE() const { return m_game_enable; }
+        uint8_t     PNMUM() const { return m_pnum; }
+        void        LP(std::vector<uint8_t> & lp) const;
+        void        CAMT(std::vector<uint32_t> & camt) const;
 
     private:
-        uint8_t                 m_var;
-        uint8_t                 m_var_lock;
-        uint8_t                 m_game_enable;
-        uint8_t                 m_pnum;
-        std::vector<uint8_t>    m_lp;
-        std::vector<uint32_t>   m_camt;
+        uint8                   m_var;
+        uint8                   m_var_lock;
+        uint8                   m_game_enable;
+        uint8                   m_pnum;
+        std::vector<uint8>      m_lp;
+        std::vector<uint32>     m_camt;
     };
 
 }

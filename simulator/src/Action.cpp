@@ -10,30 +10,14 @@
 #include "Action.hpp"
 
 namespace po = boost::program_options;
+namespace nm = boost::numeric;
 
 namespace sg 
 {
 
-    std::string ActionError::GetErrStr() const
-    {
-        switch (code) {
-        case ET_NO_ERROR:
-            return "";
-        default:
-            return "Unknown error";
-        }
-    }
-
-    bool Action::Parse(const ActionArgs &args, const ActionError **err)
+    bool Action::Parse(const ActionArgs &args)
     {
         SG_UNREF_PARAM(args);
-
-        m_err.code = ActionError::ET_NO_ERROR;
-
-        if (err)
-        {
-            *err = &m_err;
-        }
 
         return true;
     }
@@ -77,7 +61,7 @@ namespace sg
         return DoClone<ListEGMAction>();
     }
 
-    bool ListEGMAction::Parse(const ActionArgs &args, const ActionError **err)
+    bool ListEGMAction::Parse(const ActionArgs &args)
     {
         bool res = false;
 
@@ -89,42 +73,29 @@ namespace sg
         po::variables_map vm;
         po::options_description desc;
         po::options_description vis_desc;
-        po::positional_options_description pos_desc;
         desc.add_options()
-                ("all,a", "")
-                ("help", "")
-                ("dummy", po::value< std::vector<std::string> >(), "");
-        pos_desc.add("dummy", -1);
+            ("all,a", "")
+            ("help", "");
 
         vis_desc.add_options()
                 ("all,a", "list all information of an EGM")
                 ("help", "help message");
 
-        // TODO : handle exception later
-
-        //try
-        //{
+        try
+        {
             po::store(
-                po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(),
+                po::command_line_parser(argv).options(desc).run(),
                 vm);
-        //}
-        //catch(po::error &e)
-        //{
-
-        //}
-
-        if (!vm.count("help"))
-        {
-            if (vm.count("all"))
-            {
-                m_list_all = true;
-            }
-
-            res = true;
         }
-        else
+        catch(po::error const& e)
         {
-            COMMS_START_LOG_BLOCK();
+            COMMS_LOG(e.what(), CLL_Error);
+            return false;
+        }
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: list [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
@@ -132,10 +103,14 @@ namespace sg
 
             res = false;
         }
-
-        if (err)
+        else
         {
-            *err = &m_err;
+            if (vm.count("all"))
+            {
+                m_list_all = true;
+            }
+
+            res = true;
         }
 
         return res;
@@ -164,7 +139,7 @@ namespace sg
         return DoClone<PickEGMAction>();
     }
 
-    bool PickEGMAction::Parse(const ActionArgs &args, const ActionError **err)
+    bool PickEGMAction::Parse(const ActionArgs &args)
     {
         bool res = false;
 
@@ -179,43 +154,58 @@ namespace sg
         po::positional_options_description pos_desc;
 
         desc.add_options()
-                ("help,h", "")
-                ("egm", po::value<uint8_t>(&m_egm)->default_value(0), "")
-                ("dummy", po::value< std::vector<std::string> >(), "");
-        pos_desc.add("egm", 1).add("dummy", -1);
+            ("help,h", "")
+            ("egm", po::value<uint8>(&m_egm)->default_value(0), "");
+        pos_desc.add("egm", 1);
         vis_desc.add_options()
                 ("help,h", "help message");
 
-        po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
-
-        if (!vm.count("help"))
+        try
         {
-            if (vm.count("egm"))
-            {
-                if (m_egm > 0)
-                {
-                    res = true;
-                }
-                // invalid argument
-            }
-
-            // too few argument
-
-            // unregistered and too much arguments
+            po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).run(), vm);
         }
-        else
+        catch (po::error const& error)
         {
-            COMMS_START_LOG_BLOCK();
+            COMMS_LOG(error.what(), CLL_Error);
+            return false;
+        }
+        catch (nm::bad_numeric_cast const& )
+        {
+            COMMS_LOG("Option value is out of range\n", CLL_Error);
+            return false;
+        }
+        catch (boost::bad_lexical_cast const& )
+        {
+            COMMS_LOG("Invalid option value\n", CLL_Error);
+            return false;
+        }
+
+
+        if (vm.count("help") || !vm.count("egm"))
+        {
+            COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: pick <egm>\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
+
+            res = false;
+
+        }
+        else
+        {
+            if (m_egm > 0)
+            {
+                res = true;
+            }
+            else
+            {
+                COMMS_LOG("Invalid egm value '0', egm value must larger than 0", CLL_Error);
+                res = false;
+            }
         }
 
-        if (err)
-        {
-            *err = &m_err;
-        }
+
 
         return res;
     }
@@ -248,7 +238,7 @@ namespace sg
         return DoClone<ResetDevAction>();
     }
 
-    bool ResetDevAction::Parse(const ActionArgs &args, const ActionError **err)
+    bool ResetDevAction::Parse(const ActionArgs &args)
     {
         bool res = false;
 
@@ -264,33 +254,48 @@ namespace sg
 
         desc.add_options()
             ("help,h", "Show usage")
-            ("dev,d",boost::program_options::value<std::string>(), "set the dev path")
-            ("dummy", po::value< std::vector<std::string> >(), "");
-        pos_desc.add("dummy", -1);
+            ("dev", po::value<std::string>(&m_dev), "");
+        pos_desc.add("dev", 1);
         vis_desc.add_options()
             ("help,h", "help message");
 
-        po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).allow_unregistered().run(), vm);
-
-        if (!vm.count("help"))
+        try
         {
-            if (vm.count("dev"))
-            {
-                m_dev = vm["dev"].as<std::string>();
-                res = true;
-            }
+            po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).run(), vm);
+        }
+        catch (po::error const& error)
+        {
+            COMMS_LOG(error.what(), CLL_Error);
+            return false;
+        }
+        catch (nm::bad_numeric_cast const& )
+        {
+            COMMS_LOG("Option value is out of range\n", CLL_Error);
+            return false;
+        }
+        catch (boost::bad_lexical_cast const& )
+        {
+            COMMS_LOG("Invalid option value\n", CLL_Error);
+            return false;
+        }
+
+        if (vm.count("help") || !vm.count("dev"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: resetdev/dev <dev_path>\n");
+            COMMS_PRINT(vis_desc);
+            COMMS_PRINT("\n");
+            COMMS_END_PRINT_BLOCK();
+
+            res = false;
+
         }
         else
         {
-            COMMS_START_LOG_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: dev/d --dev/-d dev_path\n");
-            COMMS_END_PRINT_BLOCK();
+            res = true;
         }
 
-        if (err)
-        {
-            *err = &m_err;
-        }
+
         return res;
     }
 

@@ -209,13 +209,19 @@ namespace sg
         {
             QcomGameConfigurationActionPtr p = std::static_pointer_cast<QcomGameConfigurationAction>(action);
 
+            std::vector<uint8_t> lp;
+            std::vector<uint32_t> camt;
+
+            p->LP(lp);
+            p->CAMT(camt);
+
             m_qcom->GameConfiguration(m_curr_egm, 
                 p->VAR(), 
                 p->VAR_LOCK(), 
                 p->GAME_ENABLE(), 
                 p->PNMUM(), 
-                p->LP(), 
-                p->CAMT());
+                lp, 
+                camt);
         }
     }
 

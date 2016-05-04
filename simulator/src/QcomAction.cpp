@@ -469,14 +469,14 @@ namespace sg
     {
         lp.clear();
         lp.reserve(m_lp.size());
-        std::for_each(m_lp.begin(), m_lp.end(), [&](auto const&_lp) { lp.push_back(_lp.value); });
+        std::for_each(m_lp.begin(), m_lp.end(), [&](uint8 const&_lp) { lp.push_back(_lp.value); });
     }
 
     void QcomGameConfigurationAction::CAMT(std::vector<uint32_t>& camt) const
     {
         camt.clear();
         camt.reserve(m_camt.size());
-        std::for_each(m_camt.begin(), m_camt.end(), [&](auto const& _camt) { camt.push_back(_camt.value); });
+        std::for_each(m_camt.begin(), m_camt.end(), [&](uint32 const& _camt) { camt.push_back(_camt.value); });
     }
 
 }

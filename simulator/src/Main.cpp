@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
 
     if (!sg::CmdParser::Instance().Parse(argc, argv)) // console is not ready, use std::cout instead
     {
-        sg::CmdParser::Instance().ShowHelp();
         ret = 1;
         return ret;
     }

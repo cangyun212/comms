@@ -3,7 +3,6 @@
 
 #include <algorithm>
 
-#include "boost/program_options.hpp"
 
 #include "Utils.hpp"
 #include "Comms.hpp"
@@ -20,6 +19,90 @@ namespace sg
         SG_UNREF_PARAM(args);
 
         return true;
+    }
+
+    void Action::AddOption(const std::string &option, ValueSematicPtr const &value, const std::string &message)
+    {
+        BOOST_ASSERT(m_options != nullptr);
+        m_options->push_back(MakeSharedPtr<ActionOption>(option, value, message));
+    }
+
+    void Action::AddPosOption(const ActionPosOptionPtr &option)
+    {
+        BOOST_ASSERT(m_pos_options != nullptr);
+        m_pos_options->push_back(option);
+    }
+
+    void Action::FillOptionsDescription(po::options_description &desc, po::options_description &vis_desc, po::positional_options_description &pos_desc)
+    {
+        std::vector<std::string>::size_type i;
+        for(i = 0; i < m_options->size(); ++i)
+        {
+            std::string &option_desc = (*m_options)[i]->name;
+            std::string &option_vis = (*m_options)[i]->message;
+            ValueSematicPtr value = (*m_options)[i]->value;
+            if(value != nullptr)
+            {
+                desc.add_options()
+                        (option_desc.c_str(), value->value(), "");
+            }
+            else
+            {
+                desc.add_options()
+                        (option_desc.c_str(), "");
+            }
+
+            if(!option_vis.empty())
+            {
+                vis_desc.add_options()
+                            (option_desc.c_str(), option_vis.c_str());
+            }
+        }
+
+        desc.add_options()
+                ("help,h", "");
+        vis_desc.add_options()
+                ("help,h", "help message");
+
+        for(i = 0; i < m_pos_options->size(); ++i)
+        {
+            ActionPosOptionPtr &pos_option = (*m_pos_options)[i];
+            desc.add_options()
+                        (pos_option->option.c_str(), pos_option->value->value(), "");
+            pos_desc.add(pos_option->option.c_str(), pos_option->max_count);
+        }
+	} 
+
+    void Action::FillOptionsDescription(po::options_description &desc, po::options_description &vis_desc)
+    {
+        std::vector<std::string>::size_type i;
+        for(i = 0; i < m_options->size(); ++i)
+        {
+            std::string &option_desc = (*m_options)[i]->name;
+            std::string &option_vis = (*m_options)[i]->message;
+            ValueSematicPtr value = (*m_options)[i]->value;
+            if(value != nullptr)
+            {
+                desc.add_options()
+                        (option_desc.c_str(), value->value(), "");
+            }
+            else
+            {
+                desc.add_options()
+                        (option_desc.c_str(), "");
+            }
+
+            if(!option_vis.empty())
+            {
+                vis_desc.add_options()
+                            (option_desc.c_str(), option_vis.c_str());
+            }
+        }
+
+        desc.add_options()
+                ("help,h", "");
+        vis_desc.add_options()
+                ("help,h", "help message");
     }
 
     QuitAction::QuitAction()
@@ -44,11 +127,16 @@ namespace sg
         return des;
     }
    
+	bool ListEGMAction::m_list_all = false;
+
     ListEGMAction::ListEGMAction()
         : Action(Action::AT_LIST_EGM)
-        , m_list_all(false)
     {
+		m_options = MakeSharedPtr<ActionOptions>();
 
+		this->AddOption("all,a", nullptr, "list all information of an EGM");
+		this->AddOption("help", nullptr, "help message");
+			
     }
 
     ListEGMAction::~ListEGMAction()
@@ -73,13 +161,8 @@ namespace sg
         po::variables_map vm;
         po::options_description desc;
         po::options_description vis_desc;
-        desc.add_options()
-            ("all,a", "")
-            ("help", "");
 
-        vis_desc.add_options()
-                ("all,a", "list all information of an EGM")
-                ("help", "help message");
+		this->FillOptionsDescription(desc, vis_desc);
 
         try
         {
@@ -121,11 +204,17 @@ namespace sg
         return des;
     }
 
+	uint8 PickEGMAction::m_egm = 0;
+
     PickEGMAction::PickEGMAction()
         : Action(Action::AT_PICK_EGM)
-        , m_egm(0)
     {
+		m_options = MakeSharedPtr<ActionOptions>();
 
+		this->AddOption("help", nullptr, "help message");
+
+        m_pos_options = MakeSharedPtr<VectorPosOptionPtr>();
+        this->AddPosOption(MakeSharedPtr<ActionPosOption>("egm", Value<uint8>(&m_egm), 1));
     }
 
     PickEGMAction::~PickEGMAction()
@@ -152,12 +241,7 @@ namespace sg
         po::options_description vis_desc;
         po::positional_options_description pos_desc;
 
-        desc.add_options()
-            ("help,h", "")
-            ("egm", po::value<uint8>(&m_egm)->default_value(0), "");
-        pos_desc.add("egm", 1);
-        vis_desc.add_options()
-                ("help,h", "help message");
+		this->FillOptionsDescription(desc, vis_desc, pos_desc);
 
         try
         {
@@ -230,7 +314,18 @@ namespace sg
         return des;
     }
 
-    ResetDevAction::ResetDevAction() : Action(Action::AT_RESET_DEV) , m_dev(""){}
+	std::string ResetDevAction::m_dev;
+
+    ResetDevAction::ResetDevAction() : Action(Action::AT_RESET_DEV)
+	{
+		m_options = MakeSharedPtr<ActionOptions>();
+
+		this->AddOption("help", nullptr, "help message");
+
+        m_pos_options = MakeSharedPtr<VectorPosOptionPtr>();
+        this->AddPosOption(MakeSharedPtr<ActionPosOption>("dev", Value<std::string>(&m_dev), 1));
+	}
+
     ResetDevAction::~ResetDevAction() {}
 
     ActionPtr ResetDevAction::Clone()
@@ -252,12 +347,7 @@ namespace sg
         po::options_description vis_desc;
         po::positional_options_description pos_desc;
 
-        desc.add_options()
-            ("help,h", "Show usage")
-            ("dev", po::value<std::string>(&m_dev), "");
-        pos_desc.add("dev", 1);
-        vis_desc.add_options()
-            ("help,h", "help message");
+		this->FillOptionsDescription(desc, vis_desc, pos_desc);
 
         try
         {

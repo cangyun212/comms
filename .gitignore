@@ -31,6 +31,7 @@ CMakeLists.txt.user
 /pdcurses/pdcurses/x11/config.h
 /pdcurses/pdcurses/x11/pdcurses.cmake
 /pdcurses/pdcurses/x11/mono
+cmake-build/
 
 
 tags

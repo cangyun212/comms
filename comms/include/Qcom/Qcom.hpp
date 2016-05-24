@@ -52,6 +52,25 @@ namespace sg {
         uint32_t   maxect;
     };
 
+    struct EGMParams
+    {   // QCOM v1.6
+        uint8_t    reserve;
+        uint8_t    autoplay;
+        uint8_t    crlimitmode;
+        uint8_t    opr;
+        uint32_t   lwin;           // cents
+        uint32_t   crlimit;        // cents
+        uint8_t    dumax;
+        uint32_t   dulimit;        // cents
+        // New fields for QCOM v1.6:
+        uint16_t   tzadj; // units of minutes
+        uint32_t   pwrtime;        // seconds
+        uint8_t    pid;
+        uint16_t   eodt;           // End of Day Time.  Units: Minutes since midnight (0...1439)
+        uint32_t   npwinp;         // cents
+        uint32_t   sapwinp;        // cents
+    };
+
     struct ProgressiveConfigData
     {
         uint8_t    pnum; // number of progressive levels in game. 0...8
@@ -78,8 +97,10 @@ namespace sg {
         uint16_t        last_gvn; // game version number of the last initiated game in the egm
         uint8_t         last_var; // game variation number as above
         uint8_t         flgsh; // bit 7 for shared progressive component flag, ref Qcom1.6-10.9; bit 8 for denomination hot-switching, ref Qcom1.6-15.6.12
+        uint8_t         psn; //poll swquence number
         EGMConfigData   egm_config; // store the egm config data which sent
         ProgressiveConfigData  progressive_config;// store the game config data which sent
+        EGMParams       egm_params;
     };
 
     struct QcomData
@@ -112,6 +133,27 @@ namespace sg {
         uint8_t  game_enable;
         ProgressiveConfigData data;
 
+    };    // QCOM v1.6 version
+
+    struct QcomGameConfigChangeCustomData
+    {
+        uint8_t  egm;
+        uint8_t  var;
+        uint8_t  var_lock;
+        uint8_t  game_enable;
+    };    // QCOM v1.6 version
+
+    struct QcomEgmParametersCustomData
+    {
+        uint8_t  egm;
+        EGMParams  params;
+    };    // QCOM v1.6 version
+
+    struct QcomPurgeEventsCustomData
+    {
+        uint8_t  egm;
+        uint8_t  psn;
+        uint8_t  evtno;
     };    // QCOM v1.6 version
 
     struct QcomPoll
@@ -178,6 +220,11 @@ namespace sg {
                               std::string gpm_text, std::string sds_text, std::string sdl_text);
         void    GameConfiguration(uint8_t poll_address, uint8_t var, uint8_t varlock, uint8_t gameenable, uint8_t pnum,
                                   const std::vector<uint8_t>& lp, const std::vector<uint32_t>& amct);
+        void    GameConfigurationChange(uint8_t poll_address, uint8_t var, uint8_t gameenable);
+        void    PurgeEvents(uint8_t poll_address, uint8_t psn, uint8_t evtno);
+        void    EGMParameters(uint8_t poll_address, uint8_t reserve, uint8_t autoplay, uint8_t crlimitmode, uint8_t opr,
+                              uint32_t lwin, uint32_t crlimit, uint8_t dumax, uint32_t dulimit, uint16_t tzadj, uint32_t pwrtime,
+                              uint8_t pid, uint16_t eodt, uint32_t npwinp, uint32_t sapwinp);
 
     public:
         QcomDataPtr     GetEgmData(uint8_t poll_address);

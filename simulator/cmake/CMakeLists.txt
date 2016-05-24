@@ -37,6 +37,7 @@ set(SIMULATOR_HEADER_FILES
     ${SIMULATOR_PROJECT_DIR}/include/Predeclare.hpp
     ${SIMULATOR_PROJECT_DIR}/include/SimUtils.hpp
     ${SIMULATOR_PROJECT_DIR}/include/CmdParser.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/CmdCompletion.hpp
     )
 
 set(SIMULATOR_SOURCE_FILES
@@ -51,6 +52,7 @@ set(SIMULATOR_SOURCE_FILES
     ${SIMULATOR_PROJECT_DIR}/src/ActionCenter.cpp
     ${SIMULATOR_PROJECT_DIR}/src/SimUtils.cpp
     ${SIMULATOR_PROJECT_DIR}/src/CmdParser.cpp
+    ${SIMULATOR_PROJECT_DIR}/src/CmdCompletion.cpp
     )
 
 source_group("Source Files" FILES ${SIMULATOR_SOURCE_FILES})

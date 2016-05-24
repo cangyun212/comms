@@ -2,6 +2,7 @@
 
 #include "Utils.hpp"
 #include "Comms.hpp"
+#include "CmdCompletion.hpp"
 #include "LineReader.hpp"
 
 namespace sg
@@ -154,6 +155,50 @@ namespace sg
                 }
             }
             break;
+        case '\t':
+        {
+            char cmdStr[m_len+1];
+            memcpy(cmdStr, m_buffer.get(), m_len);
+            cmdStr[m_len] = '\0';
+
+            std::vector<std::string> matchStrings;
+
+            std::string::size_type pos = CmdCompletion::Instance().doCmdCompletion(cmdStr, matchStrings);
+
+            if(matchStrings.size() > 1)
+            {
+                std::string res;
+
+                for(auto const &tmpStr : matchStrings)
+                {
+                    res.append("  ").append(tmpStr);
+                }
+
+                NextLine();
+                m_input_wnd->CurCoord(m_row, m_col);
+                m_input_wnd->ClearHLine(m_row, 0, 5);
+                m_input_wnd->AddStrTo(m_row, 0, res.c_str(), res.size());
+                NextLine();
+                m_input_wnd->CurCoord(m_row, m_col);
+            }
+            else if(matchStrings.size() == 1)
+            {
+                std::string res;
+
+                res = cmdStr;
+
+                res.append(matchStrings[0], pos, matchStrings[0].size());
+
+                if(res.size() > m_len)
+                {
+                    memcpy(m_buffer.get(), res.c_str(), res.size());
+                    m_len = res.size();
+                    m_pos = res.size();
+                }
+            }
+        }
+            break;
+
         default:
             break;
         }

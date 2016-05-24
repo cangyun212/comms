@@ -54,7 +54,7 @@ namespace sg
                     pd->data.base_gvn = p->Data.egmcr2.BGVN;
                     pd->data.total_num_games = p->Data.egmcr2.NUMG;
                     pd->data.total_num_games_enable = p->Data.egmcr2.NUME;
-                    pd->data.last_gvn = p->Data.egmcr2.LGVN;
+                    //pd->data.last_gvn = p->Data.egmcr2.LGVN;
                     pd->data.last_var = p->Data.egmcr2.LVAR;
                     pd->data.flgsh = p->Data.egmcr2.FLGSH.FLGSH;
 

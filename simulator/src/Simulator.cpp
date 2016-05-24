@@ -1,5 +1,6 @@
 
 #include "Core.hpp"
+#include "Utils.hpp"
 
 #include "Simulator.hpp"
 
@@ -35,6 +36,7 @@ namespace sg
 
     void Simulator::Install(uint type)
     {
+		SG_UNREF_PARAM(type);
         BOOST_ASSERT(m_slots.insert(std::make_pair(type, Connection())).second);
     }
 

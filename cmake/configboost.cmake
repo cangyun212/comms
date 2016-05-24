@@ -1,11 +1,25 @@
 set(BOOST_ROOT "${SG_PROJECT_DIR}/boost")
+
+if((${CMAKE_MAJOR_VERSION} STREQUAL "3") AND (${CMAKE_MINOR_VERSION} STRGREATER "2")) 
+	set(SG_FIND_BOOST_BY_CONFIG TRUE)
+endif()
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(BOOST_LIBRARYDIR "${SG_BIN_DIR}")
+	if(${SG_FIND_BOOST_BY_CONFIG})
+		set(Boost_LIBRARY_DIR_RELEASE "${SG_BIN_DIR}")
+		set(Boost_LIBRARY_DIR_DEBUG "${SG_BIN_DIR}")
+	endif()
 elseif(WIN32)
     set(BOOST_LIBRARYDIR "${SG_LIB_DIR}")
+	if(${SG_FIND_BOOST_BY_CONFIG})
+		set(Boost_LIBRARY_DIR_RELEASE "${SG_LIB_DIR}")
+		set(Boost_LIBRARY_DIR_DEBUG "${SG_LIB_DIR}")
+	endif()
 endif()
 set(BOOST_COMPONENTS "")
 set(Boost_NO_SYSTEM_PATHS ON)
+#set(Boost_DEBUG ON)
 
 set(BOOST_COMPONENTS program_options filesystem system)
 

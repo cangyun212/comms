@@ -27,6 +27,9 @@ namespace sg {
         void    EGMConfRequest(const ActionCenter &sender, const ActionPtr &action);
         void    EGMConfiguration(const ActionCenter &sender, const ActionPtr &action);
         void    GameConfiguration(const ActionCenter &sender, const ActionPtr &action);
+        void    GameConfigurationChange(const ActionCenter &sender, const ActionPtr &action);
+        void    EGMParameters(const ActionCenter &sender, const ActionPtr &action);
+        void    PurgeEvents(const ActionCenter &sender, const ActionPtr &action);
         void    SendBroadcast(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);
 

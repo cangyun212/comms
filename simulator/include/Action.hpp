@@ -6,11 +6,78 @@
 #include <string>
 #include <vector>
 
+#include "boost/program_options.hpp"
+
 #include "Utils.hpp"
 #include "Predeclare.hpp"
 
 namespace sg 
 {
+    class ValueSematic
+    {
+    public:
+        ValueSematic(){}
+        virtual ~ValueSematic(){}
+
+        virtual boost::program_options::value_semantic* value() const = 0;
+    };
+
+    typedef std::shared_ptr<ValueSematic> ValueSematicPtr;
+
+    template <typename T>
+    class OptionValue : public ValueSematic
+    {
+    public:
+        OptionValue(T* value) : m_value(value){}
+        ~OptionValue(){}
+
+        boost::program_options::value_semantic * value() const override 
+        {
+            boost::program_options::typed_value<T> *value_ptr = new boost::program_options::typed_value<T>(m_value);
+
+            return value_ptr;
+        }
+
+    private:
+        T* m_value;
+    };
+
+    template<typename T>
+    ValueSematicPtr Value(T* value)
+    {
+        return MakeSharedPtr<OptionValue<T> >(value);
+    }
+
+    template<typename T>
+    ValueSematicPtr Value()
+    {
+        return MakeSharedPtr<OptionValue<T> >(nullptr);
+    }
+
+    struct ActionOption
+    {
+        ActionOption(std::string const& n, ValueSematicPtr const& v, std::string m) : name(n), value(v), message(m){}
+
+        std::string name;
+        ValueSematicPtr value;
+        std::string message;
+    };
+
+    typedef std::shared_ptr<ActionOption> ActionOptionPtr;
+
+    struct ActionPosOption
+    {
+        ActionPosOption(std::string const& option, ValueSematicPtr const& v, int c) : option(option), value(v), max_count(c) {}
+
+        std::string option;
+        ValueSematicPtr value;
+        int max_count;
+    };
+
+    typedef std::shared_ptr<ActionPosOption>    ActionPosOptionPtr;
+    typedef std::vector<ActionOptionPtr> ActionOptions;
+    typedef std::shared_ptr<ActionOptions> ActionOptionsPtr;
+
     class Action
     {
     public:
@@ -27,6 +94,9 @@ namespace sg
             AT_QCOM_EGM_CONF,
             AT_QCOM_BROADCAST,
             AT_QCOM_GAME_CONF,
+            AT_QCOM_GAME_CONF_CHANGE,
+            AT_QCOM_EGM_PARAMS,
+            AT_QCOM_PURGE_EVENTS,
  
             AT_HELP,
             AT_NUM
@@ -34,10 +104,8 @@ namespace sg
 
     public:
         Action(ActionType type)
-            : m_type(type)
-        {
-        }
-        virtual ~Action() {}
+            : m_type(type), m_options(nullptr), m_pos_options(nullptr){}
+        virtual ~Action(){}
 
     public:
         ActionType  GetType() const { return m_type; }
@@ -49,6 +117,9 @@ namespace sg
 
         virtual ActionPtr Clone() = 0;
 
+    public:
+        ActionOptionsPtr GetOptions(){ return m_options; }
+
     protected:
         template<typename T>
         ActionPtr   DoClone()
@@ -57,9 +128,22 @@ namespace sg
 
             return ptr;
         }
+        void AddOption(std::string const& option, ValueSematicPtr const& value = nullptr, std::string const& message = std::string());
+        void AddPosOption(ActionPosOptionPtr const& option);
+        void FillOptionsDescription(boost::program_options::options_description &desc,
+                                    boost::program_options::options_description &vis_desc,
+                                    boost::program_options::positional_options_description &pos_desc);
+        void FillOptionsDescription(boost::program_options::options_description &desc,
+                                    boost::program_options::options_description &vis_desc);
 
     protected:
         ActionType  m_type;
+		
+		typedef std::vector<ActionPosOptionPtr> VectorPosOptionPtr;
+        typedef std::shared_ptr<VectorPosOptionPtr> ActionPosOptionsPtr;
+
+        ActionOptionsPtr        m_options;
+        ActionPosOptionsPtr     m_pos_options;
     };
 
     class QuitAction : public Action
@@ -88,7 +172,7 @@ namespace sg
         bool        ListAll() const { return m_list_all; }
 
     private:
-        bool        m_list_all;
+        static bool        m_list_all;
     };
 
     class PickEGMAction : public Action
@@ -106,7 +190,7 @@ namespace sg
         uint8_t     Target() const { return m_egm; }
 
     private:
-        uint8       m_egm;
+        static uint8       m_egm;
     };
 
     class HelpAction : public Action
@@ -133,7 +217,7 @@ namespace sg
 
             const std::string  & GetDev()  { return m_dev; }
         private:
-            std::string m_dev;
+            static std::string m_dev;
     };
 }
 

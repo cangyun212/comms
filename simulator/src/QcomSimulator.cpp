@@ -225,6 +225,65 @@ namespace sg
         }
     }
 
+    void QcomSim::GameConfigurationChange(const ActionCenter &sender, const ActionPtr &action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomGameConfigurationChangeActionPtr p = std::static_pointer_cast<QcomGameConfigurationChangeAction>(action);
+
+            m_qcom->GameConfigurationChange(m_curr_egm, p->VAR(), p->GAME_ENABLE());
+        }
+    }
+
+    void QcomSim::EGMParameters(const ActionCenter &sender, const ActionPtr &action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomEGMParametersActionPtr p = std::static_pointer_cast<QcomEGMParametersAction>(action);
+
+            m_qcom->EGMParameters(m_curr_egm,
+					p->RESERVE(), 
+					p->AUTOPLAY(), 
+					p->CRLIMITMODE(), 
+					p->OPR(), 
+					p->LWIN(), 
+					p->CRLIMIT(), 
+					p->DUMAX(),
+                    p->DULIMIT(), 
+					p->TZADJ(), 
+					p->PWRTIME(), 
+					p->PID(), 
+					p->EODT(), 
+					p->NPWINP(), 
+					p->SAPWINP());
+        }
+    }
+
+    void QcomSim::PurgeEvents(const ActionCenter &sender, const ActionPtr &action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomPurgeEventsActionPtr p = std::static_pointer_cast<QcomPurgeEventsAction>(action);
+
+            m_qcom->PurgeEvents(m_curr_egm, p->PSN(), p->EVTNO());
+
+        }
+    }
 
 
     void QcomSim::SendBroadcast(const ActionCenter &sender, const ActionPtr &action)

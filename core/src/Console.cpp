@@ -287,6 +287,8 @@ namespace sg
 
     void Console::ColorOff(ConsoleColorHandle const & h) const
     {
+		SG_UNREF_PARAM(h);
+
         BOOST_ASSERT(m_has_color && m_type != CT_Custom && h.i == 0);
 
 #ifdef SG_PLATFORM_WINDOWS

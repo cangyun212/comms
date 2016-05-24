@@ -157,9 +157,7 @@ namespace sg
             break;
         case '\t':
         {
-            char cmdStr[m_len+1];
-            memcpy(cmdStr, m_buffer.get(), m_len);
-            cmdStr[m_len] = '\0';
+            std::string cmdStr(m_buffer.get(), m_len);
 
             std::vector<std::string> matchStrings;
 

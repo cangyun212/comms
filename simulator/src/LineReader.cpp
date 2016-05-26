@@ -175,7 +175,7 @@ namespace sg
                 NextLine();
                 m_input_wnd->CurCoord(m_row, m_col);
                 m_input_wnd->ClearHLine(m_row, 0, 5);
-                m_input_wnd->AddStrTo(m_row, 0, res.c_str(), res.size());
+                m_input_wnd->AddStrTo(m_row, 0, res.c_str(), static_cast<int>(res.size()));
                 NextLine();
                 m_input_wnd->CurCoord(m_row, m_col);
             }
@@ -190,8 +190,8 @@ namespace sg
                 if(res.size() > m_len)
                 {
                     memcpy(m_buffer.get(), res.c_str(), res.size());
-                    m_len = res.size();
-                    m_pos = res.size();
+                    m_len = static_cast<uint>(res.size());
+                    m_pos = static_cast<uint>(res.size());
                 }
             }
         }

@@ -92,19 +92,6 @@ namespace sg
                                                     }\
                                                 }
 
-    //#define SG_FILL_DESC_S(desc, vis_desc) [&](ActionOption const& option) {\
-    //                                                    if (option.value) {\
-    //                                                        desc.add_options()(option.name.c_str(), option.value->value(), "");\
-    //                                                    }\
-    //                                                    else {\
-    //                                                        desc.add_options()(option.name.c_str(), "");\
-    //                                                    }\
-    //                                                    if (!option.message.empty()) {\
-    //                                                        vis_desc.add_options()(option.name.c_str(), option.message.c_str());\
-    //                                                    }\
-    //                                                }
-
-
 #define SG_PARSE_OPTION(args, p)    BOOST_ASSERT(args.size());\
                                     std::vector<std::string> argv(args.begin() + 1, args.end());\
                                     boost::program_options::variables_map vm;\
@@ -130,32 +117,6 @@ namespace sg
                                         COMMS_LOG("Invalid option value\n", CLL_Error);\
                                         return false;\
                                     }
-
-//#define SG_PARSE_OPTION_S(args, p)  BOOST_ASSERT(args.size());\
-//                                    std::vector<std::string> argv(args.size());\
-//                                    argv.assign(args.begin() + 1, args.end());\
-//                                    boost::program_options::variables_map vm;\
-//                                    boost::program_options::options_description desc;\
-//                                    boost::program_options::options_description vis_desc;\
-//                                    p->Traverse(SG_FILL_DESC_S(desc, vis_desc));\
-//                                    try {\
-//                                        boost::program_options::store(\
-//                                            boost::program_options::command_line_parser(argv).options(desc).run(),\
-//                                            vm);\
-//                                        boost::program_options::notify(vm);\
-//                                    }\
-//                                    catch (boost::program_options::error const& error) {\
-//                                        COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);\
-//                                        return false;\
-//                                    }\
-//                                    catch (boost::numeric::bad_numeric_cast const&) {\
-//                                        COMMS_LOG("Option value is out of range\n", CLL_Error);\
-//                                        return false;\
-//                                    }\
-//                                    catch (boost::bad_lexical_cast const&) {\
-//                                        COMMS_LOG("Invalid option value\n", CLL_Error);\
-//                                        return false;\
-//                                    }
 
 }
 

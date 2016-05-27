@@ -50,6 +50,7 @@ namespace sg
             sim->GetConnection(Action::AT_LIST_EGM) =
                 center.GetEvent(Action::AT_LIST_EGM)->connect(
                     bind(&QcomSim::ListEGM, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             // add a command test log to test log
             sim->Install(Action::AT_PICK_EGM);
             center.Install(Action::AT_PICK_EGM);
@@ -72,37 +73,37 @@ namespace sg
                 center.GetEvent(Action::AT_QCOM_EGM_CONF)->connect(
                     bind(&QcomSim::EGMConfiguration, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
-        sim->Install(Action::AT_QCOM_GAME_CONF);
-        center.Install(Action::AT_QCOM_GAME_CONF);
+            sim->Install(Action::AT_QCOM_GAME_CONF);
+            center.Install(Action::AT_QCOM_GAME_CONF);
 
-        sim->GetConnection(Action::AT_QCOM_GAME_CONF) =
-            center.GetEvent(Action::AT_QCOM_GAME_CONF)->connect(
+            sim->GetConnection(Action::AT_QCOM_GAME_CONF) =
+                center.GetEvent(Action::AT_QCOM_GAME_CONF)->connect(
                     bind(&QcomSim::GameConfiguration, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
-        sim->Install(Action::AT_QCOM_GAME_CONF_CHANGE);
-        center.Install(Action::AT_QCOM_GAME_CONF_CHANGE);
+            sim->Install(Action::AT_QCOM_GAME_CONF_CHANGE);
+            center.Install(Action::AT_QCOM_GAME_CONF_CHANGE);
 
-        sim->GetConnection(Action::AT_QCOM_GAME_CONF_CHANGE) =
+            sim->GetConnection(Action::AT_QCOM_GAME_CONF_CHANGE) =
                 center.GetEvent(Action::AT_QCOM_GAME_CONF_CHANGE)->connect(
                     bind(&QcomSim::GameConfigurationChange, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
-        sim->Install(Action::AT_QCOM_EGM_PARAMS);
-        center.Install(Action::AT_QCOM_EGM_PARAMS);
+            sim->Install(Action::AT_QCOM_EGM_PARAMS);
+            center.Install(Action::AT_QCOM_EGM_PARAMS);
 
-        sim->GetConnection(Action::AT_QCOM_EGM_PARAMS) =
+            sim->GetConnection(Action::AT_QCOM_EGM_PARAMS) =
                 center.GetEvent(Action::AT_QCOM_EGM_PARAMS)->connect(
                     bind(&QcomSim::EGMParameters, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
-        sim->Install(Action::AT_QCOM_PURGE_EVENTS);
-        center.Install(Action::AT_QCOM_PURGE_EVENTS);
+            sim->Install(Action::AT_QCOM_PURGE_EVENTS);
+            center.Install(Action::AT_QCOM_PURGE_EVENTS);
 
-        sim->GetConnection(Action::AT_QCOM_PURGE_EVENTS) =
+            sim->GetConnection(Action::AT_QCOM_PURGE_EVENTS) =
                 center.GetEvent(Action::AT_QCOM_PURGE_EVENTS)->connect(
                     bind(&QcomSim::PurgeEvents, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
-        //For broadcast Action
-        sim->Install(Action::AT_QCOM_BROADCAST);
-        center.Install(Action::AT_QCOM_BROADCAST);
+            //For broadcast Action
+            sim->Install(Action::AT_QCOM_BROADCAST);
+            center.Install(Action::AT_QCOM_BROADCAST);
 
             sim->GetConnection(Action::AT_QCOM_BROADCAST) =
                 center.GetEvent(Action::AT_QCOM_BROADCAST)->connect(

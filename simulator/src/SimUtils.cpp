@@ -8,6 +8,9 @@
 
 namespace sg 
 {
+    SimulatorPtr g_sim = nullptr;
+    ActionFactoryPtr g_fac = nullptr;
+
     namespace
     {
 
@@ -95,14 +98,14 @@ namespace sg
 
     }
 
-    SimulatorPtr setup_sim()
+    void setup_sim()
     {
-        return setup_qcom();
+        g_sim = setup_qcom();
     }
 
-    ActionFactoryPtr setup_action_factory()
+    void setup_action_factory()
     {
-        return setup_qcom_factory();
+        g_fac = setup_qcom_factory();
     }
 
     bool  quit_sim()

@@ -45,28 +45,29 @@ int main(int argc, char *argv[])
 
     sg::ConsolePrinter::Instance().Init((sg::ConsoleLogLevel)sg::CmdParser::Instance().GetLogLevel(), "Sim>> ");
 
-    sg::SimulatorPtr sim = sg::setup_sim();
-    sg::ActionFactoryPtr fac = sg::setup_action_factory();
+    sg::setup_sim();
+    sg::setup_action_factory();
     sg::ActionCenter& center = sg::ActionCenter::Instance();
 
-    sim->Init();
-    fac->Init();
+    sg::g_sim->Init();
+    sg::g_fac->Init();
 
     std::string line;
     sg::Action::ActionArgs args;
     args.reserve(10);
+
     while(!sg::quit_sim())
     {
         args.clear();
-        if (sim->IsReady())
+        if (sg::g_sim->IsReady())
         {
             line = sg::LineReader::Instance().ReadLine();
 
-            if (fac->Parse(line, args))
+            if (sg::g_fac->Parse(line, args))
             {
-                if (fac->IsValidAction(args.front()))
+                sg::ActionPtr action = sg::g_fac->CreateAction(args.front());
+                if (action)
                 {
-                    sg::ActionPtr action = fac->CreateAction(args.front());
                     if (action->Parse(args))
                     {
                         center.SendAction(action);

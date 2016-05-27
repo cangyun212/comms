@@ -7,6 +7,7 @@
 #include "Utils.hpp"
 #include "Comms.hpp"
 #include "Action.hpp"
+#include "ActionOptions.hpp"
 
 namespace po = boost::program_options;
 namespace nm = boost::numeric;
@@ -21,88 +22,87 @@ namespace sg
         return true;
     }
 
-    void Action::AddOption(const std::string &option, ValueSematicPtr const &value, const std::string &message)
+    bool Action::TryParse(ActionArgs const & args, ActionParsedOptions & options, bool ignore_pos)
     {
-        BOOST_ASSERT(m_options != nullptr);
-        m_options->push_back(MakeSharedPtr<ActionOption>(option, value, message));
+        if (args.size() && m_options)
+        {
+            std::vector<std::string> argv(args.begin() + 1, args.end());
+            
+            po::options_description desc;
+            po::positional_options_description pos_desc;
+
+            m_options->Traverse(
+                [&](ActionOption const& option)
+            {
+                if (option.max > 0 && ignore_pos)
+                    return;
+
+                if (option.value)
+                    desc.add_options()(option.name.c_str(), po::value<std::string>(), "");
+                else
+                    desc.add_options()(option.name.c_str(), "");
+
+                if (option.max > 0)
+                    pos_desc.add(option.name.c_str(), option.max);
+            });
+
+            try
+            {
+                std::vector<po::option> result;
+                if (ignore_pos)
+                    result = po::command_line_parser(argv).options(desc).run().options;
+                else
+                    result = po::command_line_parser(argv).options(desc).positional(pos_desc).run().options;
+
+                for (auto const& o : result)
+                {
+                    options.push_back({ o.string_key, o.original_tokens.front() });
+                }
+
+                return true;
+            }
+            catch (po::ambiguous_option const& error)
+            {
+                for (auto const& a : error.alternatives())
+                {
+                    options.push_back({ a, a });
+                }
+            }
+            catch (po::invalid_command_line_syntax const& error)
+            {
+                std::string name = error.get_option_name();
+                options.push_back({ name, name });
+            }
+            catch (po::error const&)
+            {
+
+            }
+        }
+
+        return false;
     }
 
-    void Action::AddPosOption(const ActionPosOptionPtr &option)
+    void Action::GetAllOptionsName(std::vector<std::string>& names, bool long_name) const
     {
-        BOOST_ASSERT(m_pos_options != nullptr);
-        m_pos_options->push_back(option);
-    }
-
-    void Action::FillOptionsDescription(po::options_description &desc, po::options_description &vis_desc, po::positional_options_description &pos_desc)
-    {
-        std::vector<std::string>::size_type i;
-        for(i = 0; i < m_options->size(); ++i)
+        if (m_options)
         {
-            std::string &option_desc = (*m_options)[i]->name;
-            std::string &option_vis = (*m_options)[i]->message;
-            ValueSematicPtr value = (*m_options)[i]->value;
-            if(value != nullptr)
+            m_options->Traverse(
+            [&](ActionOption const& option) 
             {
-                desc.add_options()
-                        (option_desc.c_str(), value->value(), "");
-            }
-            else
-            {
-                desc.add_options()
-                        (option_desc.c_str(), "");
-            }
-
-            if(!option_vis.empty())
-            {
-                vis_desc.add_options()
-                            (option_desc.c_str(), option_vis.c_str());
-            }
+                std::string::size_type pos = option.name.find(',');
+                if (pos != std::string::npos)
+                {
+                    if (long_name)
+                        names.push_back(std::string(option.name, 0, pos));
+                    else if (pos + 1 < option.name.size())
+                        names.push_back(std::string(option.name, pos + 1, option.name.size() - pos - 1));
+                }
+                else
+                {
+                    names.push_back(option.name);
+                }
+            });
         }
-
-        desc.add_options()
-                ("help,h", "");
-        vis_desc.add_options()
-                ("help,h", "help message");
-
-        for(i = 0; i < m_pos_options->size(); ++i)
-        {
-            ActionPosOptionPtr &pos_option = (*m_pos_options)[i];
-            desc.add_options()
-                        (pos_option->option.c_str(), pos_option->value->value(), "");
-            pos_desc.add(pos_option->option.c_str(), pos_option->max_count);
-        }
-	} 
-
-    void Action::FillOptionsDescription(po::options_description &desc, po::options_description &vis_desc)
-    {
-        std::vector<std::string>::size_type i;
-        for(i = 0; i < m_options->size(); ++i)
-        {
-            std::string &option_desc = (*m_options)[i]->name;
-            std::string &option_vis = (*m_options)[i]->message;
-            ValueSematicPtr value = (*m_options)[i]->value;
-            if(value != nullptr)
-            {
-                desc.add_options()
-                        (option_desc.c_str(), value->value(), "");
-            }
-            else
-            {
-                desc.add_options()
-                        (option_desc.c_str(), "");
-            }
-
-            if(!option_vis.empty())
-            {
-                vis_desc.add_options()
-                            (option_desc.c_str(), option_vis.c_str());
-            }
-        }
-
-        desc.add_options()
-                ("help,h", "");
-        vis_desc.add_options()
-                ("help,h", "help message");
     }
 
     QuitAction::QuitAction()
@@ -127,16 +127,11 @@ namespace sg
         return des;
     }
    
-	bool ListEGMAction::m_list_all = false;
+    bool ListEGMAction::m_list_all = false;
 
     ListEGMAction::ListEGMAction()
         : Action(Action::AT_LIST_EGM)
     {
-		m_options = MakeSharedPtr<ActionOptions>();
-
-		this->AddOption("all,a", nullptr, "list all information of an EGM");
-		this->AddOption("help", nullptr, "help message");
-			
     }
 
     ListEGMAction::~ListEGMAction()
@@ -153,27 +148,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-		this->FillOptionsDescription(desc, vis_desc);
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch(po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
@@ -198,23 +173,28 @@ namespace sg
         return res;
     }
 
+    void ListEGMAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("all,a", "list all information of an EGM"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
     const char* ListEGMAction::Description() const
     {
         static const char* des = "\tList all EGM :\n\t\tl,ls,list\n";
         return des;
     }
 
-	uint8 PickEGMAction::m_egm = 0;
+    uint8 PickEGMAction::m_egm = 0;
 
     PickEGMAction::PickEGMAction()
         : Action(Action::AT_PICK_EGM)
     {
-		m_options = MakeSharedPtr<ActionOptions>();
-
-		this->AddOption("help", nullptr, "help message");
-
-        m_pos_options = MakeSharedPtr<VectorPosOptionPtr>();
-        this->AddPosOption(MakeSharedPtr<ActionPosOption>("egm", Value<uint8>(&m_egm), 1));
     }
 
     PickEGMAction::~PickEGMAction()
@@ -227,43 +207,22 @@ namespace sg
         return DoClone<PickEGMAction>();
     }
 
+    void PickEGMAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("egm", "", Value<uint8>(&m_egm), 1));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
     bool PickEGMAction::Parse(const ActionArgs &args)
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-        po::positional_options_description pos_desc;
-
-		this->FillOptionsDescription(desc, vis_desc, pos_desc);
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const& )
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const& )
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
-
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help") || !vm.count("egm"))
         {
@@ -289,8 +248,6 @@ namespace sg
             }
         }
 
-
-
         return res;
     }
 
@@ -314,17 +271,11 @@ namespace sg
         return des;
     }
 
-	std::string ResetDevAction::m_dev;
+    std::string ResetDevAction::m_dev;
 
     ResetDevAction::ResetDevAction() : Action(Action::AT_RESET_DEV)
-	{
-		m_options = MakeSharedPtr<ActionOptions>();
-
-		this->AddOption("help", nullptr, "help message");
-
-        m_pos_options = MakeSharedPtr<VectorPosOptionPtr>();
-        this->AddPosOption(MakeSharedPtr<ActionPosOption>("dev", Value<std::string>(&m_dev), 1));
-	}
+    {
+    }
 
     ResetDevAction::~ResetDevAction() {}
 
@@ -337,38 +288,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-        po::positional_options_description pos_desc;
-
-		this->FillOptionsDescription(desc, vis_desc, pos_desc);
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).positional(pos_desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const& )
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const& )
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help") || !vm.count("dev"))
         {
@@ -388,6 +308,17 @@ namespace sg
 
 
         return res;
+    }
+
+    void ResetDevAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("dev", "", Value<std::string>(&m_dev), 1));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
     }
 
     const char* ResetDevAction::Description() const

@@ -30,6 +30,7 @@ set(SIMULATOR_HEADER_FILES
     ${SIMULATOR_PROJECT_DIR}/include/QcomSimulator.hpp
     ${SIMULATOR_PROJECT_DIR}/include/LineReader.hpp
     ${SIMULATOR_PROJECT_DIR}/include/Action.hpp
+    ${SIMULATOR_PROJECT_DIR}/include/ActionOptions.hpp
     ${SIMULATOR_PROJECT_DIR}/include/QcomAction.hpp
     ${SIMULATOR_PROJECT_DIR}/include/ActionFactory.hpp
     ${SIMULATOR_PROJECT_DIR}/include/QcomActionFactory.hpp

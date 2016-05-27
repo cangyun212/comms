@@ -19,20 +19,9 @@ class CmdCompletion : public Singleton<CmdCompletion>
 {
 public:
     CmdCompletion(){}
-    ~CmdCompletion(){}
+   ~CmdCompletion(){}
 
     std::string::size_type doCmdCompletion(std::string cmdStr, std::vector<std::string> &retVecStrings);
-    void initCommand(std::string const &command, ActionOptionsPtr const &options = nullptr);
-
-private:
-    std::string::size_type matchCommand(std::string const &command, std::vector<std::string> &matchVecCommands);
-    std::string getLongOption(std::string const &option);
-
-
-private:
-    typedef std::unordered_map<std::string, ActionOptionsPtr> CmdMap;
-
-    CmdMap m_commands;
 };
 
 }

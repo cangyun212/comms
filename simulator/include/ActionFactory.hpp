@@ -9,7 +9,8 @@
 
 #include "Predeclare.hpp"
 
-namespace sg {
+namespace sg 
+{
 
     class ActionFactory
     {
@@ -22,8 +23,9 @@ namespace sg {
         virtual ActionPtr   CreateAction(std::string const& act);
         virtual void        Init();
         virtual bool        IsValidAction(std::string const& act) const;
-
         virtual void        Help(ActionCenter const& , const ActionPtr&);
+
+        void                MatchActions(std::string const& token, std::vector<std::string> &actions) const;
     protected:
 
 

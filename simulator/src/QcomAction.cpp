@@ -7,6 +7,7 @@
 #include "Utils.hpp"
 #include "Comms.hpp"
 #include "QcomAction.hpp"
+#include "ActionOptions.hpp"
 
 namespace po = boost::program_options;
 namespace nm = boost::numeric;
@@ -66,12 +67,6 @@ namespace sg
     QcomEGMConfRequestAction::QcomEGMConfRequestAction()
         : Action(Action::AT_QCOM_EGM_CONF_REQ)
     {
-        m_options = MakeSharedPtr<ActionOptions>();
-
-        this->AddOption("mef,m", nullptr, "enable egm machine");
-        this->AddOption("gcr,g", nullptr, "commands egm queue the EGM Game configuration Response");
-        this->AddOption("psn,p", nullptr, "reset all Poll Sequence Numbers");
-
     }
 
     QcomEGMConfRequestAction::~QcomEGMConfRequestAction()
@@ -83,37 +78,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-        this->FillOptionsDescription(desc, vis_desc);
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const&)
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const&)
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("mef"))
         {
@@ -150,6 +115,19 @@ namespace sg
         return res;
     }
 
+    void QcomEGMConfRequestAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("mef,m", "enable egm machine"));
+            m_options->AddOption(ActionOption("gcr,g", "commands egm queue the EGM Game configuration Response"));
+            m_options->AddOption(ActionOption("psn,p", "reset all Poll Sequence Numbers"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
     ActionPtr QcomEGMConfRequestAction::Clone()
     {
         return Action::DoClone<QcomEGMConfRequestAction>();
@@ -161,11 +139,11 @@ namespace sg
         return des;
     }
 
-  	uint8     QcomEGMConfAction::m_jur = 0;
-   	uint32    QcomEGMConfAction::m_den = 1;
-   	uint32    QcomEGMConfAction::m_tok = 100;
-   	uint32    QcomEGMConfAction::m_maxden = 100;
-   	uint16    QcomEGMConfAction::m_minrtp = 8500;
+    uint8     QcomEGMConfAction::m_jur = 0;
+    uint32    QcomEGMConfAction::m_den = 1;
+    uint32    QcomEGMConfAction::m_tok = 100;
+    uint32    QcomEGMConfAction::m_maxden = 100;
+    uint16    QcomEGMConfAction::m_minrtp = 8500;
     uint16    QcomEGMConfAction::m_maxrtp = 10000;
     uint16    QcomEGMConfAction::m_maxsd = 15;
     uint16    QcomEGMConfAction::m_maxlines = 1024;
@@ -176,22 +154,8 @@ namespace sg
 
     QcomEGMConfAction::QcomEGMConfAction()
                     : Action(Action::AT_QCOM_EGM_CONF)
-	{
-        m_options = MakeSharedPtr<ActionOptions>();
-
-		this->AddOption("jur", Value<uint8>(&m_jur), "jurisdictions");
-		this->AddOption("den", Value<uint32>(&m_den), "credit denomination");
-		this->AddOption("tok", Value<uint32>(&m_tok), "coin/token denomination");
-		this->AddOption("maxden", Value<uint32>(&m_maxden), "EGM credit meter max denomination");
-		this->AddOption("minrtp", Value<uint16>(&m_minrtp), "minimum RTP");
-		this->AddOption("maxrtp", Value<uint16>(&m_maxrtp), "maximum RTP");
-		this->AddOption("maxsd", Value<uint16>(&m_maxsd), "regulatory maximum EGM game theoretical standard deviation");
-		this->AddOption("maxlines", Value<uint16>(&m_maxlines), "regulatory maximum number of playlines in any game in the EGM");
-		this->AddOption("maxbet", Value<uint32>(&m_maxbet), "maximum bet per play");
-		this->AddOption("maxnpwin", Value<uint32>(&m_maxnpwin), "regulatory maximum non-progressive EGM win permitted uint32 any game element");
-		this->AddOption("maxpwin", Value<uint32>(&m_maxpwin), "regulatory maximum SAP progressive EGM win permitted per SAP hit");
-		this->AddOption("maxect", Value<uint32>(&m_maxect), "regulatory maximum allowable ECT to/from the EGM");
-	}
+    {
+    }
 
     QcomEGMConfAction::~QcomEGMConfAction()
     {
@@ -202,38 +166,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-        this->FillOptionsDescription(desc, vis_desc);
-
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const&)
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const&)
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
@@ -252,6 +185,46 @@ namespace sg
 
 
         return res;
+    }
+
+    void QcomEGMConfAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("jur","jurisdictions", Value<uint8>(&m_jur)));
+            m_options->AddOption(ActionOption("den", "credit denomination", Value<uint32>(&m_den)));
+            m_options->AddOption(ActionOption("tok", "coin/token denomination", Value<uint32>(&m_tok)));
+            m_options->AddOption(ActionOption("maxden", "EGM credit meter max denomination", Value<uint32>(&m_maxden)));
+            m_options->AddOption(ActionOption("minrtp", "minimum RTP", Value<uint16>(&m_minrtp)));
+            m_options->AddOption(ActionOption("maxrtp", "maximum RTP", Value<uint16>(&m_maxrtp)));
+
+            m_options->AddOption(ActionOption(
+                "maxsd",
+                "regulatory maximum EGM game theoretical standard deviation", 
+                Value<uint16>(&m_maxsd)));
+
+            m_options->AddOption(ActionOption(
+                "maxlines", 
+                "regulatory maximum number of playlines in any game in the EGM", 
+                Value<uint16>(&m_maxlines)));
+
+            m_options->AddOption(ActionOption("maxbet", "maximum bet per play", Value<uint32>(&m_maxbet)));
+
+            m_options->AddOption(ActionOption(
+                "maxnpwin", 
+                "regulatory maximum non-progressive EGM win permitted uint32 any game element", 
+                Value<uint32>(&m_maxnpwin)));
+
+            m_options->AddOption(ActionOption(
+                "maxpwin", 
+                "regulatory maximum SAP progressive EGM win permitted per SAP hit", 
+                Value<uint32>(&m_maxpwin)));
+
+            m_options->AddOption(ActionOption("maxect", "regulatory maximum allowable ECT to/from the EGM", Value<uint32>(&m_maxect)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
     }
 
     ActionPtr QcomEGMConfAction::Clone()
@@ -274,13 +247,6 @@ namespace sg
     QcomBroadcastAction::QcomBroadcastAction()
                     : Action(Action::AT_QCOM_BROADCAST)
     {
-        m_options = MakeSharedPtr<ActionOptions>();
-
-        this->AddOption("type,t", Value<uint32>(&m_broadcast_type), "what is the type of broadcast \nSEEK_EGM = 1,\nTIME_DATA = 2,\nLJP_CUR_AMOUNT = 3,\nGPM = 4,\nPOLL_ADDRESS = 5,\nSITE_DETAILS = 6,");
-        this->AddOption("gpmtext,g", Value<std::string>(&m_gpm_text), "gpm text");
-        this->AddOption("sdstext,s", Value<std::string>(&m_sds_text), "site details / Name of licensed venue");
-        this->AddOption("sdltext,l", Value<std::string>(&m_sdl_text), "site details / Address  Contact details of licensed venue");
-
     }
 
     QcomBroadcastAction::~QcomBroadcastAction()
@@ -292,38 +258,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-        this->FillOptionsDescription(desc, vis_desc);
-
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const&)
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const&)
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
@@ -341,6 +276,30 @@ namespace sg
         }
 
         return res;
+    }
+
+    void QcomBroadcastAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption(
+                "type,t", 
+                "what is the type of broadcast \n\
+                SEEK_EGM = 1,\nTIME_DATA = 2,\nLJP_CUR_AMOUNT = 3,\nGPM = 4,\nPOLL_ADDRESS = 5,\nSITE_DETAILS = 6,",
+                Value<uint32>(&m_broadcast_type)));
+
+            m_options->AddOption(ActionOption("gpmtext,g", "gpm text", Value<std::string>(&m_gpm_text)));
+            m_options->AddOption(ActionOption("sdstext,s", "site details / Name of licensed venue", Value<std::string>(&m_sds_text)));
+
+            m_options->AddOption(ActionOption(
+                "sdltext,l", 
+                "site details / Address  Contact details of licensed venue", 
+                Value<std::string>(&m_sdl_text)));
+
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
     }
 
     ActionPtr QcomBroadcastAction::Clone()
@@ -364,15 +323,6 @@ namespace sg
     QcomGameConfigurationAction::QcomGameConfigurationAction()
         : Action(Action::AT_QCOM_GAME_CONF)
     {
-        m_options = MakeSharedPtr<ActionOptions>();
-
-        this->AddOption("var", Value<uint8>(&m_var), "define jurisdictions if set");
-        this->AddOption("varlock", Value<uint8>(&m_var_lock), "define credit denomination if set");
-        this->AddOption("gameenable", Value<uint8>(&m_game_enable), "define coin/token denomination if set");
-        this->AddOption("pnum", Value<uint8>(&m_pnum), "define max denomination if set");
-        this->AddOption("linkJackpot", Value< std::vector<uint8> >(&m_lp), "define min");
-        this->AddOption("amount", Value< std::vector<uint32> >(&m_camt), "define max denomination if set");
-
     }
 
     QcomGameConfigurationAction::~QcomGameConfigurationAction()
@@ -384,38 +334,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-        this->FillOptionsDescription(desc, vis_desc);
-
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const&)
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const&)
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
@@ -433,6 +352,22 @@ namespace sg
         }
 
         return res;
+    }
+
+    void QcomGameConfigurationAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("var", "TODO:", Value<uint8>(&m_var)));
+            m_options->AddOption(ActionOption("varlock", "TODO", Value<uint8>(&m_var_lock)));
+            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&m_game_enable)));
+            m_options->AddOption(ActionOption("pnum", "TODO", Value<uint8>(&m_pnum)));
+            m_options->AddOption(ActionOption("linkJackpot", "TODO", Value< std::vector<uint8> >(&m_lp)));
+            m_options->AddOption(ActionOption("amount", "TODO", Value< std::vector<uint32> >(&m_camt)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
     }
 
     ActionPtr QcomGameConfigurationAction::Clone()
@@ -468,8 +403,7 @@ namespace sg
     {
         m_options = MakeSharedPtr<ActionOptions>();
 
-        this->AddOption("var", Value<uint8>(&m_var), "define jurisdictions if set");
-        this->AddOption("gameenable", Value<uint8>(&m_game_enable), "define coin/token denomination if set");
+
     }
 
     QcomGameConfigurationChangeAction::~QcomGameConfigurationChangeAction()
@@ -480,37 +414,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-        this->FillOptionsDescription(desc, vis_desc);
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const&)
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const&)
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
@@ -529,6 +433,19 @@ namespace sg
 
         return res;
     }
+
+    void QcomGameConfigurationChangeAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("var", "TODO", Value<uint8>(&m_var)));
+            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&m_game_enable)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
     ActionPtr QcomGameConfigurationChangeAction::Clone()
     {
         return Action::DoClone<QcomGameConfigurationChangeAction>();
@@ -559,22 +476,8 @@ namespace sg
     QcomEGMParametersAction::QcomEGMParametersAction()
         :Action(Action::AT_QCOM_EGM_PARAMS)
     {
-        m_options = MakeSharedPtr<ActionOptions>();
 
-        this->AddOption("reserve", Value<uint8>(&m_reserve), "Enable or Disable RESERV");
-        this->AddOption("autoplay", Value<uint8>(&m_autoplay), "Enable or Disable autoplay");
-        this->AddOption("crlimitmode", Value<uint8>(&m_crlimitmode), "credit limit");
-        this->AddOption("opr", Value<uint8>(&m_opr), "Monitoring system operator ID");
-        this->AddOption("lwin", Value<uint32>(&m_lwin), "Large win lockup threshold");
-        this->AddOption("crlimit", Value<uint32>(&m_crlimit), "Credit-in lockout value");
-        this->AddOption("dumax", Value<uint8>(&m_dumax), "Maximum allowable number of Gambles");
-        this->AddOption("dulimit", Value<uint32>(&m_dulimit), "Double-Up/Gamble Limit");
-        this->AddOption("tzadj", Value<uint16>(&m_tzadj), "Time zone adjust");
-        this->AddOption("pwrtime", Value<uint32>(&m_pwrtime), "Power-save Time-out value");
-        this->AddOption("pid", Value<uint8>(&m_pid), "Player Information Display");
-        this->AddOption("eodt", Value<uint16>(&m_eodt), "End of the day time");
-        this->AddOption("npwinp", Value<uint32>(&m_npwinp), "Non-Progressive Win Payout Threshold");
-        this->AddOption("sapwinp", Value<uint32>(&m_sapwinp), "Stand alone progressive win payout threshold");
+
     }
 
     QcomEGMParametersAction::~QcomEGMParametersAction()
@@ -586,37 +489,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-        this->FillOptionsDescription(desc, vis_desc);
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const&)
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const&)
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
@@ -634,6 +507,30 @@ namespace sg
         }
 
         return res;
+    }
+
+    void QcomEGMParametersAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("reserve", "Enable or Disable RESERV", Value<uint8>(&m_reserve)));
+            m_options->AddOption(ActionOption("autoplay", "Enable or Disable autoplay", Value<uint8>(&m_autoplay)));
+            m_options->AddOption(ActionOption("crlimitmode", "credit limit", Value<uint8>(&m_crlimitmode)));
+            m_options->AddOption(ActionOption("opr", "Monitoring system operator ID", Value<uint8>(&m_opr)));
+            m_options->AddOption(ActionOption("lwin", "Large win lockup threshold", Value<uint32>(&m_lwin)));
+            m_options->AddOption(ActionOption("crlimit", "Credit-in lockout value", Value<uint32>(&m_crlimit)));
+            m_options->AddOption(ActionOption("dumax", "Maximum allowable number of Gambles", Value<uint8>(&m_dumax)));
+            m_options->AddOption(ActionOption("dulimit", "Double-Up/Gamble Limit", Value<uint32>(&m_dulimit)));
+            m_options->AddOption(ActionOption("tzadj", "Time zone adjust", Value<uint16>(&m_tzadj)));
+            m_options->AddOption(ActionOption("pwrtime", "Power-save Time-out value", Value<uint32>(&m_pwrtime)));
+            m_options->AddOption(ActionOption("pid", "Player Information Display", Value<uint8>(&m_pid)));
+            m_options->AddOption(ActionOption("eodt", "End of the day time", Value<uint16>(&m_eodt)));
+            m_options->AddOption(ActionOption("npwinp", "Non-Progressive Win Payout Threshold", Value<uint32>(&m_npwinp)));
+            m_options->AddOption(ActionOption("sapwinp", "Stand alone progressive win payout threshold", Value<uint32>(&m_sapwinp)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
     }
 
     ActionPtr QcomEGMParametersAction::Clone()
@@ -654,10 +551,8 @@ namespace sg
     QcomPurgeEventsAction::QcomPurgeEventsAction()
         :Action(Action::AT_QCOM_PURGE_EVENTS)
     {
-        m_options = MakeSharedPtr<ActionOptions>();
 
-        this->AddOption("psn", Value<uint8>(&m_psn), "Poll sequence number");
-        this->AddOption("evnto", Value<uint8>(&m_evtno), "Event sequence number");
+
     }
 
     QcomPurgeEventsAction::~QcomPurgeEventsAction()
@@ -669,37 +564,7 @@ namespace sg
     {
         bool res = false;
 
-        BOOST_ASSERT(args.size());
-
-        std::vector<std::string> argv(args.size());
-        argv.assign(args.begin() + 1, args.end());
-
-        po::variables_map vm;
-        po::options_description desc;
-        po::options_description vis_desc;
-
-        this->FillOptionsDescription(desc, vis_desc);
-
-        try
-        {
-            po::store(po::command_line_parser(argv).options(desc).run(), vm);
-            po::notify(vm);
-        }
-        catch (po::error const& error)
-        {
-            COMMS_LOG(boost::format("%1%\n") % error.what(), CLL_Error);
-            return false;
-        }
-        catch (nm::bad_numeric_cast const&)
-        {
-            COMMS_LOG("Option value is out of range\n", CLL_Error);
-            return false;
-        }
-        catch (boost::bad_lexical_cast const&)
-        {
-            COMMS_LOG("Invalid option value\n", CLL_Error);
-            return false;
-        }
+        SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
@@ -717,6 +582,19 @@ namespace sg
         }
 
         return res;
+    }
+
+    void QcomPurgeEventsAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+
+            m_options->AddOption(ActionOption("psn", "Poll sequence number", Value<uint8>(&m_psn)));
+            m_options->AddOption(ActionOption("evnto", "Event sequence number", Value<uint8>(&m_evtno)));
+
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
     }
 
     ActionPtr QcomPurgeEventsAction::Clone()

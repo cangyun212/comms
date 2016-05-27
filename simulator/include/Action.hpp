@@ -1,5 +1,5 @@
-#ifndef __ACTION_HPP__
-#define __ACTION_HPP__
+#ifndef __SG_ACTION_HPP__
+#define __SG_ACTION_HPP__
 
 #include "Core.hpp"
 
@@ -13,70 +13,15 @@
 
 namespace sg 
 {
-    class ValueSematic
-    {
-    public:
-        ValueSematic(){}
-        virtual ~ValueSematic(){}
+    class ActionOptions;
+    typedef std::shared_ptr<ActionOptions>     ActionOptionsPtr;
 
-        virtual boost::program_options::value_semantic* value() const = 0;
+    struct ActionParsedOption
+    {
+        std::string     key;
+        std::string     token;
     };
-
-    typedef std::shared_ptr<ValueSematic> ValueSematicPtr;
-
-    template <typename T>
-    class OptionValue : public ValueSematic
-    {
-    public:
-        OptionValue(T* value) : m_value(value){}
-        ~OptionValue(){}
-
-        boost::program_options::value_semantic * value() const override 
-        {
-            boost::program_options::typed_value<T> *value_ptr = new boost::program_options::typed_value<T>(m_value);
-
-            return value_ptr;
-        }
-
-    private:
-        T* m_value;
-    };
-
-    template<typename T>
-    ValueSematicPtr Value(T* value)
-    {
-        return MakeSharedPtr<OptionValue<T> >(value);
-    }
-
-    template<typename T>
-    ValueSematicPtr Value()
-    {
-        return MakeSharedPtr<OptionValue<T> >(nullptr);
-    }
-
-    struct ActionOption
-    {
-        ActionOption(std::string const& n, ValueSematicPtr const& v, std::string m) : name(n), value(v), message(m){}
-
-        std::string name;
-        ValueSematicPtr value;
-        std::string message;
-    };
-
-    typedef std::shared_ptr<ActionOption> ActionOptionPtr;
-
-    struct ActionPosOption
-    {
-        ActionPosOption(std::string const& option, ValueSematicPtr const& v, int c) : option(option), value(v), max_count(c) {}
-
-        std::string option;
-        ValueSematicPtr value;
-        int max_count;
-    };
-
-    typedef std::shared_ptr<ActionPosOption>    ActionPosOptionPtr;
-    typedef std::vector<ActionOptionPtr> ActionOptions;
-    typedef std::shared_ptr<ActionOptions> ActionOptionsPtr;
+    typedef std::vector<ActionParsedOption>     ActionParsedOptions;
 
     class Action
     {
@@ -103,8 +48,7 @@ namespace sg
         };
 
     public:
-        Action(ActionType type)
-            : m_type(type), m_options(nullptr), m_pos_options(nullptr){}
+        Action(ActionType type) : m_type(type), m_options(nullptr) {}
         virtual ~Action(){}
 
     public:
@@ -113,12 +57,12 @@ namespace sg
     public:
         typedef std::vector<std::string>    ActionArgs;
         virtual bool Parse(ActionArgs const& args);
+        virtual void BuildOptions() {}
         virtual const char* Description() const = 0;
-
         virtual ActionPtr Clone() = 0;
 
-    public:
-        ActionOptionsPtr GetOptions(){ return m_options; }
+        bool TryParse(ActionArgs const& args, ActionParsedOptions &options, bool ignore_pos = true);
+        void GetAllOptionsName(std::vector<std::string> &names, bool long_name = true) const;
 
     protected:
         template<typename T>
@@ -128,22 +72,10 @@ namespace sg
 
             return ptr;
         }
-        void AddOption(std::string const& option, ValueSematicPtr const& value = nullptr, std::string const& message = std::string());
-        void AddPosOption(ActionPosOptionPtr const& option);
-        void FillOptionsDescription(boost::program_options::options_description &desc,
-                                    boost::program_options::options_description &vis_desc,
-                                    boost::program_options::positional_options_description &pos_desc);
-        void FillOptionsDescription(boost::program_options::options_description &desc,
-                                    boost::program_options::options_description &vis_desc);
 
     protected:
-        ActionType  m_type;
-		
-		typedef std::vector<ActionPosOptionPtr> VectorPosOptionPtr;
-        typedef std::shared_ptr<VectorPosOptionPtr> ActionPosOptionsPtr;
-
-        ActionOptionsPtr        m_options;
-        ActionPosOptionsPtr     m_pos_options;
+        ActionType          m_type;
+        ActionOptionsPtr    m_options;
     };
 
     class QuitAction : public Action
@@ -165,6 +97,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -183,6 +116,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -206,18 +140,19 @@ namespace sg
 
     class ResetDevAction : public Action
     {
-        public :
-            ResetDevAction();
-            ~ResetDevAction();
+    public:
+        ResetDevAction();
+       ~ResetDevAction();
 
-        public:
-            ActionPtr   Clone() override;
-            bool        Parse(const ActionArgs &args) override;
-            const char* Description() const override;
+    public:
+        ActionPtr   Clone() override;
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        const char* Description() const override;
 
-            const std::string  & GetDev()  { return m_dev; }
-        private:
-            static std::string m_dev;
+        const std::string  & GetDev() { return m_dev; }
+    private:
+        static std::string m_dev;
     };
 }
 

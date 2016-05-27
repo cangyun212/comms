@@ -2,6 +2,7 @@
 
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/split.hpp"
+#include "boost/algorithm/string/trim.hpp"
 
 #include <algorithm>
 
@@ -47,6 +48,7 @@ namespace sg {
     {
         if (this->PreParse(line))
         {
+            boost::algorithm::trim_left(line);
             boost::algorithm::split(arg, line, boost::is_any_of(" "));
             return true;
         }
@@ -57,8 +59,10 @@ namespace sg {
     ActionPtr ActionFactory::CreateAction(const std::string &act)
     {
         auto it = m_actions.find(act);
-        BOOST_ASSERT(it != m_actions.end());
-        return it->second->Clone();
+        if (it != m_actions.end())
+            return it->second->Clone();
+        else
+            return nullptr;
     }
 
     void ActionFactory::Init()
@@ -68,11 +72,13 @@ namespace sg {
         m_actions["q"] = ptr;
 
         ptr = MakeSharedPtr<ListEGMAction>();
+        ptr->BuildOptions();
         m_actions["list"] = ptr;
         m_actions["l"] = ptr;
         m_actions["ls"] = ptr;
 
         ptr = MakeSharedPtr<PickEGMAction>();
+        ptr->BuildOptions();
         m_actions["pick"] = ptr;
         m_actions["pk"] = ptr;
 
@@ -81,6 +87,7 @@ namespace sg {
         m_actions["h"]    = ptr;
 
         ptr = MakeSharedPtr<ResetDevAction>();
+        ptr->BuildOptions();
         m_actions["resetdev"] = ptr;
         m_actions["dev"] = ptr;
     }
@@ -114,6 +121,15 @@ namespace sg {
         COMMS_PRINT_BLOCK("\n");
 
         COMMS_END_PRINT_BLOCK();
+    }
+
+    void ActionFactory::MatchActions(std::string const & command, std::vector<std::string>& actions) const
+    {
+        for (auto const& action : m_actions)
+        {
+            if (action.first.compare(0, command.size(), command.c_str()) == 0)
+                actions.push_back(action.first);
+        }
     }
 }
 

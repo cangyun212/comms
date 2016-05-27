@@ -15,10 +15,12 @@
 namespace sg 
 {
 
-    SimulatorPtr setup_sim();
-    ActionFactoryPtr setup_action_factory();
+    void setup_sim();
+    void setup_action_factory();
     bool quit_sim();
 
+    extern SimulatorPtr     g_sim;
+    extern ActionFactoryPtr g_fac;
 }
 
 

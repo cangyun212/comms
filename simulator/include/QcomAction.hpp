@@ -48,6 +48,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -71,6 +72,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -111,6 +113,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -135,6 +138,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -165,6 +169,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -185,6 +190,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 
@@ -229,6 +235,7 @@ namespace sg
 
     public:
         bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
 

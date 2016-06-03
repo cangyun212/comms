@@ -7,25 +7,6 @@
 
 namespace sg 
 {
-
-    namespace 
-    {
-        bool CheckSerialMidBCD(uint32_t ser, QcomDataPtr p)
-        {
-            // unique_lock lock(p->locker);
-
-            if (p->data.serialMidBCD == ser)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-    }
-
-
     uint8_t QcomBroadcastSeek::Id() const
     {
         return QCOM_BROADCAST_SEEK_FC;
@@ -44,16 +25,19 @@ namespace sg
             {
 
                 if (it->FindEgmData(
-                            std::bind(&CheckSerialMidBCD,
-                                 p->Data.segmbr.SN.SER,
-                                 std::placeholders::_1)) == nullptr)
+                    [&](QcomDataPtr const& pd) 
+                    {
+                        if (pd->data.control.serialMidBCD == p->Data.segmbr.SN.SER)
+                            return true;
+                        return false;
+                    }) == nullptr)
                 {
                     QcomDataPtr pd = it->AddNewEgm();
 
-                    std::memset(&pd->data, 0, sizeof(EGMData));
+                    std::memset(&pd->data, 0, sizeof(QcomEGMData));
 
-                    pd->data.serialMidBCD = p->Data.segmbr.SN.SER;
-                    pd->data.last_control |= (QCOM_ACK_MASK | QCOM_LAMAPOLL_MASK);
+                    pd->data.control.serialMidBCD= p->Data.segmbr.SN.SER;
+                    pd->data.control.last_control |= (QCOM_ACK_MASK | QCOM_LAMAPOLL_MASK);
                 }
 
                 return true;

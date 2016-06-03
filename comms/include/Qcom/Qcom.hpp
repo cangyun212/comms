@@ -20,141 +20,190 @@
 #define QCOM_ACK_MASK       (0x01 << 7)
 #define QCOM_LAMAPOLL_MASK  (0x01)
 #define QCOM_CNTL_POLL_BIT  (0x01)
-#define QCOM_NO_RESPONSE    (-1)
 
 #define QCOM_MINIMUM_ADDRESS    1
 #define QCOM_MAXMUM_ADDRESS     250
 
-namespace sg {
+#define QCOM_VER_1_5            0x00
+#define QCOM_VER_1_6            0x01
 
-    enum PollSeqNum
+#define QCOM_GAME_NOT_CONFIG    0x00
+#define QCOM_GAME_CONFIG_SET    0x01
+#define QCOM_GAME_CONFIG_REQ    0x02
+#define QCOM_GAME_CONFIG_READY  0x04
+#define QCOM_GAME_CONFIG_GVN    0x08
+
+#define QCOM_MAX_GAME_NUM       0xFF
+
+#define QCOM_RESET_PSN          0x00
+
+#define QCOM_EGM_NOT_CONFIG     0x00
+#define QCOM_EGM_CONFIG_SET     0x01
+#define QCOM_EGM_CONFIG_READY   0x02
+#define QCOM_EGM_CONFIG_FSH     0x04
+
+namespace sg 
+{
+    inline uint8_t  QcomNextPSN(uint8_t psn)
     {
-        PSN_EVENTS = 0,
-        PSN_ECT,
+        return (psn + 1) % 256;
+    }
 
-        PSN_NUM
+    enum QcomPollSeqType
+    {
+        Qcom_PSN_Events = 0,
+        Qcom_PSN_ECT,
+
+        Qcom_PSN_NUM
     };
 
-    struct EGMConfigData
+    enum QcomEGMConfigState
     {
-        uint8_t  jur;
+        Qcom_EGM_NoConfig = 0,
+        Qcom_EGM_Config,
+
+        Qcom_EGM_ConfigState_Num
+    };
+
+    struct QcomEGMControlData
+    {
+        uint32_t    serialMidBCD; // manually entered or hard code in the egm and returned by seek cmd
+        uint8_t     poll_address; // 1 <= valid address <= 25
+        uint8_t     last_control; // ACK/NAK bit
+        uint8_t     protocol_ver; // 0x00 for Qcom1.5.x egm and 0x01 for Qcom1.6.x egm
+        uint8_t     machine_eable; // if equal 1, then egm enable, otherwise egm disable
+        uint8_t     game_config_state[QCOM_MAX_GAME_NUM]; // indicate egm game config state
+        uint8_t     psn[Qcom_PSN_NUM];
+        uint8_t     egm_config_state;
+    };  
+
+    struct QcomEGMControlPollData
+    {
+        uint8_t    mef;
+        uint8_t    gcr;
+        uint8_t    psn;
+    };
+
+    struct QcomEGMConfigPollData
+    {
         // QCOM v1.6 additional fields
-        uint32_t   den;
-        uint32_t   tok;
-        uint32_t   maxden;
-        uint16_t   minrtp;
-        uint16_t   maxrtp;
-        uint16_t   maxsd;
-        uint16_t   maxlines;
-        uint32_t   maxbet;
-        uint32_t   maxnpwin;
-        uint32_t   maxpwin;
-        uint32_t   maxect;
+        uint32_t    den;
+        uint32_t    tok;
+        uint32_t    maxden;
+        uint16_t    minrtp;
+        uint16_t    maxrtp;
+        uint16_t    maxsd;
+        uint16_t    maxlines;
+        uint32_t    maxbet;
+        uint32_t    maxnpwin;
+        uint32_t    maxpwin;
+        uint32_t    maxect;
+        // 
+        uint8_t     jur;
     };
 
-    struct EGMParams
-    {   // QCOM v1.6
-        uint8_t    reserve;
-        uint8_t    autoplay;
-        uint8_t    crlimitmode;
-        uint8_t    opr;
-        uint32_t   lwin;           // cents
-        uint32_t   crlimit;        // cents
-        uint8_t    dumax;
-        uint32_t   dulimit;        // cents
-        // New fields for QCOM v1.6:
-        uint16_t   tzadj; // units of minutes
-        uint32_t   pwrtime;        // seconds
-        uint8_t    pid;
-        uint16_t   eodt;           // End of Day Time.  Units: Minutes since midnight (0...1439)
-        uint32_t   npwinp;         // cents
-        uint32_t   sapwinp;        // cents
-    };
-
-    struct ProgressiveConfigData
+    struct QcomEGMConfigRespData
     {
-        uint8_t    pnum; // number of progressive levels in game. 0...8
-        uint8_t    lp[QCOM_REMAX_EGMGCP];   // if set, denotes the level is to be set as a LP
-        uint32_t   camt[QCOM_REMAX_EGMGCP]; // If SAP, CAMT is the initial contribution towards the progressive level.
-                         // If LP, CAMT is the initial jackpot current amount for the LP level and may be treated by the EGM as the same as a LP Broadcast to the EGM’s PGID
-    };
-
-    struct EGMData
-    {
-        uint32_t        serialMidBCD; // manually entered into egm and returned by seek cmd
-        uint8_t         last_control; // ACK/NAK bit
-        int8_t          resp_funcode; // store the function code of poll which has the response otherwise -1
-        uint8_t         poll_address; // 1 <= valid address <= 250
-        uint16_t        machine_enable; // if equal 1, then egm enable, otherwise egm disable
-        uint16_t        game_config_req; // if set, the egm will queue the egm game configuration response
-        uint8_t         poll_seq_num[PSN_NUM]; // poll sequence number, ref Qcom1.6-15.1.9
-        uint8_t         protocol_ver; // 0x00 for Qcom1.5.x egm and 0x01 for Qcom1.6.x egms
-        uint8_t         egm_config_flag_a; // flag indicates which device are expected
-        uint8_t         egm_config_flag_b; // the same as above, ref Qcom1.6-15.6.12
-        uint16_t        base_gvn; // base software version number, ref Qcom1.6-15.1.4
-        uint8_t         total_num_games; // total number of available games
-        uint8_t         total_num_games_enable; // total number of games that can be enabled
+        uint8_t         flag_a; // flag indicates which device are expected
+        uint8_t         flag_b; // the same above, ref Qcom1.6-15.6.12
+        uint16_t        bsvn; // base software version number, ref Qcom1.6-15.1.4
+        uint8_t         games_num; // total number of available games
+        uint8_t         games_num_enable; // total number of games that can be enable
         uint16_t        last_gvn; // game version number of the last initiated game in the egm
         uint8_t         last_var; // game variation number as above
-        uint8_t         flgsh; // bit 7 for shared progressive component flag, ref Qcom1.6-10.9; bit 8 for denomination hot-switching, ref Qcom1.6-15.6.12
-        uint8_t         psn; //poll swquence number
-        EGMConfigData   egm_config; // store the egm config data which sent
-        ProgressiveConfigData  progressive_config;// store the game config data which sent
-        EGMParams       egm_params;
+        uint8_t         flag_s; // bit 7 for shared progressive component flag, ref Qcom1.6-10.9; bit 8 for denomination hot-switching, ref Qcom1.6-15.6.12
     };
+
+    struct QcomLinkedProgressiveData
+    {
+        uint32_t        lpamt[QCOM_REMAX_BMLPCA];
+        uint16_t        pgid[QCOM_REMAX_BMLPCA];
+        uint8_t         plvl[QCOM_REMAX_BMLPCA];
+        uint8_t         pnum;
+    };
+
+    struct QcomProgressiveConfigData
+    {
+        uint32_t        camt[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, if SAP, then this is the start up value for each level; if LP, this will be the initial jackpot current amount
+        uint8_t         flag_p[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, check bit 7 to denote the level as a LP, otherwise the level is a SAP
+        uint8_t         pnum;
+    };
+
+    struct QcomVariationData
+    {
+        uint16_t        pret[QCOM_REMAX_EGMGCR]; // ref Qcom1.6-15.6.11, theoretical RTP of the non-progressive component, BCD value for Qcom 1.5, hex x 100 for Qcom 1.6
+        uint8_t         var[QCOM_REMAX_EGMGCR]; // ref Qcom1.6-15.6.11, BCD value
+        uint8_t         vnum;
+    };
+
+    struct QcomGameSettingData
+    {
+        uint16_t        pgid; // ref Qcom1.6-15.4.3, 0xFFFF if non-progressive or SAP game, 0x0001 ~ 0xFFFE if LP game
+        uint8_t         var; // ref Qcom1.6-15.4.3, BCD value, current variation to use
+        uint8_t         var_lock; // ref Qcom1.6-15.4.3, set to disable variation hot-switching
+        uint8_t         game_enable; // ref Qcom1.6-15.4.3, indicates the game is enable or not
+    };
+
+    struct QcomGameConfigPollData
+    {
+        QcomProgressiveConfigData       progressive_config;
+        QcomGameSettingData             settings;
+    };
+
+    struct QcomGameConfigData
+    {
+        QcomGameConfigPollData          config;
+        QcomVariationData               variations;
+        uint16_t                        gvn;
+        uint8_t                         var_hot_switching; // ref Qcom1.6-15.6.11, set if the game support on-the-fly variation switching
+        uint8_t                         lp_only; // ref Qcom1.6-15.6.11
+        uint8_t                         plbm; // ref Qcom1.6-15.6.11
+    };
+
+    struct QcomEGMParametersData
+    {
+        // ref all in Qcom1.6-15.4.5
+        uint8_t     reserve;
+        uint8_t     auto_play;
+        uint8_t     crlimit_mode;
+        uint8_t     opr;
+        uint32_t    lwin;           // cents
+        uint32_t    crlimit;        // cents
+        uint32_t    dulimit;        // cents
+        uint8_t     dumax;
+        int16_t     tzadj;          // uints of minutes
+        uint8_t     pid;
+        uint32_t    pwrtime;        // senconds
+        uint32_t    npwinp;         // cents
+        uint32_t    sapwinp;        // cents
+        uint16_t    eodt;           // End of Day Time. Units: mniutes since midnight (valid range is 0...1439)
+    };
+
+    struct QcomEGMStatusData
+    {
+        uint8_t     flag_a;
+        uint8_t     flag_b;
+        uint8_t     state;
+    };
+
+    struct QcomEGMData
+    {
+        QcomEGMControlData              control;
+        QcomEGMConfigPollData           custom;
+        QcomEGMConfigRespData           config;
+        QcomEGMParametersData           param;
+        QcomEGMStatusData               status;
+        QcomGameConfigData              games[QCOM_MAX_GAME_NUM];
+    };
+
 
     struct QcomData
     {
-        EGMData data;
-        std::mutex locker;
+        QcomEGMData     data;
+        std::mutex      locker;
     };
 
     typedef std::shared_ptr<QcomData>    QcomDataPtr;
-
-    struct QcomEGMConifgReqCustomData
-    {
-        uint16_t    mef;
-        uint16_t    gcr;
-        uint16_t    psn;
-        uint8_t     egm;
-    };
-
-    struct QcomEGMConfigCustomData
-    {
-        uint8_t  egm;
-        EGMConfigData data;
-    };    // QCOM v1.6 version
-
-    struct QcomGameConfigCustomData
-    {
-        uint8_t  egm;
-        uint8_t  var;
-        uint8_t  var_lock;
-        uint8_t  game_enable;
-        ProgressiveConfigData data;
-
-    };    // QCOM v1.6 version
-
-    struct QcomGameConfigChangeCustomData
-    {
-        uint8_t  egm;
-        uint8_t  var;
-        uint8_t  var_lock;
-        uint8_t  game_enable;
-    };    // QCOM v1.6 version
-
-    struct QcomEgmParametersCustomData
-    {
-        uint8_t  egm;
-        EGMParams  params;
-    };    // QCOM v1.6 version
-
-    struct QcomPurgeEventsCustomData
-    {
-        uint8_t  egm;
-        uint8_t  psn;
-        uint8_t  evtno;
-    };    // QCOM v1.6 version
 
     struct QcomPoll
     {
@@ -202,6 +251,22 @@ namespace sg {
 
     typedef std::shared_ptr<QcomJobData>     QcomJobDataPtr;
 
+//    class QcomLocker
+//    {
+//    public:
+//        QcomLocker() : m_p(nullptr) {}
+//        QcomLocker(std::vector<QcomDataPtr> *p, std::mutex &m) : m_p(p), m_lock(m) {}
+//        QcomLocker(QcomLocker &&o) : m_p(std::move(o.m_p)), m_lock(std::move(o.m_lock)){}
+//       ~QcomLocker() { m_p = nullptr; }
+//
+//    public:
+//        std::vector<QcomDataPtr>&       Data() { return *m_p; }
+//
+//    private:
+//        std::vector<QcomDataPtr>       *m_p;
+//        std::unique_lock<std::mutex>    m_lock;
+//    };
+
     class COMMS_API CommsQcom : public Comms
     {
     public:
@@ -212,27 +277,26 @@ namespace sg {
         // Seek EGM Broadcast Poll
         void    SeekEGM(); // TODO : For test purpose refactor later
         void    PollAddress(uint8_t poll_address); // TODO : For test purpose refactor later
-        void    EGMConfRequest(uint8_t poll_address, uint8_t mef, uint8_t gcr, uint8_t psn);
-        void    EGMConfiguration(uint8_t poll_address,  uint8_t jur, uint32_t den, uint32_t tok,uint32_t maxden,
-                        uint16_t minrtp,uint16_t maxrtp,uint16_t maxsd,uint16_t maxlines,uint32_t maxbet,
-                        uint32_t maxnpwin,uint32_t maxpwin,uint32_t maxect);
-        void    SendBroadcast(uint32_t broadcast_type,
-                              std::string gpm_text, std::string sds_text, std::string sdl_text);
-        void    GameConfiguration(uint8_t poll_address, uint8_t var, uint8_t varlock, uint8_t gameenable, uint8_t pnum,
-                                  const std::vector<uint8_t>& lp, const std::vector<uint32_t>& amct);
-        void    GameConfigurationChange(uint8_t poll_address, uint8_t var, uint8_t gameenable);
-        void    PurgeEvents(uint8_t poll_address, uint8_t psn, uint8_t evtno);
-        void    EGMParameters(uint8_t poll_address, uint8_t reserve, uint8_t autoplay, uint8_t crlimitmode, uint8_t opr,
-                              uint32_t lwin, uint32_t crlimit, uint8_t dumax, uint32_t dulimit, uint16_t tzadj, uint32_t pwrtime,
-                              uint8_t pid, uint16_t eodt, uint32_t npwinp, uint32_t sapwinp);
+        void    TimeData();
+        void    LinkJPCurrentAmount(QcomLinkedProgressiveData const& data);
+        void    GeneralPromotional(std::string const& text);
+        void    SiteDetail(std::string const& stext, std::string const& ltext);
+
+        void    EGMConfRequest(uint8_t poll_address, QcomEGMControlPollData const& data);
+        void    EGMConfiguration(uint8_t poll_address, QcomEGMConfigPollData const& data);
+        void    GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const& data);
+        void    GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);
+        void    EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data);
+        void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
 
     public:
         QcomDataPtr     GetEgmData(uint8_t poll_address);
-        void            GetEgmData(std::vector<QcomDataPtr> & data);
         QcomDataPtr     AddNewEgm();
         size_t          GetEgmNum();
+        //QcomLocker      LockEGMData();
+        void            CaptureEGMData(std::vector<QcomDataPtr> & data);
 
-        template<typename Predicate>
+        template <typename Predicate>
         QcomDataPtr FindEgmData(Predicate const & p)
         {
            std::unique_lock<std::mutex> lock(m_egms_guard);
@@ -247,6 +311,17 @@ namespace sg {
            {
                return nullptr;
            }
+        }
+
+        template <typename F>
+        void Traverse(F const& func)
+        {
+            std::unique_lock<std::mutex> lock(m_egms_guard);
+
+            for (auto & i : m_egms)
+            {
+                func(i);
+            }
         }
 
     public:

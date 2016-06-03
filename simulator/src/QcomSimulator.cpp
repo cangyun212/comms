@@ -90,7 +90,7 @@ namespace sg
         SG_UNREF_PARAM(show_all); // TODO
 
         std::vector<QcomDataPtr> data;
-        m_qcom->GetEgmData(data);
+        m_qcom->CaptureEGMData(data);
 
         ConsoleTable t;
         t.SetStyle("compact");
@@ -122,19 +122,19 @@ namespace sg
 
             ConsoleTableItem row[] = {
                 (i + 1),
-                data[i]->data.serialMidBCD,
-                (uint32_t)data[i]->data.egm_config.jur,
-                data[i]->data.egm_config.den ,
-                data[i]->data.egm_config.tok ,
-                data[i]->data.egm_config.maxden ,
-                data[i]->data.egm_config.minrtp ,
-                data[i]->data.egm_config.maxrtp ,
-                data[i]->data.egm_config.maxsd ,
-                data[i]->data.egm_config.maxlines ,
-                data[i]->data.egm_config.maxbet ,
-                data[i]->data.egm_config.maxnpwin ,
-                data[i]->data.egm_config.maxpwin ,
-                data[i]->data.egm_config.maxect
+                data[i]->data.control.serialMidBCD,
+                (uint32_t)data[i]->data.custom.jur,
+                data[i]->data.custom.den ,
+                data[i]->data.custom.tok ,
+                data[i]->data.custom.maxden ,
+                data[i]->data.custom.minrtp ,
+                data[i]->data.custom.maxrtp ,
+                data[i]->data.custom.maxsd ,
+                data[i]->data.custom.maxlines ,
+                data[i]->data.custom.maxbet ,
+                data[i]->data.custom.maxnpwin ,
+                data[i]->data.custom.maxpwin ,
+                data[i]->data.custom.maxect
             };
 
             t.AddRow(&row);
@@ -153,7 +153,14 @@ namespace sg
         SG_UNREF_PARAM(action);
 
         m_qcom->PollAddress(m_curr_egm);
-        COMMS_LOG(boost::format("Config the poll address of EGM %1%\n") % static_cast<uint32_t>(m_curr_egm + 1), CLL_Info);
+        if (m_curr_egm)
+        {
+            COMMS_LOG(boost::format("Config the poll address of EGM %1%\n") % static_cast<uint32_t>(m_curr_egm), CLL_Info);
+        }
+        else
+        {
+            COMMS_LOG("Config the poll address for all EGM\n", CLL_Info);
+        }
     }
 
     void QcomSim::EGMConfRequest(const ActionCenter &sender, const ActionPtr &action)
@@ -167,7 +174,9 @@ namespace sg
         {
             QcomEGMConfRequestActionPtr p = std::static_pointer_cast<QcomEGMConfRequestAction>(action);
 
-            m_qcom->EGMConfRequest(m_curr_egm, p->MEF(), p->GCR(), p->PSN());
+            QcomEGMControlPollData data{ p->MEF(), p->GCR(), p->PSN() };
+
+            m_qcom->EGMConfRequest(m_curr_egm, data);
         }
     }
 
@@ -182,19 +191,22 @@ namespace sg
         {
             QcomEGMConfActionPtr p = std::static_pointer_cast<QcomEGMConfAction>(action);
 
-            m_qcom->EGMConfiguration(m_curr_egm, 
-                p->JUR(), 
-                p->DEN(), 
-                p->TOK(), 
-                p->MAXDEN(), 
-                p->MINRTP(), 
-                p->MAXRTP(), 
+            QcomEGMConfigPollData data
+            {
+                p->DEN(),
+                p->TOK(),
+                p->MAXDEN(),
+                p->MINRTP(),
+                p->MAXRTP(),
                 p->MAXSD(),
-                p->MAXLINES(), 
-                p->MAXBET(), 
-                p->MAXNPWIN(), 
-                p->MAXPWIN(), 
-                p->MAXECT());
+                p->MAXLINES(),
+                p->MAXBET(),
+                p->MAXNPWIN(),
+                p->MAXPWIN(),
+                p->MAXECT()
+            };
+
+            m_qcom->EGMConfiguration(m_curr_egm, data);
         }
     }
 
@@ -209,19 +221,15 @@ namespace sg
         {
             QcomGameConfigurationActionPtr p = std::static_pointer_cast<QcomGameConfigurationAction>(action);
 
-            std::vector<uint8_t> lp;
-            std::vector<uint32_t> camt;
+            QcomGameConfigPollData data;
 
-            p->LP(lp);
-            p->CAMT(camt);
+            data.settings.pgid = p->PGID();
+            data.settings.var = p->VAR();
+            data.settings.var_lock = p->VAR_LOCK();
+            data.settings.game_enable = p->GAME_ENABLE();
+            data.progressive_config.pnum = p->ProgressiveConfig(data.progressive_config.flag_p, data.progressive_config.camt);
 
-            m_qcom->GameConfiguration(m_curr_egm, 
-                p->VAR(), 
-                p->VAR_LOCK(), 
-                p->GAME_ENABLE(), 
-                p->PNMUM(), 
-                lp, 
-                camt);
+            m_qcom->GameConfiguration(m_curr_egm, p->GVN(), data);
         }
     }
 
@@ -236,7 +244,9 @@ namespace sg
         {
             QcomGameConfigurationChangeActionPtr p = std::static_pointer_cast<QcomGameConfigurationChangeAction>(action);
 
-            m_qcom->GameConfigurationChange(m_curr_egm, p->VAR(), p->GAME_ENABLE());
+            QcomGameSettingData data{ p->PGID(), p->VAR(), 0, p->GAME_ENABLE() };
+
+            m_qcom->GameConfigurationChange(m_curr_egm, p->GVN(), data);
         }
     }
 
@@ -251,21 +261,25 @@ namespace sg
         {
             QcomEGMParametersActionPtr p = std::static_pointer_cast<QcomEGMParametersAction>(action);
 
-            m_qcom->EGMParameters(m_curr_egm,
-					p->RESERVE(), 
-					p->AUTOPLAY(), 
-					p->CRLIMITMODE(), 
-					p->OPR(), 
-					p->LWIN(), 
-					p->CRLIMIT(), 
-					p->DUMAX(),
-                    p->DULIMIT(), 
-					p->TZADJ(), 
-					p->PWRTIME(), 
-					p->PID(), 
-					p->EODT(), 
-					p->NPWINP(), 
-					p->SAPWINP());
+            QcomEGMParametersData data 
+            {
+                p->RESERVE(), 
+                p->AUTOPLAY(), 
+                p->CRLIMITMODE(), 
+                p->OPR(), 
+                p->LWIN(), 
+                p->CRLIMIT(), 
+                p->DUMAX(),
+                p->DULIMIT(), 
+                p->TZADJ(), 
+                p->PWRTIME(), 
+                p->PID(), 
+                p->EODT(), 
+                p->NPWINP(), 
+                p->SAPWINP()
+            };
+
+            m_qcom->EGMParameters(m_curr_egm, data);
         }
     }
 
@@ -280,8 +294,7 @@ namespace sg
         {
             QcomPurgeEventsActionPtr p = std::static_pointer_cast<QcomPurgeEventsAction>(action);
 
-            m_qcom->PurgeEvents(m_curr_egm, p->PSN(), p->EVTNO());
-
+            m_qcom->PurgeEvents(m_curr_egm, p->EVTNO());
         }
     }
 

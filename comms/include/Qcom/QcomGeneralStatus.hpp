@@ -22,10 +22,10 @@ namespace sg
 
     public:
         uint8_t     Id() const override;
+        uint8_t     RespId() const override;
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        //void            BuildGeneralStatusPoll(std::vector<QcomEGMConfigCustomData> const& data);
         void            BuildGeneralStatusPoll(uint8_t poll_address);
         QcomJobDataPtr  MakeGeneralStatusJob();
 

@@ -42,22 +42,21 @@ namespace sg
         }
 
     public:
-        void            BuildPollAddressPoll();
-        void            BuildPollAddressPoll(uint8_t poll_address);
-        QcomJobDataPtr  MakePollAddressJob();
-
-        void            BuildTimeDataBroadcast();
-        void            BuildLinkProgressiveCurrentAmountBroadcast();
-        void            BuildGeneralPromotionalMessageBroadcast(u8 gpm_text_length, const char* gpm_text);
-        void            BuildSiteDetailsBroadcast(u8 sd_stext_length, u8 sd_ltext_length, const char* sds_text, const char* sdl_text);
+        void    BuildPollAddressPoll();
+        void    BuildPollAddressPoll(uint8_t poll_address);
+        void    BuildTimeDataBroadcast();
+        void    BuildLinkProgressiveCurrentAmountBroadcast(QcomLinkedProgressiveData const& data);
+        void    BuildGeneralPromotionalMessageBroadcast(std::string const& text);
+        void    BuildSiteDetailsBroadcast(std::string const& stext, std::string const& ltext);
 
     private:
-        QcomPollPtr MakePollAddressPoll(size_t size);
-
-        QcomPollPtr MakeTimeDataBroadcast();
-        QcomPollPtr MakeLinkProgressiveCurrentAmountBroadcast();
-        QcomPollPtr MakeGeneralPromotionalMessageBroadcast(u8 gpm_text_length, const char* gpm_text);
-        QcomPollPtr MakeSiteDetailsBroadcast(u8 sd_stext_length, u8 sd_ltext_length, const char* sds_text, const char*sdl_text);
+        QcomPollPtr     MakePollAddressPoll(size_t size);
+        QcomPollPtr     MakePollAddressPoll(uint32_t ser, uint8_t poll_address);
+        QcomJobDataPtr  MakePollAddressJob();
+        QcomPollPtr     MakeTimeDataBroadcast();
+        QcomPollPtr     MakeLinkProgressiveCurrentAmountBroadcast(QcomLinkedProgressiveData const& data);
+        QcomPollPtr     MakeGeneralPromotionalMessageBroadcast(std::string const& text);
+        QcomPollPtr     MakeSiteDetailsBroadcast(std::string const& stext, std::string const& ltext);
 
     private:
         std::weak_ptr<CommsQcom>     m_qcom;

@@ -22,16 +22,14 @@ namespace sg
 
     public:
         uint8_t     Id() const override;
+        uint8_t     RespId() const override;
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        void        BuildGameConfigPoll(std::vector<QcomGameConfigCustomData> const& data);
-        void        BuildGameConfigPoll(uint8_t poll_address, uint8_t var, uint8_t var_lock, uint8_t game_enable, uint8_t pnum,
-                                        std::vector<uint8_t> const& lp, std::vector<uint32_t> const& camt);
+        void        BuildGameConfigPoll(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const& data);
 
     private:
-        QcomPollPtr MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t last_gvn, uint8_t var, uint8_t var_lock,
-                                           uint8_t game_enable, uint8_t pnum, std::vector<uint8_t> const&lp, std::vector<uint32_t> const&camt);
+        QcomPollPtr MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, QcomGameConfigPollData const& data);
 
 
     private:

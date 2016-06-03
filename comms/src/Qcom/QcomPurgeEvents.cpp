@@ -5,25 +5,17 @@
 #include "Qcom/QcomPurgeEvents.hpp"
 #include "Qcom/qogr/qogr_crc.h"
 
-namespace sg {
-
-    namespace {
-
-        bool FindEGMDataBySER(uint32_t ser, QcomDataPtr p)
-        {
-			std::unique_lock<std::mutex> lock(p->locker);
-            if (p->data.serialMidBCD == ser)
-            {
-                return true;
-            }
-
-            return false;
-        }
-    }
-
+namespace sg 
+{
     uint8_t QcomPurgeEvents::Id() const
     {
         return QCOM_PEP_FC;
+    }
+
+
+    uint8_t QcomPurgeEvents::RespId() const 
+    {
+        return QCOM_PEPAR_FC; 
     }
 
     bool QcomPurgeEvents::Parse(uint8_t buf[], int length)
@@ -34,18 +26,25 @@ namespace sg {
             QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
             if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_peptype)))
             {
-                QcomDataPtr pd = it->FindEgmData(std::bind(&FindEGMDataBySER, p->Data.egmcr2.SN.SER, std::placeholders::_1));
+                QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
+
+                uint8_t psn = 0;
 
                 if (pd)
                 {
-					std::unique_lock<std::mutex> lock(pd->locker);
+                    std::unique_lock<std::mutex> lock(pd->locker);
 
-                    pd->data.last_control ^= (QCOM_ACK_MASK);
+                    pd->data.control.last_control ^= (QCOM_ACK_MASK);
 
-                    pd->data.psn = p->Data.pepar.PPSN;
-
-                    return true;
+                    uint8_t psn = QcomNextPSN(pd->data.control.psn[Qcom_PSN_Events]);
+                    if (psn == p->Data.pepar.PPSN)
+                    {
+                        return true;
+                    }
                 }
+
+                COMMS_LOG(boost::format("Received invalid PSN %1%, PSN %2% is expected.\n") %
+                    p->Data.pepar.PPSN % psn, CLL_Error);
             }
         }
 
@@ -53,52 +52,7 @@ namespace sg {
 
     }
 
-    void QcomPurgeEvents::BuildPurgeEventsPoll(std::vector<QcomPurgeEventsCustomData> const& data)
-    {
-        if (auto it = m_qcom.lock())
-        {
-            bool pac_sent = false;
-
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-            for(auto const& d : data)
-            {
-                QcomDataPtr p = it->GetEgmData(d.egm);
-
-                if (p)
-                {
-					std::unique_lock<std::mutex> lock(p->locker);
-
-                    if (!pac_sent && p->data.poll_address == 0)
-                    {
-                        QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
-                        if (pb)
-                        {
-                            // TODO : it's better broadcast supply a function that
-                            // it can just config specified egm poll address instead of all of them
-                            pb->BuildPollAddressPoll();
-                        }
-
-                        pac_sent = true;
-                    }
-
-                    if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                        p->data.last_control ^= (QCOM_ACK_MASK);
-
-                    job->AddPoll(this->MakePurgeEventsPoll(d.egm, p->data.last_control, d.psn,
-                                                    d.evtno));
-
-                    // store the data to game data
-                    p->data.resp_funcode = QCOM_PEP_FC;
-
-                }
-            }
-
-            it->AddJob(job);
-
-        }
-    }
-
-    void QcomPurgeEvents::BuildPurgeEventsPoll(uint8_t poll_address, uint8_t psn, uint8_t evtno)
+    void QcomPurgeEvents::BuildPurgeEventsPoll(uint8_t poll_address, uint8_t evtno)
     {
         if (auto it = m_qcom.lock())
         {
@@ -107,34 +61,23 @@ namespace sg {
             {
                 QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
 
-				std::unique_lock<std::mutex> lock(p->locker);
+                std::unique_lock<std::mutex> lock(p->locker);
 
-                if (p->data.poll_address == 0)
-                {
-                    QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
-                    if (pb)
-                    {
-                        pb->BuildPollAddressPoll();
-                    }
-                }
+                p->data.control.psn[Qcom_PSN_Events] = QcomNextPSN(p->data.control.psn[Qcom_PSN_Events]);
 
+                job->AddPoll(
+                    this->MakePurgeEventsPoll(
+                        poll_address, 
+                        p->data.control.last_control, 
+                        p->data.control.psn[Qcom_PSN_Events], 
+                        evtno));
 
-                if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                    p->data.last_control ^= (QCOM_ACK_MASK);
-
-                if (p->data.psn)
-                    psn = p->data.psn;
-
-                job->AddPoll(this->MakePurgeEventsPoll(poll_address, p->data.last_control, psn, evtno));
-
-                p->data.resp_funcode = QCOM_NO_RESPONSE;
                 it->AddJob(job);
             }
         }
     }
 
-    QcomPollPtr QcomPurgeEvents::MakePurgeEventsPoll(uint8_t poll_address, uint8_t last_control, uint8_t psn,
-                                                          uint8_t evtno)
+    QcomPollPtr QcomPurgeEvents::MakePurgeEventsPoll(uint8_t poll_address, uint8_t last_control, uint8_t psn, uint8_t evtno)
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
 

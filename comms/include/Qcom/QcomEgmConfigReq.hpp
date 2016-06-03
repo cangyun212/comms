@@ -21,15 +21,14 @@ namespace sg {
 
     public:
         uint8_t     Id() const override;
-        uint8_t     RespId() const override { return QCOM_EGMCR_FC; }
+        uint8_t     RespId() const override;
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        void        BuildEGMConfigReqPoll(std::vector<QcomEGMConifgReqCustomData> const& data);
-        void        BuildEGMConfigReqPoll(uint8_t poll_address, uint8_t mef, uint8_t gcr, uint8_t psn);
+        void        BuildEGMConfigReqPoll(uint8_t poll_address, QcomEGMControlPollData const& data);
 
     private:
-        QcomPollPtr MakeEGMConfigReqPoll(uint8_t poll_address, uint8_t last_control, uint16_t mef, uint16_t gcr, uint16_t psn);
+        QcomPollPtr MakeEGMConfigReqPoll(uint8_t poll_address, uint8_t last_control, QcomEGMControlPollData const& data);
 
     private:
         std::weak_ptr<CommsQcom>     m_qcom;

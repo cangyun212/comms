@@ -14,11 +14,38 @@ namespace sg
         return QCOM_GSP_FC;
     }
 
+    uint8_t QcomGeneralStatus::RespId() const
+    {
+        return QCOM_GSR_FC;
+    }
+
     bool QcomGeneralStatus::Parse(uint8_t buf[], int length)
     {
-        SG_UNREF_PARAM(buf);
         SG_UNREF_PARAM(length);
-        return true;
+
+        if (auto it = m_qcom.lock())
+        {
+            QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
+            if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_gsrtype)))
+            {
+                QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
+
+                if (pd)
+                {
+                    std::unique_lock<std::mutex> lock(pd->locker);
+
+                    pd->data.control.last_control ^= (QCOM_ACK_MASK);
+
+                    pd->data.status.flag_a = p->Data.gsr.FLGA.FLGA;
+                    pd->data.status.flag_b = p->Data.gsr.FLGB.FLGB;
+                    pd->data.status.state = p->Data.gsr.STATE;
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     QcomPollPtr QcomGeneralStatus::MakeGeneralStatusPoll(uint8_t poll_address, uint8_t last_control)
@@ -52,21 +79,7 @@ namespace sg
 
                 std::unique_lock<std::mutex> lock(p->locker);
 
-                if (p->data.poll_address == 0)
-                {
-                    QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
-                    if (pb)
-                    {
-                        pb->BuildPollAddressPoll();
-                    }
-                }
-
-                if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                    p->data.last_control ^= (QCOM_ACK_MASK);
-
-                job->AddPoll(this->MakeGeneralStatusPoll(poll_address, p->data.last_control));
-
-                p->data.resp_funcode = QCOM_NO_RESPONSE;
+                job->AddPoll(this->MakeGeneralStatusPoll(poll_address, p->data.control.last_control));
 
                 it->AddJob(job);
             }
@@ -79,13 +92,11 @@ namespace sg
         if (auto it = m_qcom.lock())
         {
             std::vector<QcomDataPtr> egmDatas;
-            it->GetEgmData(egmDatas);
-            size_t size = egmDatas.size();
+            it->CaptureEGMData(egmDatas);
 
+            size_t size = egmDatas.size();
             if (!size)
-            {
                 return nullptr;
-            }
 
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
 
@@ -97,12 +108,7 @@ namespace sg
                 {
                     std::unique_lock<std::mutex> lock(p->locker);
 
-                    if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                        p->data.last_control ^= (QCOM_ACK_MASK);
-
-                    job->AddPoll(this->MakeGeneralStatusPoll(i + 1, p->data.last_control));
-
-                    p->data.resp_funcode = QCOM_NO_RESPONSE;
+                    job->AddPoll(this->MakeGeneralStatusPoll(i + 1, p->data.control.last_control));
                 }
             }
 

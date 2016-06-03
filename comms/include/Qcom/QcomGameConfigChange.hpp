@@ -23,16 +23,14 @@ namespace sg {
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        void        BuildGameConfigChangePoll(std::vector<QcomGameConfigChangeCustomData> const& data);
-        void		BuildGameConfigChangePoll(uint8_t poll_address, uint8_t var, uint8_t game_enable);
+        void        BuildGameConfigChangePoll(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);
 
     private:
-        QcomPollPtr		MakeGameConfigChangePoll(uint8_t poll_address, uint8_t last_control, uint16_t last_gvn, uint8_t var,
-                                           uint8_t game_enable);
+        QcomPollPtr MakeGameConfigChangePoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, QcomGameSettingData const& data);
 
 
     private:
-		std::weak_ptr<CommsQcom>     m_qcom;
+        std::weak_ptr<CommsQcom>     m_qcom;
     };
 
     typedef std::shared_ptr<QcomGameConfigurationChange> QcomGameConfigurationChangePtr;

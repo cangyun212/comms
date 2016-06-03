@@ -6,26 +6,29 @@
 #include "Qcom/QcomEgmConfigReq.hpp"
 #include "Qcom/qogr/qogr_crc.h"
 
+#define SG_QCOM_EGM_CONFIG_DEN          (0x1)
+#define SG_QCOM_EGM_CONFIG_TOK          (0x1 << 1)
+#define SG_QCOM_EGM_CONFIG_MAXDEN       (0x1 << 2)
+#define SG_QCOM_EGM_CONFIG_MINRTP       (0x1 << 3)
+#define SG_QCOM_EGM_CONFIG_MAXRTP       (0x1 << 4)
+#define SG_QCOM_EGM_CONFIG_MAXSD        (0x1 << 5)
+#define SG_QCOM_EGM_CONFIG_MAXLINES     (0x1 << 6)
+#define SG_QCOM_EGM_CONFIG_MAXBET       (0x1 << 7)
+#define SG_QCOM_EGM_CONFIG_MAXNPWIN     (0x1 << 8)
+#define SG_QCOM_EGM_CONFIG_MAXPWIN      (0x1 << 9)
+#define SG_QCOM_EGM_CONFIG_MAXECT       (0x1 << 10)
+
 namespace sg 
 {
-
-    namespace 
-    {
-        bool FindEGMDataBySER(uint32_t ser, QcomDataPtr p)
-        {
-            std::unique_lock<std::mutex> lock(p->locker);
-            if (p->data.serialMidBCD == ser)
-            {
-                return true;
-            }
-
-            return false;
-        }
-    }
 
     uint8_t QcomEgmConfigurationRequest::Id() const
     {
         return QCOM_EGMCRP_FC;
+    }
+
+    uint8_t QcomEgmConfigurationRequest::RespId() const
+    {
+        return QCOM_EGMCR_FC;
     }
 
     bool QcomEgmConfigurationRequest::Parse(uint8_t buf[], int length)
@@ -37,121 +40,153 @@ namespace sg
             QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
             if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_egmcrtype2)))
             {
-                QcomDataPtr pd = it->FindEgmData(std::bind(&FindEGMDataBySER, p->Data.egmcr2.SN.SER, std::placeholders::_1));
+                QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 
+                bool invalid_ser = false;
+                uint32_t flag = 0;
+                QcomEGMConfigPollData data;
                 if (pd)
                 {
                     std::unique_lock<std::mutex> _lock(pd->locker);
 
-                    pd->data.last_control ^= (QCOM_ACK_MASK);
-
-                    // TODO : the following fields must not change
-                    // once reported by the egm in the first egm configuration response
-                    // except NUMG, DEN, TOK & CRC
-                    pd->data.protocol_ver = p->Data.egmcr2.NPRV;
-                    pd->data.egm_config_flag_a = p->Data.egmcr2.FLGA.FLGA;
-                    pd->data.egm_config_flag_b = p->Data.egmcr2.FLGB.FLGB;
-                    pd->data.base_gvn = p->Data.egmcr2.BGVN;
-                    pd->data.total_num_games = p->Data.egmcr2.NUMG;
-                    pd->data.total_num_games_enable = p->Data.egmcr2.NUME;
-                    //pd->data.last_gvn = p->Data.egmcr2.LGVN;
-                    pd->data.last_var = p->Data.egmcr2.LVAR;
-                    pd->data.flgsh = p->Data.egmcr2.FLGSH.FLGSH;
-
-                    // The following fields are set via the EGM Configuration Poll and reported
-                    // back here for verification
-                    COMMS_START_LOG_BLOCK(); // TODO : we need to prevent potential dead lock here when lock pd->locker at the same time
-                    if (pd->data.egm_config.den != p->Data.egmcr2.DEN2)
+                    if (pd->data.control.serialMidBCD == p->Data.egmcr2.SN.SER)
                     {
-                        COMMS_LOG_BLOCK(
-                            boost::format("Invalid den value %1% is returned from EGM, should be %2%\n") %
-                            p->Data.egmcr2.DEN2 %
-                            pd->data.egm_config.den, CLL_Error);
+                        pd->data.control.last_control ^= (QCOM_ACK_MASK);
+
+                        // TODO : the following fields must not change
+                        // once reported by the egm in the first egm configuration response
+                        // except NUMG, DEN, TOK & CRC
+
+                        if (!(pd->data.control.egm_config_state & QCOM_EGM_CONFIG_READY))
+                        {
+                            pd->data.control.protocol_ver = p->Data.egmcr2.NPRV;
+                            pd->data.config.flag_a = p->Data.egmcr2.FLGA.FLGA;
+                            pd->data.config.flag_b = p->Data.egmcr2.FLGB.FLGB;
+                            pd->data.config.bsvn = p->Data.egmcr2.BGVN;
+                            pd->data.config.last_gvn = p->Data.egmcr2.LGVN;
+                            pd->data.config.last_var = p->Data.egmcr2.LVAR;
+
+                            pd->data.control.egm_config_state |= QCOM_EGM_CONFIG_READY;
+                        }
+
+                        if (pd->data.control.egm_config_state & QCOM_EGM_CONFIG_SET)
+                        {
+                            if (!(pd->data.control.egm_config_state & QCOM_EGM_CONFIG_FSH))
+                            {
+                                pd->data.config.flag_s = p->Data.egmcr2.FLGSH.FLGSH;
+                                pd->data.control.egm_config_state |= QCOM_EGM_CONFIG_FSH;
+                            }
+
+                            pd->data.config.games_num = p->Data.egmcr2.NUMG;
+                            pd->data.config.games_num_enable = p->Data.egmcr2.NUME;
+
+                            // The following fields are set via the EGM Configuration Poll and
+                            // reported back here for verification
+                            if (pd->data.custom.den != p->Data.egmcr2.DEN2)
+                                flag |= SG_QCOM_EGM_CONFIG_DEN;
+
+                            if (pd->data.custom.tok != p->Data.egmcr2.TOK2)
+                                flag |= SG_QCOM_EGM_CONFIG_TOK;
+
+                            if (pd->data.custom.maxden != p->Data.egmcr2.MAXDEN)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXDEN;
+
+                            if (pd->data.custom.minrtp != p->Data.egmcr2.MINRTP)
+                                flag |= SG_QCOM_EGM_CONFIG_MINRTP;
+
+                            if (pd->data.custom.maxrtp != p->Data.egmcr2.MAXRTP)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXRTP;
+
+                            if (pd->data.custom.maxsd != p->Data.egmcr2.MAXSD)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXSD;
+
+                            if (pd->data.custom.maxlines != p->Data.egmcr2.MAXLINES)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXLINES;
+
+                            if (pd->data.custom.maxbet != p->Data.egmcr2.MAXBET)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXBET;
+
+                            if (pd->data.custom.maxnpwin != p->Data.egmcr2.MAXNPWIN)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXNPWIN;
+
+                            if (pd->data.custom.maxpwin != p->Data.egmcr2.MAXPWIN)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXPWIN;
+
+                            if (pd->data.custom.maxect != p->Data.egmcr2.MAXECT)
+                                flag |= SG_QCOM_EGM_CONFIG_MAXECT;
+
+                            if (flag)
+                                data = pd->data.custom;
+                            else
+                                return true;
+                        }
+                    }
+                    else
+                    {
+                        invalid_ser = true;
                     }
 
-                    if (pd->data.egm_config.tok != p->Data.egmcr2.TOK2)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid tok value %1% is returned from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.TOK2 %
-                                 pd->data.egm_config.tok, CLL_Error);
-                    }
+                }
 
-                    if (pd->data.egm_config.maxden != p->Data.egmcr2.MAXDEN)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxden value %1% is returned from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXDEN %
-                                 pd->data.egm_config.maxden, CLL_Error);
-                    }
+                if (invalid_ser)
+                {
+                    COMMS_LOG(boost::format("Invalid serial MID value %1% is returned for EGM at poll address %2%\n") %
+                        p->Data.egmcr2.SN.SER % static_cast<uint32_t>(p->DLL.PollAddress), CLL_Error);
+                }
 
-                    if (pd->data.egm_config.minrtp != p->Data.egmcr2.MINRTP)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid minrtp value %1% is returned from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MINRTP %
-                                 pd->data.egm_config.minrtp, CLL_Error);
-                    }
+                if (flag)
+                {
+                    COMMS_START_LOG_BLOCK();
 
-                    if (pd->data.egm_config.maxrtp != p->Data.egmcr2.MAXRTP)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxrtp value %1% return from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXRTP%
-                                 pd->data.egm_config.maxrtp, CLL_Error);
-                    }
+                    if (flag & SG_QCOM_EGM_CONFIG_DEN)
+                        COMMS_LOG_BLOCK(boost::format("Invalid den value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.DEN2 % data.den, CLL_Error);
 
-                    if (pd->data.egm_config.maxsd != p->Data.egmcr2.MAXSD)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxsd value %1% return from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXSD%
-                                 pd->data.egm_config.maxsd, CLL_Error);
-                    }
+                    if (flag & SG_QCOM_EGM_CONFIG_TOK)
+                        COMMS_LOG_BLOCK(boost::format("Invalid tok value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.TOK2 % data.tok, CLL_Error);
 
-                    if (pd->data.egm_config.maxlines != p->Data.egmcr2.MAXLINES)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxlines value %1% return from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXLINES %
-                                 pd->data.egm_config.maxlines, CLL_Error);
-                    }
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXDEN)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxden value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXDEN % data.maxden, CLL_Error);
 
-                    if (pd->data.egm_config.maxbet != p->Data.egmcr2.MAXBET)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxbet value %1% return from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXBET %
-                                 pd->data.egm_config.maxbet, CLL_Error);
-                    }
+                    if (flag & SG_QCOM_EGM_CONFIG_MINRTP)
+                        COMMS_LOG_BLOCK(boost::format("Invalid minrtp value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MINRTP % data.minrtp, CLL_Error);
 
-                    if (pd->data.egm_config.maxnpwin != p->Data.egmcr2.MAXNPWIN)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxnpwin value %1% return from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXNPWIN %
-                                 pd->data.egm_config.maxnpwin, CLL_Error);
-                    }
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXRTP)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxrtp value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXRTP % data.maxrtp, CLL_Error);
 
-                    if (pd->data.egm_config.maxpwin != p->Data.egmcr2.MAXPWIN)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxpwin value %1% return from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXPWIN %
-                                 pd->data.egm_config.maxpwin, CLL_Error);
-                    }
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXSD)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxsd value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXSD % data.maxsd, CLL_Error);
 
-                    if (pd->data.egm_config.maxect != p->Data.egmcr2.MAXECT)
-                    {
-                        COMMS_LOG_BLOCK(
-                                 boost::format("Invalid maxect value %1% return from EGM, should be %2%\n") %
-                                 p->Data.egmcr2.MAXECT %
-                                 pd->data.egm_config.maxect, CLL_Error);
-                    }
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXLINES)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxlines value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXLINES % data.maxlines, CLL_Error);
+
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXBET)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxbet value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXBET % data.maxbet, CLL_Error);
+
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXNPWIN)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxnpwin value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXNPWIN % data.maxnpwin, CLL_Error);
+
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXPWIN)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxpwin value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXPWIN % data.maxpwin, CLL_Error);
+
+                    if (flag & SG_QCOM_EGM_CONFIG_MAXECT)
+                        COMMS_LOG_BLOCK(boost::format("Invalid maxect value %1% is returned from EGM, should be %2%\n") %
+                            p->Data.egmcr2.MAXECT % data.maxect, CLL_Error);
+
                     COMMS_END_LOG_BLOCK();
 
                     return true;
                 }
+
             }
         }
 
@@ -159,27 +194,7 @@ namespace sg
 
     }
 
-    QcomPollPtr QcomEgmConfigurationRequest::MakeEGMConfigReqPoll(uint8_t poll_address, uint8_t last_control, uint16_t mef, uint16_t gcr, uint16_t psn)
-    {
-        QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
-
-        std::memset(poll.get(), 0, sizeof(QcomPoll));
-
-        // ref Qcom1.6-15.4.1
-        poll->poll.DLL.PollAddress = poll_address;
-        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_egmcrptype);
-        poll->poll.DLL.ControlByte.CNTL = last_control;
-        poll->poll.DLL.FunctionCode = QCOM_EGMCRP_FC;
-        poll->poll.Data.egmcrp.MEF = mef;
-        poll->poll.Data.egmcrp.GCR = gcr;
-        poll->poll.Data.egmcrp.PSN = psn;
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
-
-        return poll;
-    }
-
-    void QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(uint8_t poll_address, uint8_t mef, uint8_t gcr, uint8_t psn)
+    void QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(uint8_t poll_address, QcomEGMControlPollData const & data)
     {
         if (auto it = m_qcom.lock())
         {
@@ -190,27 +205,32 @@ namespace sg
 
                 std::unique_lock<std::mutex> lock(p->locker);
 
-                if (p->data.poll_address == 0)
+                job->AddPoll(this->MakeEGMConfigReqPoll(poll_address, p->data.control.last_control, data));
+
+                p->data.control.machine_eable = data.mef;
+
+                if (data.gcr)
                 {
-                    QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
-                    if (pb)
+                    if (p->data.config.games_num > 0)
                     {
-                        pb->BuildPollAddressPoll();
+                        for (uint8_t i = 0; i < p->data.config.games_num; ++i)
+                        {
+                            p->data.control.game_config_state[i] |= QCOM_GAME_CONFIG_REQ;
+                        }
+                    }
+                    else
+                    {
+                        for (auto & s : p->data.control.game_config_state)
+                        {
+                            s |= QCOM_GAME_CONFIG_REQ;
+                        }
                     }
                 }
 
-                if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                    p->data.last_control ^= (QCOM_ACK_MASK);
-
-                job->AddPoll(this->MakeEGMConfigReqPoll(poll_address, p->data.last_control, mef, gcr, psn));
-
-                p->data.resp_funcode = QCOM_EGMCRP_FC;
-                p->data.machine_enable = mef;
-                p->data.game_config_req = gcr;
-                if (psn)
+                if (data.psn)
                 {
-                    p->data.poll_seq_num[PSN_EVENTS] = 0;
-                    p->data.poll_seq_num[PSN_ECT] = 0;
+                    p->data.control.psn[Qcom_PSN_Events] = QCOM_RESET_PSN;
+                    p->data.control.psn[Qcom_PSN_ECT] = QCOM_RESET_PSN;
                 }
 
                 it->AddJob(job);
@@ -219,54 +239,24 @@ namespace sg
         }
     }
 
-    void QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(std::vector<QcomEGMConifgReqCustomData> const& data)
+    QcomPollPtr QcomEgmConfigurationRequest::MakeEGMConfigReqPoll(uint8_t poll_address, uint8_t last_control, QcomEGMControlPollData const& data)
     {
-        if (auto it = m_qcom.lock())
-        {
-            bool pac_sent = false;
+        QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
 
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        std::memset(poll.get(), 0, sizeof(QcomPoll));
 
-            for(auto const& d : data)
-            {
-                QcomDataPtr p = it->GetEgmData(d.egm);
+        // ref Qcom1.6-15.4.1
+        poll->poll.DLL.PollAddress = poll_address;
+        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_egmcrptype);
+        poll->poll.DLL.ControlByte.CNTL = last_control;
+        poll->poll.DLL.FunctionCode = QCOM_EGMCRP_FC;
+        poll->poll.Data.egmcrp.MEF = data.mef;
+        poll->poll.Data.egmcrp.GCR = data.gcr;
+        poll->poll.Data.egmcrp.PSN = data.psn;
+        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
-                if (p)
-                {
-                    std::unique_lock<std::mutex> lock(p->locker);
-
-                    if (!pac_sent && p->data.poll_address == 0)
-                    {
-                        QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
-                        if (pb)
-                        {
-                            // TODO : it's better broadcast supply a function that
-                            // it can just config specified egm poll address instead of all of them
-                            pb->BuildPollAddressPoll();
-                        }
-
-                        pac_sent = true;
-                    }
-
-                    if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                        p->data.last_control ^= (QCOM_ACK_MASK);
-
-                    job->AddPoll(this->MakeEGMConfigReqPoll(d.egm, p->data.last_control, d.mef, d.gcr, d.psn));
-
-                    p->data.resp_funcode = QCOM_EGMCRP_FC;
-                    p->data.machine_enable = d.mef;
-                    p->data.game_config_req = d.gcr;
-                    if (d.psn)
-                    {
-                        p->data.poll_seq_num[PSN_EVENTS] = 0;
-                        p->data.poll_seq_num[PSN_ECT] = 0;
-                    }
-                }
-            }
-
-            it->AddJob(job);
-
-        }
+        return poll;
     }
 
 }

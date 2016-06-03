@@ -313,12 +313,13 @@ namespace sg
         return des;
     }
 
+    uint16 QcomGameConfigurationAction::m_gvn = 0;
+    uint16 QcomGameConfigurationAction::m_pgid = 0xFFFF;
     uint8  QcomGameConfigurationAction::m_var = 0;
     uint8  QcomGameConfigurationAction::m_var_lock = 0;
     uint8  QcomGameConfigurationAction::m_game_enable = 0;
-    uint8  QcomGameConfigurationAction::m_pnum = 0;
-    std::vector<uint8> QcomGameConfigurationAction::m_lp(0);
-    std::vector<uint32> QcomGameConfigurationAction::m_camt(0);
+    std::vector<uint8> QcomGameConfigurationAction::m_lp;
+    std::vector<uint32> QcomGameConfigurationAction::m_camt;
 
     QcomGameConfigurationAction::QcomGameConfigurationAction()
         : Action(Action::AT_QCOM_GAME_CONF)
@@ -360,10 +361,11 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
+            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&m_gvn)));
+            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&m_pgid)));
             m_options->AddOption(ActionOption("var", "TODO:", Value<uint8>(&m_var)));
             m_options->AddOption(ActionOption("varlock", "TODO", Value<uint8>(&m_var_lock)));
             m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&m_game_enable)));
-            m_options->AddOption(ActionOption("pnum", "TODO", Value<uint8>(&m_pnum)));
             m_options->AddOption(ActionOption("linkJackpot", "TODO", Value< std::vector<uint8> >(&m_lp)));
             m_options->AddOption(ActionOption("amount", "TODO", Value< std::vector<uint32> >(&m_camt)));
             m_options->AddOption(ActionOption("help,h", "help message"));
@@ -381,21 +383,22 @@ namespace sg
         return des;
     }
 
-    void QcomGameConfigurationAction::LP(std::vector<uint8_t>& lp) const
+    uint8_t QcomGameConfigurationAction::ProgressiveConfig(uint8_t * lp, uint32_t * camt)
     {
-        lp.clear();
-        lp.reserve(m_lp.size());
-        std::for_each(m_lp.begin(), m_lp.end(), [&](uint8 const&_lp) { lp.push_back(_lp.value); });
+        size_t pnum = m_lp.size() < m_camt.size() ? m_lp.size() : m_camt.size();
+
+        for (size_t i = 0; i < pnum; ++i)
+        {
+            lp[i] = m_lp[i];
+            camt[i] = m_camt[i];
+        }
+
+        return static_cast<uint8_t>(pnum);
     }
 
-    void QcomGameConfigurationAction::CAMT(std::vector<uint32_t>& camt) const
-    {
-        camt.clear();
-        camt.reserve(m_camt.size());
-        std::for_each(m_camt.begin(), m_camt.end(), [&](uint32 const& _camt) { camt.push_back(_camt.value); });
-    }
-	
-	uint8  QcomGameConfigurationChangeAction::m_var = 0;
+    uint16 QcomGameConfigurationChangeAction::m_gvn = 0;
+    uint16 QcomGameConfigurationChangeAction::m_pgid = 0xFFFF;
+    uint8  QcomGameConfigurationChangeAction::m_var = 0;
     uint8  QcomGameConfigurationChangeAction::m_game_enable = 1;
 
     QcomGameConfigurationChangeAction::QcomGameConfigurationChangeAction()
@@ -440,6 +443,8 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
+            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&m_gvn)));
+            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&m_pgid)));
             m_options->AddOption(ActionOption("var", "TODO", Value<uint8>(&m_var)));
             m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&m_game_enable)));
             m_options->AddOption(ActionOption("help,h", "help message"));
@@ -545,7 +550,6 @@ namespace sg
     }
 
 
-    uint8  QcomPurgeEventsAction::m_psn = 1;
     uint8  QcomPurgeEventsAction::m_evtno = 255;
 
     QcomPurgeEventsAction::QcomPurgeEventsAction()
@@ -590,7 +594,6 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("psn", "Poll sequence number", Value<uint8>(&m_psn)));
             m_options->AddOption(ActionOption("evnto", "Event sequence number", Value<uint8>(&m_evtno)));
 
             m_options->AddOption(ActionOption("help,h", "help message"));

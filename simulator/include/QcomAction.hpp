@@ -143,20 +143,21 @@ namespace sg
         const char* Description() const override;
 
     public:
+        uint16_t    GVN() const { return m_gvn; }
+        uint16_t    PGID() const { return m_pgid; }
         uint8_t     VAR() const { return m_var; }
         uint8_t     VAR_LOCK() const { return m_var_lock; }
         uint8_t     GAME_ENABLE() const { return m_game_enable; }
-        uint8_t     PNMUM() const { return m_pnum; }
-        void        LP(std::vector<uint8_t> & lp) const;
-        void        CAMT(std::vector<uint32_t> & camt) const;
+        uint8_t     ProgressiveConfig(uint8_t *lp, uint32_t *camt);
 
     private:
-        static uint8                   m_var;
-        static uint8                   m_var_lock;
-        static uint8                   m_game_enable;
-        static uint8                   m_pnum;
-        static std::vector<uint8>      m_lp;
-        static std::vector<uint32>     m_camt;
+        static uint16                   m_gvn;
+        static uint16                   m_pgid;
+        static uint8                    m_var;
+        static uint8                    m_var_lock;
+        static uint8                    m_game_enable;
+        static std::vector<uint8>       m_lp;
+        static std::vector<uint32>      m_camt;
     };
 
 
@@ -174,12 +175,16 @@ namespace sg
         const char* Description() const override;
 
     public:
-        uint8_t    VAR() const { return m_var; }
-        uint8_t    GAME_ENABLE() const { return m_game_enable; }
+        uint16_t    GVN() const { return m_gvn; }
+        uint16_t    PGID() const { return m_pgid; }
+        uint8_t     VAR() const { return m_var; }
+        uint8_t     GAME_ENABLE() const { return m_game_enable; }
 
     private:
-        static uint8  m_var;
-        static uint8  m_game_enable;
+        static uint16   m_gvn;
+        static uint16   m_pgid;
+        static uint8    m_var;
+        static uint8    m_game_enable;
     };
 
     class QcomEGMParametersAction : public Action
@@ -240,11 +245,9 @@ namespace sg
         const char* Description() const override;
 
     public:
-        uint8_t    PSN() const { return m_psn; }
         uint8_t    EVTNO() const { return m_evtno; }
 
     private:
-        static uint8  m_psn;
         static uint8  m_evtno;
     };
 }

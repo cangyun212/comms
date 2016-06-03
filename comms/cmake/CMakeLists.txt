@@ -42,7 +42,6 @@ set(COMMS_QCOM_HEADER_FILES
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomEgmConfigReq.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomEgmConfig.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomGameConfig.hpp
-    ${COMMS_PROJECT_DIR}/include/Qcom/QcomGameConfigReq.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomGameConfigChange.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomEgmParameters.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomPurgeEvents.hpp
@@ -56,7 +55,6 @@ set(COMMS_QCOM_SOURCE_FILES
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmConfigReq.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmConfig.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomGameConfig.cpp
-    ${COMMS_PROJECT_DIR}/src/Qcom/QcomGameConfigReq.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomGameConfigChange.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmParameters.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomPurgeEvents.cpp

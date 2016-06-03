@@ -13,154 +13,214 @@ namespace sg
         return QCOM_EGMGCP_FC;
     }
 
+    uint8_t QcomGameConfiguration::RespId() const
+    {
+        return QCOM_EGMGCR_FC;
+    }
+
     bool QcomGameConfiguration::Parse(uint8_t buf[], int length)
     {
-        SG_UNREF_PARAM(buf);
         SG_UNREF_PARAM(length);
 
-        return true;
-
-    }
-
-    void QcomGameConfiguration::BuildGameConfigPoll(std::vector<QcomGameConfigCustomData> const& data)
-    {
         if (auto it = m_qcom.lock())
         {
-            bool pac_sent = false;
+            QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
 
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-
-            for(auto const& d : data)
+            uint32_t len = QCOM_GET_PACKET_LENGTH(sizeof(qc_egmgcrtype) - sizeof(p->Data.egmgcr.re));
+            if (p->DLL.Length >= len &&
+                p->DLL.Length >= (len + p->Data.egmgcr.NUM * p->Data.egmgcr.SIZ))
             {
-                QcomDataPtr p = it->GetEgmData(d.egm);
+                QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 
-                if (p)
+                uint8_t game_num = QCOM_MAX_GAME_NUM;
+                uint8_t game = game_num;
+                uint8_t ivn = 0;
+                uint8_t ivs[QCOM_REMAX_EGMGCR];
+
+                if (pd)
                 {
-                    std::unique_lock<std::mutex> lock(p->locker);
+                    std::unique_lock<std::mutex> lock(pd->locker);
 
-                    if (!pac_sent && p->data.poll_address == 0)
+                    pd->data.control.last_control ^= (QCOM_ACK_MASK);
+
+                    if (pd->data.config.games_num > 0)
+                        game_num = pd->data.config.games_num;
+
+                    for (game = 0; game < game_num; ++game)
                     {
-                        QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
-                        if (pb)
+                        if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ)
                         {
-                            // TODO : it's better broadcast supply a function that
-                            // it can just config specified egm poll address instead of all of them
-                            pb->BuildPollAddressPoll();
+                            if (!(pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN))
+                            {
+                                pd->data.games[game].gvn = p->Data.egmgcr.GVN;
+                                pd->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_GVN;
+                            }
+
+                            if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET)
+                            {
+                                pd->data.games[game].lp_only = p->Data.egmgcr.FLG.bits.LPonly;
+                                pd->data.games[game].var_hot_switching = p->Data.egmgcr.FLG.bits.hotswitching;
+                                pd->data.games[game].plbm = p->Data.egmgcr.PLBM;
+                                pd->data.games[game].variations.vnum = p->Data.egmgcr.NUM;
+
+                                u32 variation = 0;
+                                for (uint8_t v = 0; v < p->Data.egmgcr.NUM; ++v)
+                                {
+                                    qc_egmgcrretype *var = (qc_egmgcrretype*)((uint8_t*)(p->Data.egmgcr.re) +
+                                        v * p->Data.egmgcr.SIZ);
+
+                                    if (_QComGetBCD(&variation, &(var->VAR), sizeof(var->VAR)))
+                                    {
+                                        pd->data.games[game].variations.var[v] = static_cast<uint8_t>(variation);
+                                        pd->data.games[game].variations.pret[v] = var->PRET;
+                                    }
+                                    else
+                                    {
+                                        ivs[ivn++] = v;
+                                    }
+                                }
+
+                                pd->data.control.game_config_state[game] | QCOM_GAME_CONFIG_READY;
+                            }
+
+                            pd->data.control.game_config_state[game] &= ~QCOM_GAME_CONFIG_REQ;
+                            break;
+                        }
+                    }
+                }
+
+                if (game < game_num)
+                {
+                    if (ivn)
+                    {
+                        COMMS_START_LOG_BLOCK();
+
+                        for (uint8_t i = 0; i < ivn; ++i)
+                        {
+                            qc_egmgcrretype *var = (qc_egmgcrretype*)((uint8_t*)(p->Data.egmgcr.re) + 
+                                ivs[i] * p->Data.egmgcr.SIZ);
+
+                            COMMS_LOG(
+                                boost::format("EGM poll address %1% received variation value %2% which is not a BCD value") %
+                                static_cast<uint32_t>(p->DLL.PollAddress) %
+                                static_cast<uint32_t>(var->VAR), 
+                                CLL_Error);
                         }
 
-                        pac_sent = true;
+                        COMMS_END_LOG_BLOCK();
+
+                        return false;
                     }
 
-                    std::vector<uint8_t> lp;
-                    std::vector<uint32_t> camt;
-
-                    uint8_t pnum = d.data.pnum;
-
-                    uint32_t loop;
-                    for(loop = 0; loop < pnum; ++loop)
-                    {
-                        lp.push_back(d.data.lp[loop]);
-                        camt.push_back(d.data.camt[loop]);
-                    }
-
-                    if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                        p->data.last_control ^= (QCOM_ACK_MASK);
-
-                    job->AddPoll(this->MakeGameConfigPoll(d.egm, p->data.last_control,p->data.last_gvn, d.var,
-                                                    d.var_lock, d.game_enable, pnum, lp, camt));
-
-                    // store the data to game data
-                    p->data.resp_funcode = QCOM_NO_RESPONSE;
-                    p->data.progressive_config.pnum = pnum;
-                    p->data.last_var = d.var;
-
-                    for(loop = 0; loop < pnum; ++loop)
-                    {
-                        p->data.progressive_config.lp[loop] = d.data.lp[loop];
-                        p->data.progressive_config.camt[loop] = d.data.camt[loop];
-                    }
-
+                    COMMS_LOG(boost::format("[%1%%%] game configuration received\n") %
+                        static_cast<uint32_t>((game + 1) * 100/game_num), CLL_Info);
+                    return true;
+                }
+                else
+                {
+                    COMMS_LOG(boost::format("EGM poll address %1% received game configuration response but\
+                        can't apply to any game of it.\n") % static_cast<uint32_t>(p->DLL.PollAddress) , CLL_Error);
                 }
             }
-
-            it->AddJob(job);
-
         }
+
+        return false;
     }
 
-    void QcomGameConfiguration::BuildGameConfigPoll(uint8_t poll_address, uint8_t var, uint8_t var_lock, uint8_t game_enable,
-                                                    uint8_t pnum, const std::vector<uint8_t> &lp, const std::vector<uint32_t> &camt)
+    void QcomGameConfiguration::BuildGameConfigPoll(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const & data)
     {
         if (auto it = m_qcom.lock())
         {
+            bool invalid_gvn = false;
+
             QcomDataPtr p = it->GetEgmData(poll_address);
+
             if (p)
             {
-                QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-
                 std::unique_lock<std::mutex> lock(p->locker);
 
-                if (p->data.poll_address == 0)
+                uint8_t game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
+                uint8_t game = 0;
+                if (!gvn)
                 {
-                    QcomBroadcastPtr pb = std::static_pointer_cast<QcomBroadcast>(it->GetHandler(QCOM_BROADCAST_ADDRESS));
-                    if (pb)
+                    for (; game < game_num; ++game)
                     {
-                        pb->BuildPollAddressPoll();
+                        if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN) &&
+                            !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY))
+                        {
+                            gvn = p->data.games[game].gvn;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (; game < game_num; ++game)
+                    {
+                        if (p->data.games[game].gvn == gvn)
+                            break;
                     }
                 }
 
-
-                if (p->data.resp_funcode == QCOM_NO_RESPONSE)
-                    p->data.last_control ^= (QCOM_ACK_MASK);
-
-                job->AddPoll(this->MakeGameConfigPoll(poll_address, 
-                    p->data.last_control, p->data.last_gvn, var, var_lock, game_enable, pnum,
-                    lp, camt));
-
-                p->data.resp_funcode = QCOM_NO_RESPONSE;
-                p->data.progressive_config.pnum = pnum;
-                p->data.last_var = var;
-
-                uint32_t loop;
-                for(loop = 0; loop < pnum; ++loop)
+                if (game != game_num)
                 {
-                    p->data.progressive_config.lp[loop] = lp.at(loop);
-                    p->data.progressive_config.camt[loop] = camt.at(loop);
-                }
+                    QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+                    job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, gvn, data));
 
-                it->AddJob(job);
+                    p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
+                    p->data.games[game].config = data;
+                    p->data.games[game].gvn = gvn;
+
+                    it->AddJob(job);
+                }
+                else
+                {
+                    invalid_gvn = true;
+                }
             }
+
+            if (invalid_gvn)
+            {
+                COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : %1%\n") %
+                    gvn, CLL_Error);
+            }
+
         }
     }
 
-    QcomPollPtr QcomGameConfiguration::MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t last_gvn,
-                                                          uint8_t var, uint8_t var_lock, uint8_t game_enable, uint8_t pnum,
-                                                          std::vector<uint8_t> const&lp, std::vector<uint32_t> const&camt)
+
+
+
+    QcomPollPtr QcomGameConfiguration::MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, 
+        QcomGameConfigPollData const& data)
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
 
         std::memset(poll.get(), 0, sizeof(QcomPoll));
 
         poll->poll.DLL.PollAddress = poll_address;
-        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_egmgcptype);
+
         poll->poll.DLL.ControlByte.CNTL = last_control;
         poll->poll.DLL.FunctionCode = QCOM_EGMGCP_FC;
 
-        poll->poll.Data.egmgcp.GVN = last_gvn;
-        poll->poll.Data.egmgcp.VAR = var;
+        poll->poll.Data.egmgcp.GVN = gvn;
+        _QComPutBCD(data.settings.var, &(poll->poll.Data.egmgcp.VAR), sizeof(poll->poll.Data.egmgcp.VAR));
         poll->poll.Data.egmgcp.GFLG.bits.res = (uint8_t)0;
-        poll->poll.Data.egmgcp.GFLG.bits.varlock = var_lock;
-        poll->poll.Data.egmgcp.GFLG.bits.GEF = game_enable;
-        poll->poll.Data.egmgcp.PGID = last_gvn & var;
-        poll->poll.Data.egmgcp.PNUM = pnum;
+        poll->poll.Data.egmgcp.GFLG.bits.varlock = data.settings.var_lock;
+        poll->poll.Data.egmgcp.GFLG.bits.GEF = data.settings.game_enable;
+        poll->poll.Data.egmgcp.PGID = data.settings.pgid;
+        poll->poll.Data.egmgcp.PNUM = data.progressive_config.pnum;
         poll->poll.Data.egmgcp.SIZ = sizeof(qc_egmcpretype);
 
-        uint8_t loop;
-        for(loop = 0; loop < lp.size() && loop < camt.size() && loop < pnum; ++loop)
+        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + 
+            sizeof(poll->poll.Data.egmgcp) - sizeof(poll->poll.Data.egmgcp.re) + 
+            poll->poll.Data.egmgcp.PNUM * poll->poll.Data.egmgcp.SIZ;
+
+        for (uint8_t i = 0; i < data.progressive_config.pnum; ++i)
         {
-            poll->poll.Data.egmgcp.re[loop].PFLG.bits.res = 0;
-            poll->poll.Data.egmgcp.re[loop].PFLG.bits.LP = lp.at(loop);
-            poll->poll.Data.egmgcp.re[loop].CAMT = camt.at(loop);
+            poll->poll.Data.egmgcp.re[i].PFLG.bits.res = 0;
+            poll->poll.Data.egmgcp.re[i].PFLG.bits.LP = data.progressive_config.flag_p[i];
+            poll->poll.Data.egmgcp.re[i].CAMT = data.progressive_config.camt[i];
         }
 
         PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);

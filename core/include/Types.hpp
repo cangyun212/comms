@@ -66,6 +66,34 @@ namespace sg
 
     };
 
+    struct int8
+    {
+        int8_t value;
+
+        int8(): value() {}
+        int8(int8_t const& v) : value(v) {}
+        int8(int8 const& arg) : value(arg.value) {}
+
+        operator int8_t() const { return value; }
+
+        friend std::istream& operator>> (std::istream & in, int8 & value)
+        {
+            std::string _v;
+            in >> _v;
+
+            int _t = boost::lexical_cast<int>(_v);
+            value = boost::numeric_cast<int8_t>(_t);
+
+            return in;
+        }
+
+        friend std::ostream& operator<< (std::ostream & out, int8 const& value)
+        {
+            out << static_cast<int>(value.value);
+            return out;
+        }
+    };
+
     struct uint16
     {
         uint16_t value;
@@ -98,6 +126,34 @@ namespace sg
         friend std::ostream& operator<< (std::ostream & out, uint16 const& value)
         {
             out << static_cast<unsigned int>(value.value);
+            return out;
+        }
+    };
+
+    struct int16
+    {
+        int16_t value;
+
+        int16(): value() {}
+        int16(int16_t const& v) : value(v) {}
+        int16(int16 const& arg) : value(arg.value) {}
+
+        operator int16_t() const { return value; }
+
+        friend std::istream& operator>> (std::istream & in, int16 & value)
+        {
+            std::string _v;
+            in >> _v;
+
+            int _t = boost::lexical_cast<int>(_v);
+            value = boost::numeric_cast<int16_t>(_t);
+
+            return in;
+        }
+
+        friend std::ostream& operator<< (std::ostream & out, int16 const& value)
+        {
+            out << static_cast<int>(value.value);
             return out;
         }
     };
@@ -134,6 +190,34 @@ namespace sg
         friend std::ostream& operator<< (std::ostream & out, uint32 const& value)
         {
             out << static_cast<unsigned int>(value.value);
+            return out;
+        }
+    };
+
+    struct int32
+    {
+        int32_t value;
+
+        int32(): value() {}
+        int32(int32_t const& v) : value(v) {}
+        int32(int32 const& arg) : value(arg.value) {}
+
+        operator int32_t() const { return value; }
+
+        friend std::istream& operator>> (std::istream & in, int32 & value)
+        {
+            std::string _v;
+            in >> _v;
+
+            int _t = boost::lexical_cast<int>(_v);
+            value = boost::numeric_cast<int32_t>(_t);
+
+            return in;
+        }
+
+        friend std::ostream& operator<< (std::ostream & out, int32 const& value)
+        {
+            out << static_cast<int>(value.value);
             return out;
         }
     };

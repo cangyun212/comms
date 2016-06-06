@@ -29,7 +29,7 @@ namespace sg
         poll->poll.Data.Broadcast.ESIZ = sizeof(qc_egmpactype);
         poll->poll.Data.Broadcast.extd.EXTD.egmpac.EFUNC = QCOM_BMEGMPAC_FC;
         poll->poll.Data.Broadcast.extd.EXTD.egmpac.ESIZ = static_cast<u8>(size * sizeof(qc_egmpacretype));
-        poll->poll.Data.Broadcast.extd.EXTD.egmpac.NUM = size;
+        poll->poll.Data.Broadcast.extd.EXTD.egmpac.NUM = static_cast<u8>(size);
 
         PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;

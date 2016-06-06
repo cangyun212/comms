@@ -80,7 +80,7 @@ namespace sg
                                     }
                                 }
 
-                                pd->data.control.game_config_state[game] | QCOM_GAME_CONFIG_READY;
+                                pd->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_READY;
                             }
 
                             pd->data.control.game_config_state[game] &= ~QCOM_GAME_CONFIG_REQ;

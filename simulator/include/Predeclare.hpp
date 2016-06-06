@@ -17,11 +17,14 @@ namespace sg {
     class QcomGameConfigurationChangeAction;
     class QcomPurgeEventsAction;
     class QcomEGMParametersAction;
+    class QcomTimeDateAction;
+    class QcomLPCurrentAmountAction;
+    class QcomGeneralPromotionalAction;
+    class QcomSiteDetailAction;
     class ActionFactory;
     class QcomActionFactory;
     class Simulator;
     class QcomSim;
-    class QcomBroadcastAction;
     
     typedef std::shared_ptr<Simulator>   SimulatorPtr;
     typedef std::shared_ptr<QcomSim>     QcomSimPtr;
@@ -40,7 +43,10 @@ namespace sg {
     typedef std::shared_ptr<QcomGameConfigurationChangeAction> QcomGameConfigurationChangeActionPtr;
     typedef std::shared_ptr<QcomEGMParametersAction> QcomEGMParametersActionPtr;
     typedef std::shared_ptr<QcomPurgeEventsAction> QcomPurgeEventsActionPtr;
-    typedef std::shared_ptr<QcomBroadcastAction> QcomBroadcastActionPtr;
+    typedef std::shared_ptr<QcomTimeDateAction> QcomTimeDateActionPtr;
+    typedef std::shared_ptr<QcomLPCurrentAmountAction> QcomLPCurrentAmountActionPtr;
+    typedef std::shared_ptr<QcomGeneralPromotionalAction> QcomGeneralPromotionalActionPtr;
+    typedef std::shared_ptr<QcomSiteDetailAction> QcomSiteDetailActionPtr;
 }
 
 

@@ -68,7 +68,7 @@ namespace sg
     {
     public:
         QcomEGMConfAction();
-        ~QcomEGMConfAction();
+       ~QcomEGMConfAction();
 
     public:
         bool        Parse(const ActionArgs &args) override;
@@ -103,31 +103,6 @@ namespace sg
         static uint32  m_maxnpwin;
         static uint32  m_maxpwin;
         static uint32  m_maxect;
-    };
-
-    class QcomBroadcastAction : public Action
-    {
-    public:
-        QcomBroadcastAction();
-        ~QcomBroadcastAction();
-
-    public:
-        bool        Parse(const ActionArgs &args) override;
-        void        BuildOptions() override;
-        ActionPtr   Clone() override;
-        const char* Description() const override;
-
-    public:
-        uint32_t    GetBroadcastType() const { return m_broadcast_type; }
-        std::string GetGPMBroadcastText() const { return m_gpm_text; }
-        std::string GetSDSBroadcastText() const { return m_sds_text; }
-        std::string GetSDLBroadcastText() const { return m_sdl_text; }
-
-    private:
-        static uint32      m_broadcast_type;
-        static std::string m_gpm_text;
-        static std::string m_sds_text;
-        static std::string m_sdl_text;
     };
 
     class QcomGameConfigurationAction : public Action
@@ -166,7 +141,7 @@ namespace sg
     {
     public:
         QcomGameConfigurationChangeAction();
-        ~QcomGameConfigurationChangeAction();
+       ~QcomGameConfigurationChangeAction();
 
     public:
         bool        Parse(const ActionArgs &args) override;
@@ -191,7 +166,7 @@ namespace sg
     {
     public:
         QcomEGMParametersAction();
-        ~QcomEGMParametersAction();
+       ~QcomEGMParametersAction();
 
     public:
         bool        Parse(const ActionArgs &args) override;
@@ -208,7 +183,7 @@ namespace sg
         uint32_t CRLIMIT() const { return m_crlimit; }
         uint8_t  DUMAX() const { return m_dumax; }
         uint32_t DULIMIT() const { return m_dulimit; }
-        uint16_t TZADJ() const { return m_tzadj; }
+        int16_t  TZADJ() const { return m_tzadj; }
         uint32_t PWRTIME() const { return m_pwrtime; }
         uint8_t  PID() const { return m_pid; }
         uint16_t EODT() const { return m_eodt; }
@@ -224,7 +199,7 @@ namespace sg
         static  uint32   m_crlimit;
         static  uint8    m_dumax;
         static  uint32   m_dulimit;
-        static  uint16   m_tzadj;
+        static  int16    m_tzadj;
         static  uint32   m_pwrtime;
         static  uint8    m_pid;
         static  uint16   m_eodt;
@@ -236,7 +211,7 @@ namespace sg
     {
     public:
         QcomPurgeEventsAction();
-        ~QcomPurgeEventsAction();
+       ~QcomPurgeEventsAction();
 
     public:
         bool        Parse(const ActionArgs &args) override;
@@ -245,10 +220,83 @@ namespace sg
         const char* Description() const override;
 
     public:
-        uint8_t    EVTNO() const { return m_evtno; }
+        uint8_t     EVTNO() const { return m_evtno; }
 
     private:
         static uint8  m_evtno;
+    };
+
+    class QcomTimeDateAction : public Action
+    {
+    public:
+        QcomTimeDateAction();
+       ~QcomTimeDateAction();
+
+    public:
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    };
+
+    class QcomLPCurrentAmountAction : public Action
+    {
+    public:
+        QcomLPCurrentAmountAction();
+       ~QcomLPCurrentAmountAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        uint8_t     LPData(uint32_t *lpamt, uint16_t *pgid, uint8_t *plvl);
+
+    private:
+        static std::vector<uint32>      s_lpamt;
+        static std::vector<uint16>      s_pgid;
+    };
+
+    class QcomGeneralPromotionalAction : public Action
+    {
+    public:
+        QcomGeneralPromotionalAction();
+       ~QcomGeneralPromotionalAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        std::string Text() const { return s_text; }
+
+    private:
+        static std::string s_text;
+    };
+
+    class QcomSiteDetailAction : public Action
+    {
+    public:
+        QcomSiteDetailAction();
+       ~QcomSiteDetailAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        std::string SText() const { return s_stext; }
+        std::string LText() const { return s_ltext; }
+
+    private:
+        static std::string s_stext;
+        static std::string s_ltext;
+
     };
 }
 

@@ -31,6 +31,22 @@ namespace sg
         m_actions["polladdress"] = ptr;
         m_actions["pa"] = ptr;
 
+        ptr = MakeSharedPtr<QcomTimeDateAction>();
+        m_actions["timedate"] = ptr;
+        m_actions["td"] = ptr;
+
+        ptr = MakeSharedPtr<QcomLPCurrentAmountAction>();
+        m_actions["lpcamt"] = ptr;
+        m_actions["lp"] = ptr;
+
+        ptr = MakeSharedPtr<QcomGeneralPromotionalAction>();
+        m_actions["generalpromt"] = ptr;
+        m_actions["gp"] = ptr;
+
+        ptr = MakeSharedPtr<QcomSiteDetailAction>();
+        m_actions["sitedetail"] = ptr;
+        m_actions["sd"] = ptr;
+
         ptr = MakeSharedPtr<QcomEGMConfRequestAction>();
         ptr->BuildOptions();
         m_actions["configreq"] = ptr;
@@ -40,12 +56,6 @@ namespace sg
         ptr->BuildOptions();
         m_actions["egmconfig"] = ptr;
         m_actions["egmcf"] = ptr;
-
-        //For Broadcast Action
-        ptr = MakeSharedPtr<QcomBroadcastAction>();
-        ptr->BuildOptions();
-        m_actions["broadcast"] = ptr;
-        m_actions["bc"] = ptr;
 
         ptr = MakeSharedPtr<QcomGameConfigurationAction>();
         ptr->BuildOptions();

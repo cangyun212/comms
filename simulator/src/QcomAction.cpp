@@ -238,81 +238,6 @@ namespace sg
         return des;
     }
 
-    uint32  QcomBroadcastAction::m_broadcast_type = 0;
-    std::string QcomBroadcastAction::m_gpm_text;
-    std::string QcomBroadcastAction::m_sds_text;
-    std::string QcomBroadcastAction::m_sdl_text;
-
-    //Class for Broadcast Action
-    QcomBroadcastAction::QcomBroadcastAction()
-                    : Action(Action::AT_QCOM_BROADCAST)
-    {
-    }
-
-    QcomBroadcastAction::~QcomBroadcastAction()
-    {
-
-    }
-
-    bool QcomBroadcastAction::Parse(const Action::ActionArgs &args)
-    {
-        bool res = false;
-
-        SG_PARSE_OPTION(args, m_options);
-
-        if (vm.count("help"))
-        {
-            COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: broadcast [options]\n");
-            COMMS_PRINT_BLOCK(vis_desc);
-            COMMS_PRINT_BLOCK("\n");
-            COMMS_END_PRINT_BLOCK();
-
-            res = false;
-        }
-        else
-        {
-            res = true;
-        }
-
-        return res;
-    }
-
-    void QcomBroadcastAction::BuildOptions()
-    {
-        if (!m_options)
-        {
-            m_options = MakeSharedPtr<ActionOptions>();
-
-            m_options->AddOption(ActionOption(
-                "type,t", 
-                "what is the type of broadcast \n\
-                SEEK_EGM = 1,\nTIME_DATA = 2,\nLJP_CUR_AMOUNT = 3,\nGPM = 4,\nPOLL_ADDRESS = 5,\nSITE_DETAILS = 6,",
-                Value<uint32>(&m_broadcast_type)));
-
-            m_options->AddOption(ActionOption("gpmtext,g", "gpm text", Value<std::string>(&m_gpm_text)));
-            m_options->AddOption(ActionOption("sdstext,s", "site details / Name of licensed venue", Value<std::string>(&m_sds_text)));
-
-            m_options->AddOption(ActionOption(
-                "sdltext,l", 
-                "site details / Address  Contact details of licensed venue", 
-                Value<std::string>(&m_sdl_text)));
-
-            m_options->AddOption(ActionOption("help,h", "help message"));
-        }
-    }
-
-    ActionPtr QcomBroadcastAction::Clone()
-    {
-        return Action::DoClone<QcomBroadcastAction>();
-    }
-
-    const char* QcomBroadcastAction::Description() const
-    {
-        static const char* des = "\tQcom Broadcast :\n\t\tbc,broadcast\n";
-        return des;
-    }
-
     uint16 QcomGameConfigurationAction::m_gvn = 0;
     uint16 QcomGameConfigurationAction::m_pgid = 0xFFFF;
     uint8  QcomGameConfigurationAction::m_var = 0;
@@ -471,7 +396,7 @@ namespace sg
      uint32  QcomEGMParametersAction::m_crlimit = 1000000;
      uint8   QcomEGMParametersAction::m_dumax = 5;
      uint32  QcomEGMParametersAction::m_dulimit = 1000000;
-     uint16  QcomEGMParametersAction::m_tzadj = 0;
+     int16   QcomEGMParametersAction::m_tzadj = 0;
      uint32  QcomEGMParametersAction::m_pwrtime = 900;
      uint8   QcomEGMParametersAction::m_pid = 0;
      uint16  QcomEGMParametersAction::m_eodt = 180;
@@ -528,7 +453,7 @@ namespace sg
             m_options->AddOption(ActionOption("crlimit", "Credit-in lockout value", Value<uint32>(&m_crlimit)));
             m_options->AddOption(ActionOption("dumax", "Maximum allowable number of Gambles", Value<uint8>(&m_dumax)));
             m_options->AddOption(ActionOption("dulimit", "Double-Up/Gamble Limit", Value<uint32>(&m_dulimit)));
-            m_options->AddOption(ActionOption("tzadj", "Time zone adjust", Value<uint16>(&m_tzadj)));
+            m_options->AddOption(ActionOption("tzadj", "Time zone adjust", Value<int16>(&m_tzadj)));
             m_options->AddOption(ActionOption("pwrtime", "Power-save Time-out value", Value<uint32>(&m_pwrtime)));
             m_options->AddOption(ActionOption("pid", "Player Information Display", Value<uint8>(&m_pid)));
             m_options->AddOption(ActionOption("eodt", "End of the day time", Value<uint16>(&m_eodt)));
@@ -608,6 +533,217 @@ namespace sg
     const char *QcomPurgeEventsAction::Description() const
     {
         static const char* des = "\tPurge Events:\n\t\tpevents,purgeevents\n";
+        return des;
+    }
+
+    QcomTimeDateAction::QcomTimeDateAction()
+        : Action(Action::AT_QCOM_TIME_DATE)
+    {
+    }
+
+    QcomTimeDateAction::~QcomTimeDateAction()
+    {
+    }
+
+    ActionPtr QcomTimeDateAction::Clone()
+    {
+        return Action::DoClone<QcomTimeDateAction>();
+    }
+
+    const char * QcomTimeDateAction::Description() const
+    {
+        static const char* des = "\tTime Date Broadcast: \n\t\tsend time and date of SC\n";
+        return des;
+    }
+
+    std::vector<uint32> QcomLPCurrentAmountAction::s_lpamt;
+    std::vector<uint16> QcomLPCurrentAmountAction::s_pgid;
+
+    QcomLPCurrentAmountAction::QcomLPCurrentAmountAction()
+        : Action(Action::AT_QCOM_LP_CURRENT_AMOUNT)
+    {
+    }
+
+    QcomLPCurrentAmountAction::~QcomLPCurrentAmountAction()
+    {
+    }
+
+    bool QcomLPCurrentAmountAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: lp [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+
+            res = false;
+        }
+        else
+        {
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomLPCurrentAmountAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(
+                ActionOption("lpamt", "Linked Progressive jackpot current amount", Value<std::vector<uint32> >(&s_lpamt)));
+            m_options->AddOption(
+                ActionOption("pgid", "Linked Progressive Group ID", Value<std::vector<uint16> >(&s_pgid)));
+
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomLPCurrentAmountAction::Clone()
+    {
+        return Action::DoClone<QcomLPCurrentAmountAction>();
+    }
+
+    const char * QcomLPCurrentAmountAction::Description() const
+    {
+        static const char* des = "\tLP Current Amount Broadcast: \n\t\tsend out the current progressive amount to all LP games\n";
+        return des;
+    }
+
+    uint8_t QcomLPCurrentAmountAction::LPData(uint32_t * lpamt, uint16_t * pgid, uint8_t * plvl)
+    {
+        size_t pnum = s_lpamt.size() < s_pgid.size() ? s_lpamt.size() : s_pgid.size();
+
+        for (size_t i = 0; i < pnum; ++i)
+        {
+            lpamt[i] = s_lpamt[i];
+            pgid[i] = s_pgid[i];
+            plvl[i] = static_cast<uint8_t>(i);
+        }
+
+        return static_cast<uint8_t>(pnum);
+    }
+
+    std::string QcomGeneralPromotionalAction::s_text;
+
+    QcomGeneralPromotionalAction::QcomGeneralPromotionalAction()
+        : Action(Action::AT_QCOM_GENERAL_PROMOTIONAL)
+    {
+    }
+
+    QcomGeneralPromotionalAction::~QcomGeneralPromotionalAction()
+    {
+    }
+
+    bool QcomGeneralPromotionalAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: gp [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+
+            res = false;
+        }
+        else
+        {
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomGeneralPromotionalAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("text", "Text displayed to player", Value<std::string>(&s_text)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomGeneralPromotionalAction::Clone()
+    {
+        return Action::DoClone<QcomGeneralPromotionalAction>();
+    }
+
+    const char * QcomGeneralPromotionalAction::Description() const
+    {
+        static const char* des = "\tGeneral Promotional Broadcast: \n\t\tsend out to request EGM to display an arbitrary text message\
+                                    to the player while it is in idle mode\n";
+
+        return des;
+    }
+
+    std::string QcomSiteDetailAction::s_stext;
+    std::string QcomSiteDetailAction::s_ltext;
+
+    QcomSiteDetailAction::QcomSiteDetailAction()
+        : Action(Action::AT_QCOM_SITE_DETAIL)
+    {
+    }
+
+    QcomSiteDetailAction::~QcomSiteDetailAction()
+    {
+    }
+
+    bool QcomSiteDetailAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: sd [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+
+            res = false;
+        }
+        else
+        {
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomSiteDetailAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("stext", "Name of licensed venue", Value<std::string>(&s_stext)));
+            m_options->AddOption(ActionOption("ltext", "Address/contact details of licensed venue", Value<std::string>(&s_ltext)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomSiteDetailAction::Clone()
+    {
+        return Action::DoClone<QcomSiteDetailAction>();
+    }
+
+    const char * QcomSiteDetailAction::Description() const
+    {
+        static const char* des = "\tSite Detail Broadcast: \n\t\tThis message is in support of cash out ticket printing\n";
         return des;
     }
 

@@ -36,7 +36,7 @@ namespace sg
 
                     pd->data.control.last_control ^= (QCOM_ACK_MASK);
 
-                    uint8_t psn = QcomNextPSN(pd->data.control.psn[Qcom_PSN_Events]);
+                    psn = QcomNextPSN(pd->data.control.psn[Qcom_PSN_Events]);
                     if (psn == p->Data.pepar.PPSN)
                     {
                         return true;

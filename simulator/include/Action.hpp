@@ -35,9 +35,12 @@ namespace sg
 
             AT_QCOM_SEEKEGM,
             AT_QCOM_EGM_POLL_ADD_CONF,
+            AT_QCOM_TIME_DATE,
+            AT_QCOM_LP_CURRENT_AMOUNT,
+            AT_QCOM_GENERAL_PROMOTIONAL,
+            AT_QCOM_SITE_DETAIL,
             AT_QCOM_EGM_CONF_REQ,
             AT_QCOM_EGM_CONF,
-            AT_QCOM_BROADCAST,
             AT_QCOM_GAME_CONF,
             AT_QCOM_GAME_CONF_CHANGE,
             AT_QCOM_EGM_PARAMS,

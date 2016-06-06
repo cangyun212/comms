@@ -11,16 +11,6 @@
 
 namespace sg 
 {
-    enum QcomBroadcastType
-    {
-        BROADCAST_TYPE_SEEK_EGM = 1,
-        BROADCAST_TYPE_TIME_DATA,
-        BROADCAST_TYPE_LINK_JP_CUR_AMOUNT,
-        BROADCAST_TYPE_GPM,
-        BROADCAST_TYPE_POLL_ADDRESS,
-        BROADCAST_TYPE_SITE_DETAILS,
-    };
-
     class QcomBroadcast : public CommsPacketHandler
     {
     public:

@@ -24,13 +24,16 @@ namespace sg {
         void    ListEGM(const ActionCenter &sender, const ActionPtr &action);
         void    PickEGM(const ActionCenter &sender, const ActionPtr &action);
         void    EGMPollAddConf(const ActionCenter &sender, const ActionPtr &action);
+        void    TimeDate(const ActionCenter &sender, const ActionPtr &action);
+        void    LPCurrentAmount(const ActionCenter &sender, const ActionPtr &action);
+        void    GeneralPromotional(const ActionCenter &sender, const ActionPtr &action);
+        void    SiteDetail(const ActionCenter &sender, const ActionPtr &action);
         void    EGMConfRequest(const ActionCenter &sender, const ActionPtr &action);
         void    EGMConfiguration(const ActionCenter &sender, const ActionPtr &action);
         void    GameConfiguration(const ActionCenter &sender, const ActionPtr &action);
         void    GameConfigurationChange(const ActionCenter &sender, const ActionPtr &action);
         void    EGMParameters(const ActionCenter &sender, const ActionPtr &action);
         void    PurgeEvents(const ActionCenter &sender, const ActionPtr &action);
-        void    SendBroadcast(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);
 
     private:

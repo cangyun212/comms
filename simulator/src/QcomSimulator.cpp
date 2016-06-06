@@ -163,6 +163,45 @@ namespace sg
         }
     }
 
+    void QcomSim::TimeDate(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
+
+        m_qcom->TimeData();
+    }
+
+    void QcomSim::LPCurrentAmount(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        QcomLPCurrentAmountActionPtr p = std::static_pointer_cast<QcomLPCurrentAmountAction>(action);
+
+        QcomLinkedProgressiveData data;
+
+        data.pnum = p->LPData(data.lpamt, data.pgid, data.plvl);
+
+        m_qcom->LinkJPCurrentAmount(data);
+    }
+
+    void QcomSim::GeneralPromotional(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        QcomGeneralPromotionalActionPtr p = std::static_pointer_cast<QcomGeneralPromotionalAction>(action);
+
+        m_qcom->GeneralPromotional(p->Text());
+    }
+
+    void QcomSim::SiteDetail(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        QcomSiteDetailActionPtr p = std::static_pointer_cast<QcomSiteDetailAction>(action);
+
+        m_qcom->SiteDetail(p->SText(), p->LText());
+    }
+
     void QcomSim::EGMConfRequest(const ActionCenter &sender, const ActionPtr &action)
     {
         SG_UNREF_PARAM(sender);
@@ -269,14 +308,14 @@ namespace sg
                 p->OPR(), 
                 p->LWIN(), 
                 p->CRLIMIT(), 
-                p->DUMAX(),
                 p->DULIMIT(), 
+                p->DUMAX(),
                 p->TZADJ(), 
-                p->PWRTIME(), 
                 p->PID(), 
-                p->EODT(), 
+                p->PWRTIME(), 
                 p->NPWINP(), 
-                p->SAPWINP()
+                p->SAPWINP(),
+                p->EODT()
             };
 
             m_qcom->EGMParameters(m_curr_egm, data);
@@ -295,26 +334,6 @@ namespace sg
             QcomPurgeEventsActionPtr p = std::static_pointer_cast<QcomPurgeEventsAction>(action);
 
             m_qcom->PurgeEvents(m_curr_egm, p->EVTNO());
-        }
-    }
-
-
-    void QcomSim::SendBroadcast(const ActionCenter &sender, const ActionPtr &action)
-    {
-        SG_UNREF_PARAM(sender);
-
-        //if (m_curr_egm == 0)
-        //    Pick(0);
-
-        //if (m_curr_egm > 0)
-        {
-            QcomBroadcastActionPtr p = std::static_pointer_cast<QcomBroadcastAction>(action);
-
-            m_qcom->SendBroadcast(
-                p->GetBroadcastType(), 
-                p->GetGPMBroadcastText(), 
-                p->GetSDSBroadcastText(), 
-                p->GetSDLBroadcastText());
         }
     }
 

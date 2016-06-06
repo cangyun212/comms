@@ -44,6 +44,34 @@ namespace sg
                 center.GetEvent(Action::AT_QCOM_EGM_POLL_ADD_CONF)->connect(
                     bind(&QcomSim::EGMPollAddConf, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            sim->Install(Action::AT_QCOM_TIME_DATE);
+            center.Install(Action::AT_QCOM_TIME_DATE);
+
+            sim->GetConnection(Action::AT_QCOM_TIME_DATE) =
+                center.GetEvent(Action::AT_QCOM_TIME_DATE)->connect(
+                    std::bind(&QcomSim::TimeDate, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            sim->Install(Action::AT_QCOM_LP_CURRENT_AMOUNT);
+            center.Install(Action::AT_QCOM_LP_CURRENT_AMOUNT);
+
+            sim->GetConnection(Action::AT_QCOM_LP_CURRENT_AMOUNT) =
+                center.GetEvent(Action::AT_QCOM_LP_CURRENT_AMOUNT)->connect(
+                    std::bind(&QcomSim::LPCurrentAmount, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            sim->Install(Action::AT_QCOM_GENERAL_PROMOTIONAL);
+            center.Install(Action::AT_QCOM_GENERAL_PROMOTIONAL);
+
+            sim->GetConnection(Action::AT_QCOM_GENERAL_PROMOTIONAL) =
+                center.GetEvent(Action::AT_QCOM_GENERAL_PROMOTIONAL)->connect(
+                    std::bind(&QcomSim::GeneralPromotional, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            sim->Install(Action::AT_QCOM_SITE_DETAIL);
+            center.Install(Action::AT_QCOM_SITE_DETAIL);
+
+            sim->GetConnection(Action::AT_QCOM_SITE_DETAIL) =
+                center.GetEvent(Action::AT_QCOM_SITE_DETAIL)->connect(
+                    std::bind(&QcomSim::SiteDetail, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             sim->Install(Action::AT_LIST_EGM);
             center.Install(Action::AT_LIST_EGM);
 
@@ -101,15 +129,11 @@ namespace sg
                 center.GetEvent(Action::AT_QCOM_PURGE_EVENTS)->connect(
                     bind(&QcomSim::PurgeEvents, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
-            //For broadcast Action
-            sim->Install(Action::AT_QCOM_BROADCAST);
-            center.Install(Action::AT_QCOM_BROADCAST);
 
-            sim->GetConnection(Action::AT_QCOM_BROADCAST) =
-                center.GetEvent(Action::AT_QCOM_BROADCAST)->connect(
-                    bind(&QcomSim::SendBroadcast, sim.get(), std::placeholders::_1, std::placeholders::_2));
-
+            sim->Install(Action::AT_RESET_DEV);
             center.Install(Action::AT_RESET_DEV);
+
+            sim->GetConnection(Action::AT_RESET_DEV) =
             center.GetEvent(Action::AT_RESET_DEV)->connect(
                 bind(&QcomSim::ChangeDev, sim.get(), std::placeholders::_1, std::placeholders::_2));
 

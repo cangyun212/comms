@@ -242,7 +242,8 @@ namespace sg
                 p->MAXBET(),
                 p->MAXNPWIN(),
                 p->MAXPWIN(),
-                p->MAXECT()
+                p->MAXECT(),
+                p->JUR()
             };
 
             m_qcom->EGMConfiguration(m_curr_egm, data);

@@ -133,7 +133,7 @@ namespace sg
     }
 
     //Time Data broadcast
-    QcomPollPtr QcomBroadcast::MakeTimeDataBroadcast()
+    QcomPollPtr QcomBroadcast::MakeTimeDateBroadcast()
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
         std::memset(poll.get(), 0, sizeof(QcomPoll));
@@ -165,13 +165,13 @@ namespace sg
         return poll;
     }
 
-    void QcomBroadcast::BuildTimeDataBroadcast()
+    void QcomBroadcast::BuildTimeDateBroadcast()
     {
         if (auto it = m_qcom.lock())
         {
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
-            QcomPollPtr poll = this->MakeTimeDataBroadcast();
+            QcomPollPtr poll = this->MakeTimeDateBroadcast();
 
             PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 

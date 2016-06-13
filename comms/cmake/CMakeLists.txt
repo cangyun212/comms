@@ -45,6 +45,7 @@ set(COMMS_QCOM_HEADER_FILES
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomGameConfigChange.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomEgmParameters.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomPurgeEvents.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomEvent.hpp
     )
 
 set(COMMS_QCOM_SOURCE_FILES
@@ -58,7 +59,7 @@ set(COMMS_QCOM_SOURCE_FILES
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomGameConfigChange.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmParameters.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomPurgeEvents.cpp
-
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomEvent.cpp
     )
 
 set(COMMS_QCOM_QOGR_HEADER_FILES

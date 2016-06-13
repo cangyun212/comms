@@ -16,6 +16,7 @@
 #include "Qcom/QcomGameConfigChange.hpp"
 #include "Qcom/QcomEgmParameters.hpp"
 #include "Qcom/QcomPurgeEvents.hpp"
+#include "Qcom/QcomEvent.hpp"
 
 // Typically 32, max 250
 #define MAX_EGM_NUM 32
@@ -106,6 +107,10 @@ namespace sg
         p = MakeSharedPtr<QcomPurgeEvents>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
         m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomEvent>(this_ptr);
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+        
         // TODO : ...
 
     }
@@ -353,7 +358,7 @@ namespace sg
             }
 
             QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-            broadcast_handler->BuildTimeDataBroadcast();
+            broadcast_handler->BuildTimeDateBroadcast();
 
             // send every 8 secs in case job thread is too busy
             std::this_thread::sleep_for(std::chrono::seconds(8));
@@ -367,7 +372,7 @@ namespace sg
         QcomBroadcastSeekPtr handler = std::static_pointer_cast<QcomBroadcastSeek>(m_handler[QCOM_BROADCAST_SEEK_FC]);
         handler->BuildSeekEGMPoll();
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDataBroadcast();
+        broadcast_handler->BuildTimeDateBroadcast();
     }
 
     void CommsQcom::PollAddress(uint8_t poll_address)
@@ -390,7 +395,7 @@ namespace sg
         QcomBroadcastPtr handle = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
 
         COMMS_LOG("Send Time Data Broadcast\n", CLL_Info);
-        handle->BuildTimeDataBroadcast();
+        handle->BuildTimeDateBroadcast();
     }
 
     void CommsQcom::LinkJPCurrentAmount(QcomLinkedProgressiveData const & data)
@@ -423,7 +428,7 @@ namespace sg
         QcomEgmConfigurationRequestPtr handler = std::static_pointer_cast<QcomEgmConfigurationRequest>(m_handler[QCOM_EGMCRP_FC]);
         handler->BuildEGMConfigReqPoll(poll_address, data);
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDataBroadcast();
+        broadcast_handler->BuildTimeDateBroadcast();
     }
 
     void CommsQcom::EGMConfiguration(uint8_t poll_address, QcomEGMConfigPollData const & data)
@@ -432,7 +437,7 @@ namespace sg
         QcomEgmConfigurationPtr handler = std::static_pointer_cast<QcomEgmConfiguration>(m_handler[QCOM_EGMCP_FC]);
         handler->BuildEGMConfigPoll(poll_address, data);
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDataBroadcast();
+        broadcast_handler->BuildTimeDateBroadcast();
     }
 
     void CommsQcom::GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const& data)
@@ -440,7 +445,7 @@ namespace sg
         QcomGameConfigurationPtr handler = std::static_pointer_cast<QcomGameConfiguration>(m_handler[QCOM_EGMGCP_FC]);
         handler->BuildGameConfigPoll(poll_address, gvn, data);
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDataBroadcast();
+        broadcast_handler->BuildTimeDateBroadcast();
     }
 
     void CommsQcom::GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data)
@@ -448,7 +453,7 @@ namespace sg
         QcomGameConfigurationChangePtr handler = std::static_pointer_cast<QcomGameConfigurationChange>(m_handler[QCOM_EGMVCP_FC]);
         handler->BuildGameConfigChangePoll(poll_address, gvn, data);
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDataBroadcast();
+        broadcast_handler->BuildTimeDateBroadcast();
     }
 
     void CommsQcom::PurgeEvents(uint8_t poll_address, uint8_t evtno)
@@ -456,7 +461,7 @@ namespace sg
         QcomPurgeEventsPtr handler = std::static_pointer_cast<QcomPurgeEvents>(m_handler[QCOM_PEP_FC]);
         handler->BuildPurgeEventsPoll(poll_address, evtno);
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDataBroadcast();
+        broadcast_handler->BuildTimeDateBroadcast();
     }
 
     void CommsQcom::EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data)
@@ -464,7 +469,7 @@ namespace sg
         QcomEgmParametersPtr handler = std::static_pointer_cast<QcomEgmParameters>(m_handler[QCOM_EGMPP_FC]);
         handler->BuildEgmParametersPoll(poll_address, data);
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDataBroadcast();
+        broadcast_handler->BuildTimeDateBroadcast();
     }
 }
 

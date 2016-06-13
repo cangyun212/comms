@@ -100,9 +100,13 @@ namespace sg
                                     boost::program_options::positional_options_description pos_desc;\
                                     p->Traverse(SG_FILL_DESC(desc, vis_desc, pos_desc));\
                                     try {\
-                                        boost::program_options::store(\
-                                            boost::program_options::command_line_parser(argv).options(desc).positional(pos_desc).run(),\
-                                            vm);\
+                                        if (pos_desc.max_total_count())\
+                                            boost::program_options::store(\
+                                                boost::program_options::command_line_parser(argv).options(desc).positional(pos_desc).run(),\
+                                                vm);\
+                                        else\
+                                            boost::program_options::store(\
+                                                boost::program_options::command_line_parser(argv).options(desc).run(), vm);\
                                         boost::program_options::notify(vm);\
                                     }\
                                     catch (boost::program_options::error const& error) {\

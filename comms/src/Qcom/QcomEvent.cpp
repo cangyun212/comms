@@ -879,7 +879,7 @@ namespace sg
         if (auto it = m_qcom.lock())
         {
             QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
-            if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_ertype)))
+            if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_ertype) - sizeof(p->Data.er.EXTD) + p->Data.er.ESIZ.ESIZ))
             {
                 QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 

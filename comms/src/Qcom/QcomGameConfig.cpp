@@ -34,6 +34,7 @@ namespace sg
 
                 uint8_t game_num = QCOM_MAX_GAME_NUM;
                 uint8_t game = game_num;
+                uint8_t flag = 0;
                 uint8_t ivn = 0;
                 uint8_t ivs[QCOM_REMAX_EGMGCR];
 
@@ -84,6 +85,7 @@ namespace sg
                             }
 
                             pd->data.control.game_config_state[game] &= ~QCOM_GAME_CONFIG_REQ;
+                            flag = pd->data.control.game_config_state[game];
                             break;
                         }
                     }
@@ -100,7 +102,7 @@ namespace sg
                             qc_egmgcrretype *var = (qc_egmgcrretype*)((uint8_t*)(p->Data.egmgcr.re) + 
                                 ivs[i] * p->Data.egmgcr.SIZ);
 
-                            COMMS_LOG(
+                            COMMS_LOG_BLOCK(
                                 boost::format("EGM poll address %1% received variation value %2% which is not a BCD value") %
                                 static_cast<uint32_t>(p->DLL.PollAddress) %
                                 static_cast<uint32_t>(var->VAR), 
@@ -112,8 +114,17 @@ namespace sg
                         return false;
                     }
 
-                    COMMS_LOG(boost::format("[%1%%%] game configuration received\n") %
-                        static_cast<uint32_t>((game + 1) * 100/game_num), CLL_Info);
+                    if (flag & QCOM_GAME_CONFIG_READY)
+                    {
+                        COMMS_LOG(boost::format("[%1%%%] game configuration ready\n") %
+                            static_cast<uint32_t>((game + 1) * 100 / game_num), CLL_Info);
+                    }
+                    else
+                    {
+                        COMMS_LOG(boost::format("[%1%%%] game configuration GVN ready\n") %
+                            static_cast<uint32_t>((game + 1) * 100 / game_num), CLL_Info);
+                    }
+
                     return true;
                 }
                 else

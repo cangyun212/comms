@@ -19,7 +19,7 @@ namespace sg
         ActionValue() {}
         virtual ~ActionValue() {}
 
-        virtual boost::program_options::value_semantic* value() const = 0;
+        virtual boost::program_options::value_semantic* value(bool multitoken) const = 0;
     };
 
     typedef std::shared_ptr<ActionValue> ActionValuePtr;
@@ -31,9 +31,13 @@ namespace sg
         ActionOptionValue(T* value) : m_value(value) {}
        ~ActionOptionValue() {}
 
-        boost::program_options::value_semantic * value() const override
+        boost::program_options::value_semantic * value(bool multitoken) const override
         {
-            return new boost::program_options::typed_value<T>(m_value);
+            boost::program_options::typed_value<T> *p = new boost::program_options::typed_value<T>(m_value);
+            if (!multitoken)
+                return p;
+            else
+                return p->multitoken();
         }
 
     private:
@@ -48,13 +52,14 @@ namespace sg
 
     struct ActionOption
     {
-        ActionOption(std::string n, std::string m, ActionValuePtr const& v = nullptr, int c = -1) 
-            : name(std::move(n)), message(std::move(m)), value(v), max(c)
+        ActionOption(std::string n, std::string m, ActionValuePtr const& v = nullptr, bool multi = false, int c = -1) 
+            : name(std::move(n)), message(std::move(m)), value(v), multitoken(multi), max(c)
         {}
 
         std::string     name;
         std::string     message;
         ActionValuePtr  value;
+        bool            multitoken;
         int             max;
     };
 
@@ -79,7 +84,7 @@ namespace sg
 
 #define SG_FILL_DESC(desc, vis_desc, pos_desc) [&](ActionOption const& option) {\
                                                     if (option.value) {\
-                                                        desc.add_options()(option.name.c_str(), option.value->value(), "");\
+                                                        desc.add_options()(option.name.c_str(), option.value->value(option.multitoken), "");\
                                                     }\
                                                     else {\
                                                         desc.add_options()(option.name.c_str(), "");\

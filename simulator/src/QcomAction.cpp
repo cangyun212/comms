@@ -291,8 +291,8 @@ namespace sg
             m_options->AddOption(ActionOption("var", "TODO:", Value<uint8>(&m_var)));
             m_options->AddOption(ActionOption("varlock", "TODO", Value<uint8>(&m_var_lock)));
             m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&m_game_enable)));
-            m_options->AddOption(ActionOption("jptype", "TODO", Value< std::vector<uint8> >(&m_lp)));
-            m_options->AddOption(ActionOption("amount", "TODO", Value< std::vector<uint32> >(&m_camt)));
+            m_options->AddOption(ActionOption("jptype", "TODO", Value< std::vector<uint8> >(&m_lp), true));
+            m_options->AddOption(ActionOption("amount", "TODO", Value< std::vector<uint32> >(&m_camt), true));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -598,9 +598,9 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
             m_options->AddOption(
-                ActionOption("lpamt", "Linked Progressive jackpot current amount", Value<std::vector<uint32> >(&s_lpamt)));
+                ActionOption("lpamt", "Linked Progressive jackpot current amount", Value<std::vector<uint32> >(&s_lpamt), true));
             m_options->AddOption(
-                ActionOption("pgid", "Linked Progressive Group ID", Value<std::vector<uint16> >(&s_pgid)));
+                ActionOption("pgid", "Linked Progressive Group ID", Value<std::vector<uint16> >(&s_pgid), true));
 
             m_options->AddOption(ActionOption("help,h", "help message"));
         }

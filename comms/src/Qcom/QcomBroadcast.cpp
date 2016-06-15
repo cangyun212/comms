@@ -160,6 +160,9 @@ namespace sg
                     sizeof(poll->poll.Data.Broadcast.TIMEDATE.minutes));
         _QComPutBCD(cTime.tm_sec, &poll->poll.Data.Broadcast.TIMEDATE.seconds,
                     sizeof(poll->poll.Data.Broadcast.TIMEDATE.seconds));
+
+        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
@@ -172,8 +175,6 @@ namespace sg
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
             QcomPollPtr poll = this->MakeTimeDateBroadcast();
-
-            PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
             job->AddBroadcast(poll);
 
@@ -206,6 +207,7 @@ namespace sg
             poll->poll.Data.Broadcast.extd.EXTD.lpca.re[i].CAMT = data.lpamt[i];
         }
 
+        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
@@ -218,8 +220,6 @@ namespace sg
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
             QcomPollPtr poll = this->MakeLinkProgressiveCurrentAmountBroadcast(data);
-
-            PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
             job->AddBroadcast(poll);
 
@@ -258,6 +258,7 @@ namespace sg
             poll->poll.Data.Broadcast.extd.EXTD.gpm.LEN = 0;
         }
 
+        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
@@ -270,8 +271,6 @@ namespace sg
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
             QcomPollPtr poll = this->MakeGeneralPromotionalMessageBroadcast(text);
-
-            PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
             job->AddBroadcast(poll);
 
@@ -304,6 +303,8 @@ namespace sg
         strncpy(poll->poll.Data.Broadcast.extd.EXTD.sd.TEXT, stext.c_str(), slen);
         strncat(poll->poll.Data.Broadcast.extd.EXTD.sd.TEXT + slen, ltext.c_str(), llen);
 
+        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
@@ -316,8 +317,6 @@ namespace sg
             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
 
             QcomPollPtr poll = this->MakeSiteDetailsBroadcast(stext, ltext);
-
-            PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
             job->AddBroadcast(poll);
 

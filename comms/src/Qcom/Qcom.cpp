@@ -340,7 +340,7 @@ namespace sg
         // it will go into comms timeout error and then we must send
         // poll address configuration again.
         // So I think we should check the time here and send a dummy poll
-        // to prevent EGM changing status. But be carefule when implementing this
+        // to prevent EGM changing status. But be careful when implementing this
         // it's possible that a user job is doing while the dummy poll try to send
 
         while(m_start)

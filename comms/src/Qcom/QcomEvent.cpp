@@ -838,7 +838,7 @@ namespace sg
             if (!err_size && !err_bcd)
             {
                 COMMS_LOG(
-                    boost::format("%1% %2%:%3%:%4% %5%-%6%-%7% %8% %9% %10% %11%\n") %
+                    boost::format("%|1$| %|2$2d|:%|3$2d|:%|4$2d| %|5$2d|-%|6$2d|-%|7$2d| %|8$| %|9$| %|10$| %|11$|\n") %
                     sermid % hour % min % sec % year % month % day % static_cast<u32>(d->SEQ) % d->ECOD %
                     ev % ext, 
                     CLL_Info);

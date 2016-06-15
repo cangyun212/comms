@@ -34,7 +34,7 @@ namespace sg
                 ev = "EGM Hopper Level Mismatch";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.HLM))
                 {
-                    ext = (boost::format("SL-HLM = $%1%") % d->EXTD.HLM.SML).str();
+                    ext = (boost::format("SL-HLM = $%||") % d->EXTD.HLM.SML).str();
                 }
                 else
                 {
@@ -75,7 +75,7 @@ namespace sg
                 ev = "EGM Manufacturer Specific";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.MSF))
                 {
-                    ext = (boost::format("Reason: %1%") % d->EXTD.MSF.REASON).str();
+                    ext = (boost::format("Reason: %||") % d->EXTD.MSF.REASON).str();
                 }
                 else
                 {
@@ -127,7 +127,7 @@ namespace sg
                     {
                         if (_QComGetBCD(&mid, &(d->EXTD.RC.SN.SerialNo.MID), sizeof(d->EXTD.RC.SN.SerialNo.MID)))
                         {
-                            ext = (boost::format("Serial No: %1% %2%") % mid % ser).str();
+                            ext = (boost::format("Serial No: %||%||") % mid % ser).str();
                         }
                         else
                         {
@@ -157,7 +157,7 @@ namespace sg
                 ev = "EGM Cash Ticket Out Print Failure";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TOPFAIL))
                 {
-                    ext = (boost::format("Ticket Serial: %1% Amount $%2%") % d->EXTD.TOPFAIL.TSER % d->EXTD.TOPFAIL.TAMT).str();
+                    ext = (boost::format("Ticket Serial: %|| Amount $%||") % d->EXTD.TOPFAIL.TSER % d->EXTD.TOPFAIL.TAMT).str();
                 }
                 else
                 {
@@ -183,14 +183,14 @@ namespace sg
                 ev = "EGM License Key Misssing/Failure";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.KEYID))
                 {
-                    ext = (boost::format("KeyID: %|1$02X|\
-                                                 %|2$02X|\
-                                                 %|3$02X|\
-                                                 %|4$02X|\
-                                                 %|5$02X|\
-                                                 %|6$02X|\
-                                                 %|7$02X|\
-                                                 %|8$02X|") %
+                    ext = (boost::format("KeyID: %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|") %
                         d->EXTD.KEYID.KEYID[7] %
                         d->EXTD.KEYID.KEYID[6] %
                         d->EXTD.KEYID.KEYID[5] %
@@ -212,7 +212,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.LP.VAR), sizeof(d->EXTD.LP.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d| Group:0x%|3$4X| Lev: %|4$1d| $%|5$11d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| Group:0x%|4X| Lev: %|d| $%|d|") %
                             d->EXTD.LP.GVN % var % d->EXTD.LP.PGID % d->EXTD.LP.PLVL.PLVL % d->EXTD.LP.PAMT).str();
                     }
                     else
@@ -232,7 +232,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.SAP.VAR), sizeof(d->EXTD.SAP.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d| Lev: %|3$1d| $%|4$11d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| Lev: %|d| $%|d|") %
                             d->EXTD.SAP.GVN % var % d->EXTD.SAP.PLVL.PLVL % d->EXTD.SAP.PAMT).str();
                     }
                     else
@@ -252,7 +252,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.LW.VAR), sizeof(d->EXTD.LW.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d| $%|3$11d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| $%|d|") %
                             d->EXTD.LW.GVN % var % d->EXTD.LW.WAMT).str();
                     }
                     else
@@ -269,7 +269,7 @@ namespace sg
                 ev = "EGM Cancel Credit";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.CC))
                 {
-                    ext = (boost::format("$%|11d|") % d->EXTD.CC.CC).str();
+                    ext = (boost::format("$%|d|") % d->EXTD.CC.CC).str();
                 }
                 else
                 {
@@ -301,7 +301,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.GVE.VAR), sizeof(d->EXTD.GVE.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d|") %
                             d->EXTD.GVE.GVN % var).str();
                     }
                     else
@@ -321,7 +321,7 @@ namespace sg
                 ev = "EGM Hopper Refill Recorded";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.R))
                 {
-                    ext = (boost::format("$%|1$11d|") % d->EXTD.R.AMT).str();
+                    ext = (boost::format("$%|d|") % d->EXTD.R.AMT).str();
                 }
                 else
                 {
@@ -397,7 +397,7 @@ namespace sg
                 ev = "EGM Cash Ticket Printed";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TP))
                 {
-                    ext = (boost::format("Ser:%|1$10d| TAC:%|2$10d| $%|3$11d|") % 
+                    ext = (boost::format("Ser:%|d| TAC:%|d| $%|d|") %
                         d->EXTD.TP.SN.SER %
                         d->EXTD.TP.TAC %
                         d->EXTD.TP.AMT).str();
@@ -432,7 +432,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.GVE.VAR), sizeof(d->EXTD.GVE.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d|") %
                             d->EXTD.GVE.GVN % var).str();
                     }
                     else
@@ -476,7 +476,7 @@ namespace sg
                 ev = "EGM Denomination Enabled/Changed";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.EGMDC))
                 {
-                    ext = (boost::format("Denom $%|11d|") % d->EXTD.EGMDC.DEN).str();
+                    ext = (boost::format("Denom $%|d|") % d->EXTD.EGMDC.DEN).str();
                 }
                 else
                 {
@@ -490,7 +490,7 @@ namespace sg
                 ev = "EGM Hopper Calibrated";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.HP)) // TODO : ? I can't find the correct ext data type
                 {
-                    ext = (boost::format("Level $%|11d|") % d->EXTD.HP.AMT).str();
+                    ext = (boost::format("Level $%|d|") % d->EXTD.HP.AMT).str();
                 }
                 else
                 {
@@ -505,7 +505,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.PRGCC.VAR), sizeof(d->EXTD.PRGCC.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d| RTP %|3$.4f|%%") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| RTP %|.4f|%%") %
                             d->EXTD.PRGCC.GVN % var % (d->EXTD.PRGCC.PRTP / 1000.0f)).str();
                     }
                     else
@@ -526,7 +526,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.GVE.VAR), sizeof(d->EXTD.GVE.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d|") %
                             d->EXTD.GVE.GVN % var).str();
                     }
                     else
@@ -549,7 +549,7 @@ namespace sg
                 ev = "EGM EXTJIP Icon Display Enabled";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.MSF)) // TODO : ? I can't find the correct ext data type
                 {
-                    ext = (boost::format("%1%") % d->EXTD.MSF.REASON).str();
+                    ext = (boost::format("%||") % d->EXTD.MSF.REASON).str();
                 }
                 else
                 {
@@ -571,14 +571,14 @@ namespace sg
                 ev = "EGM License Key Detected";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.KEYID))
                 {
-                    ext = (boost::format("KeyID: %|1$02X|\
-                                                 %|2$02X|\
-                                                 %|3$02X|\
-                                                 %|4$02X|\
-                                                 %|5$02X|\
-                                                 %|6$02X|\
-                                                 %|7$02X|\
-                                                 %|8$02X|") %
+                    ext = (boost::format("KeyID: %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|") %
                         d->EXTD.KEYID.KEYID[7] %
                         d->EXTD.KEYID.KEYID[6] %
                         d->EXTD.KEYID.KEYID[5] %
@@ -597,14 +597,14 @@ namespace sg
                 ev = "EGM Non-Production License key Detected";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.KEYID))
                 {
-                    ext = (boost::format("KeyID: %|1$02X|\
-                                                 %|2$02X|\
-                                                 %|3$02X|\
-                                                 %|4$02X|\
-                                                 %|5$02X|\
-                                                 %|6$02X|\
-                                                 %|7$02X|\
-                                                 %|8$02X|") %
+                    ext = (boost::format("KeyID: %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|\
+                                                 %|02X|") %
                         d->EXTD.KEYID.KEYID[7] %
                         d->EXTD.KEYID.KEYID[6] %
                         d->EXTD.KEYID.KEYID[5] %
@@ -682,7 +682,7 @@ namespace sg
                 ev = "EGM Hopper Payout";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.HP))
                 {
-                    ext = (boost::format("$%|11d|") % d->EXTD.HP.AMT).str();
+                    ext = (boost::format("$%|d|") % d->EXTD.HP.AMT).str();
                 }
                 else
                 {
@@ -693,7 +693,7 @@ namespace sg
                 ev = "EGM Residual Cancel Credit Lock Up";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.RCCL))
                 {
-                    ext = (boost::format("%|5d|") % d->EXTD.RCCL.CC).str();
+                    ext = (boost::format("%|d|") % d->EXTD.RCCL.CC).str();
                 }
                 else
                 {
@@ -710,7 +710,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.GVE.VAR), sizeof(d->EXTD.GVE.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d|") %
                             d->EXTD.GVE.GVN % var).str();
                     }
                     else
@@ -733,7 +733,7 @@ namespace sg
                 ev = "EGM System Lockup User Response";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.SLUR))
                 {
-                    ext = (boost::format("Ans: %1%") % (d->EXTD.SLUR.YESNO.YESNO ? "Yes" : "No")).str();
+                    ext = (boost::format("Ans: %||") % (d->EXTD.SLUR.YESNO.YESNO ? "Yes" : "No")).str();
                 }
                 else
                 {
@@ -747,7 +747,7 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.SAP.VAR), sizeof(d->EXTD.SAP.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|1$4X| Var:%|2$2d| Lev: %|3$1d| $%|4$11d|") %
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| Lev: %|d| $%|d|") %
                             d->EXTD.SAP.GVN % var % d->EXTD.SAP.PLVL.PLVL % d->EXTD.SAP.PAMT).str();
                     }
                     else
@@ -767,7 +767,7 @@ namespace sg
                 ev = "EGM Residual Cancel Credit Lock Up";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.RCCL))
                 {
-                    ext = (boost::format("%|5d|") % d->EXTD.RCCL.CC).str();
+                    ext = (boost::format("%|d|") % d->EXTD.RCCL.CC).str();
                 }
                 else
                 {
@@ -778,7 +778,7 @@ namespace sg
                 ev = "EGM Cash Ticket Out Request";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TOR))
                 {
-                    ext = (boost::format("Ticket Serial: %|5d| Amount $%|11d|") % d->EXTD.TOR.TSER % d->EXTD.TOR.TAMT).str();
+                    ext = (boost::format("Ticket Serial: %|d| Amount $%|d|") % d->EXTD.TOR.TSER % d->EXTD.TOR.TAMT).str();
                 }
                 else
                 {
@@ -789,7 +789,7 @@ namespace sg
                 ev = "EGM Cash Ticket Out Print Successful";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TOPOK))
                 {
-                    ext = (boost::format("Ticket Serial: %|5d| Amount $%|11d|") % d->EXTD.TOPOK.TSER % d->EXTD.TOPOK.TAMT).str();
+                    ext = (boost::format("Ticket Serial: %|d| Amount $%|d|") % d->EXTD.TOPOK.TSER % d->EXTD.TOPOK.TAMT).str();
                 }
                 else
                 {
@@ -838,7 +838,7 @@ namespace sg
             if (!err_size && !err_bcd)
             {
                 COMMS_LOG(
-                    boost::format("%|1$| %|2$2d|:%|3$2d|:%|4$2d| %|5$2d|-%|6$2d|-%|7$2d| %|8$| %|9$| %|10$| %|11$|\n") %
+                    boost::format("%|| %|02d|:%|02d|:%|02d| %|02d|-%|02d|-%|02d| %|| %|| %|| %||\n") %
                     sermid % hour % min % sec % year % month % day % static_cast<u32>(d->SEQ) % d->ECOD %
                     ev % ext, 
                     CLL_Info);

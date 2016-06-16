@@ -19,7 +19,10 @@
 #include "Qcom/QcomEvent.hpp"
 
 // Typically 32, max 250
-#define MAX_EGM_NUM 32
+#define SG_QCOM_MAX_EGM_NUM 32
+
+#define SG_QCOM_TRT         5
+#define SG_QCOM_TPC         245
 
 namespace sg 
 {
@@ -63,7 +66,7 @@ namespace sg
     CommsQcom::CommsQcom(const std::string &dev)
         : Comms(dev, Comms::CT_QCOM)
     {
-        m_egms.reserve(MAX_EGM_NUM);
+        m_egms.reserve(SG_QCOM_MAX_EGM_NUM);
     }
 
     CommsQcom::~CommsQcom()
@@ -193,8 +196,32 @@ namespace sg
                 {
                     // TODO : check and reset tcp time
                     QcomPollPtr poll = job->GetPoll(i);
-                    //unique_lock<mutex> rsp_lock(m_response);
+
+                    std::unique_lock<std::mutex> rsp_lock(m_response);
+
+                    if (m_resp_received)
+                    {
+                        if (!m_resp_finish)
+                        {
+                            if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TPC)) ==
+                                std::cv_status::timeout)
+                            {
+                                COMMS_LOG("EGM can't finish response in request time.\n", CLL_Error);
+                            }
+                        }
+
+                        m_resp_received = false;
+                        m_resp_finish = false;
+                    }
+
                     this->SendPacket(poll->data, poll->length);
+
+                    if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TRT)) ==
+                        std::cv_status::timeout)
+                    {
+                        COMMS_LOG("EGM response timeout\n", CLL_Error);
+                    }
+
                     //m_resp_timeout = false;
                     //m_response_cond.wait_for(rsp_lock, chrono::milliseconds(5)); // Ref Qcom1.6-14.1.7
                     //if (!m_resp_received)

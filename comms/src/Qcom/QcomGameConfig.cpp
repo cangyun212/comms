@@ -138,7 +138,7 @@ namespace sg
         return false;
     }
 
-    void QcomGameConfiguration::BuildGameConfigPoll(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const & data)
+    bool QcomGameConfiguration::BuildGameConfigPoll(QcomJobDataPtr job, uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const & data)
     {
         if (auto it = m_qcom.lock())
         {
@@ -175,14 +175,13 @@ namespace sg
 
                 if (game != game_num)
                 {
-                    QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
                     job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, gvn, data));
 
                     p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
                     p->data.games[game].config = data;
                     p->data.games[game].gvn = gvn;
 
-                    it->AddJob(job);
+                    return true;
                 }
                 else
                 {
@@ -195,8 +194,9 @@ namespace sg
                 COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : %1%\n") %
                     gvn, CLL_Error);
             }
-
         }
+
+        return false;
     }
 
 

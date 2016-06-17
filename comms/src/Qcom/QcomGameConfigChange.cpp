@@ -21,7 +21,7 @@ namespace sg {
 
     }
 
-    void QcomGameConfigurationChange::BuildGameConfigChangePoll(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const & data)
+    bool QcomGameConfigurationChange::BuildGameConfigChangePoll(QcomJobDataPtr job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const & data)
     {
         if (auto it = m_qcom.lock())
         {
@@ -44,7 +44,6 @@ namespace sg {
 
                 if (game != game_num)
                 {
-                    QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
                     job->AddPoll(this->MakeGameConfigChangePoll(poll_address, p->data.control.last_control, gvn, data));
 
                     uint8_t var_lock = p->data.games[game].config.settings.var_lock;
@@ -52,7 +51,8 @@ namespace sg {
                     p->data.games[game].config.settings = data;
                     p->data.games[game].config.settings.var_lock = var_lock;
 
-                    it->AddJob(job);
+                    return true;
+
                 }
                 else
                 {
@@ -66,6 +66,8 @@ namespace sg {
                     static_cast<uint32_t>(poll_address) % gvn, CLL_Error);
             }
         }
+
+        return false;
     }
 
     QcomPollPtr QcomGameConfigurationChange::MakeGameConfigChangePoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn,

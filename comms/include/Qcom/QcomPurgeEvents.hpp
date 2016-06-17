@@ -25,7 +25,7 @@ namespace sg {
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        void        BuildPurgeEventsPoll(uint8_t poll_address, uint8_t evtno);
+        bool        BuildPurgeEventsPoll(QcomJobDataPtr job, uint8_t poll_address, uint8_t evtno);
 
     private:
         QcomPollPtr MakePurgeEventsPoll(uint8_t poll_address, uint8_t last_control, uint8_t psn, uint8_t evtno);

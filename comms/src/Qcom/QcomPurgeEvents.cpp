@@ -52,15 +52,13 @@ namespace sg
 
     }
 
-    void QcomPurgeEvents::BuildPurgeEventsPoll(uint8_t poll_address, uint8_t evtno)
+    bool QcomPurgeEvents::BuildPurgeEventsPoll(QcomJobDataPtr job, uint8_t poll_address, uint8_t evtno)
     {
         if (auto it = m_qcom.lock())
         {
             QcomDataPtr p = it->GetEgmData(poll_address);
             if (p)
             {
-                QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-
                 std::unique_lock<std::mutex> lock(p->locker);
 
                 p->data.control.psn[Qcom_PSN_Events] = QcomNextPSN(p->data.control.psn[Qcom_PSN_Events]);
@@ -72,9 +70,11 @@ namespace sg
                         p->data.control.psn[Qcom_PSN_Events], 
                         evtno));
 
-                it->AddJob(job);
+                return true;
             }
         }
+
+        return false;
     }
 
     QcomPollPtr QcomPurgeEvents::MakePurgeEventsPoll(uint8_t poll_address, uint8_t last_control, uint8_t psn, uint8_t evtno)

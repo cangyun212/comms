@@ -231,11 +231,11 @@ namespace sg
         };
 
     public:
-        QcomJobData(JobType type, size_t poll_num = 1);
+        QcomJobData(JobType type, size_t poll_num = 2);
 
     public:
         size_t      GetPollNum() const;
-        QcomPollPtr GetPoll(size_t poll_address) const;
+        QcomPollPtr GetPoll(size_t index) const;
         void        AddPoll(QcomPollPtr const & poll);
         size_t      GetBroadcastNum() const;
         QcomPollPtr GetBroadcast(size_t index) const;
@@ -282,12 +282,16 @@ namespace sg
         void    GeneralPromotional(std::string const& text);
         void    SiteDetail(std::string const& stext, std::string const& ltext);
 
+        void    GeneralStatus(uint8_t poll_address);
         void    EGMConfRequest(uint8_t poll_address, QcomEGMControlPollData const& data);
         void    EGMConfiguration(uint8_t poll_address, QcomEGMConfigPollData const& data);
         void    GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const& data);
         void    GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);
         void    EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data);
         void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
+
+        void    PendingPoll(size_t poll_num = 2);
+        void    SendPoll();
 
     public:
         QcomDataPtr     GetEgmData(uint8_t poll_address);
@@ -360,6 +364,9 @@ namespace sg
         std::thread     m_worker;
         std::mutex      m_job;
         std::condition_variable  m_job_cond;
+
+        bool            m_pending;
+        QcomJobDataPtr  m_pending_job;
 
         typedef std::list<QcomJobDataPtr>   JobQueue;
         JobQueue        m_jobs;

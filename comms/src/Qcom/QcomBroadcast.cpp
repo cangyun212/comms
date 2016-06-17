@@ -47,7 +47,7 @@ namespace sg
         return poll;
     }
 
-    QcomJobDataPtr QcomBroadcast::MakePollAddressJob()
+    bool QcomBroadcast::MakePollAddressJob(QcomJobDataPtr job)
     {
         if (auto it = m_qcom.lock())
         {
@@ -56,9 +56,7 @@ namespace sg
 
             size_t size = egmDatas.size();
             if(!size)
-                return nullptr;
-
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+                return false;
 
             // batch by QCOM_REMAX_BMEGMPAC, ref Qcom1.6-15.5.4
             size_t group = size / QCOM_REMAX_BMEGMPAC;
@@ -92,25 +90,23 @@ namespace sg
                 job->AddBroadcast(poll);
             }
 
-            return job;
+            return true;
         }
 
-        return nullptr;
+        return false;
     }
 
-    void QcomBroadcast::BuildPollAddressPoll()
+    bool QcomBroadcast::BuildPollAddressPoll(QcomJobDataPtr job)
     {
-        if (auto it = m_qcom.lock())
-        {
-            QcomJobDataPtr job = this->MakePollAddressJob();
-            if (job)
-            {
-                it->AddJob(job);
-            }
-        }
+        //if (auto it = m_qcom.lock())
+        //{
+            return this->MakePollAddressJob(job);
+        //}
+
+        //return false;
     }
 
-    void QcomBroadcast::BuildPollAddressPoll(uint8_t poll_address)
+    bool QcomBroadcast::BuildPollAddressPoll(QcomJobDataPtr job, uint8_t poll_address)
     {
         if (auto it = m_qcom.lock())
         {
@@ -120,16 +116,15 @@ namespace sg
             {
                 std::unique_lock<std::mutex> lock(d->locker);
 
-                QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
-
-                QcomPollPtr poll = this->MakePollAddressPoll(d->data.control.serialMidBCD, poll_address);
-                job->AddBroadcast(poll);
+                job->AddBroadcast(this->MakePollAddressPoll(d->data.control.serialMidBCD, poll_address));
 
                 d->data.control.poll_address = poll_address;
 
-                it->AddJob(job);
+                return true;
             }
         }
+
+        return false;
     }
 
     //Time Data broadcast
@@ -168,18 +163,14 @@ namespace sg
         return poll;
     }
 
-    void QcomBroadcast::BuildTimeDateBroadcast()
+    bool QcomBroadcast::BuildTimeDateBroadcast(QcomJobDataPtr job)
     {
-        if (auto it = m_qcom.lock())
-        {
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        //if (auto it = m_qcom.lock())
+        //{
+            job->AddBroadcast(this->MakeTimeDateBroadcast());
 
-            QcomPollPtr poll = this->MakeTimeDateBroadcast();
-
-            job->AddBroadcast(poll);
-
-            it->AddJob(job);
-        }
+            return true;
+        //}
     }
 
     //Link Progressive Current Amount broadcast
@@ -213,18 +204,14 @@ namespace sg
         return poll;
     }
 
-    void QcomBroadcast::BuildLinkProgressiveCurrentAmountBroadcast(QcomLinkedProgressiveData const& data)
+    bool QcomBroadcast::BuildLinkProgressiveCurrentAmountBroadcast(QcomJobDataPtr job, QcomLinkedProgressiveData const& data)
     {
-        if (auto it = m_qcom.lock())
-        {
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        //if (auto it = m_qcom.lock())
+        //{
+            job->AddBroadcast(this->MakeLinkProgressiveCurrentAmountBroadcast(data));
 
-            QcomPollPtr poll = this->MakeLinkProgressiveCurrentAmountBroadcast(data);
-
-            job->AddBroadcast(poll);
-
-            it->AddJob(job);
-        }
+            return true;
+        //}
     }
 
     //General Promotional Message broadcast
@@ -264,18 +251,14 @@ namespace sg
         return poll;
     }
 
-    void QcomBroadcast::BuildGeneralPromotionalMessageBroadcast(std::string const& text)
+    bool QcomBroadcast::BuildGeneralPromotionalMessageBroadcast(QcomJobDataPtr job, std::string const& text)
     {
-        if (auto it = m_qcom.lock())
-        {
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        //if (auto it = m_qcom.lock())
+        //{
+            job->AddBroadcast(this->MakeGeneralPromotionalMessageBroadcast(text));
 
-            QcomPollPtr poll = this->MakeGeneralPromotionalMessageBroadcast(text);
-
-            job->AddBroadcast(poll);
-
-            it->AddJob(job);
-        }
+            return true;
+        //}
     }
 
     //Site Details broadcast
@@ -310,18 +293,14 @@ namespace sg
         return poll;
     }
 
-    void QcomBroadcast::BuildSiteDetailsBroadcast(std::string const& stext, std::string const& ltext)
+    bool QcomBroadcast::BuildSiteDetailsBroadcast(QcomJobDataPtr job, std::string const& stext, std::string const& ltext)
     {
-        if (auto it = m_qcom.lock())
-        {
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        //if (auto it = m_qcom.lock())
+        //{
+            job->AddBroadcast(this->MakeSiteDetailsBroadcast(stext, ltext));
 
-            QcomPollPtr poll = this->MakeSiteDetailsBroadcast(stext, ltext);
-
-            job->AddBroadcast(poll);
-
-            it->AddJob(job);
-        }
+            return true;
+        //}
     }
 }
 

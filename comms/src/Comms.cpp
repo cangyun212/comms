@@ -31,8 +31,8 @@ namespace sg {
         , m_init(false)
         , m_start(false)
         , m_type(type)
-        , m_resp_received(false)
-        , m_resp_finish(false)
+        //, m_resp_received(false)
+        //, m_resp_finish(false)
         //, m_resp_timeout(true)
     {
     }
@@ -229,23 +229,23 @@ namespace sg {
         ptr += ret;
         length += ret;
 
-        if (length && !m_resp_received)
-        {
-            std::unique_lock<std::mutex> lock(m_response);
-            m_resp_received = true;
+        //if (length && !m_resp_received)
+        //{
+            //std::unique_lock<std::mutex> lock(m_response);
+            //m_resp_received = true;
             //if (!m_resp_timeout)
             //{
-                m_response_cond.notify_one();
+            //    m_response_cond.notify_one();
             //}
-        }
+        //}
 
         if (length && this->IsPacketComplete(msg_buf, length))
         {
-            {
-                std::unique_lock<std::mutex> lock(m_response);
-                m_resp_finish = true;
-                m_response_cond.notify_one();
-            }
+            //{
+            //    std::unique_lock<std::mutex> lock(m_response);
+            //    m_resp_finish = true;
+            //    m_response_cond.notify_one();
+            //}
             //unique_lock<mutex> lock(m_response);
             //if (!m_resp_timeout)
             //{

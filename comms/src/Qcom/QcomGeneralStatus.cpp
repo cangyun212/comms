@@ -68,26 +68,25 @@ namespace sg
     }
 
 
-    void QcomGeneralStatus::BuildGeneralStatusPoll(uint8_t poll_address)
+    bool QcomGeneralStatus::BuildGeneralStatusPoll(QcomJobDataPtr job, uint8_t poll_address)
     {
         if (auto it = m_qcom.lock())
         {
             QcomDataPtr p = it->GetEgmData(poll_address);
             if (p)
             {
-                QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-
                 std::unique_lock<std::mutex> lock(p->locker);
 
                 job->AddPoll(this->MakeGeneralStatusPoll(poll_address, p->data.control.last_control));
 
-                it->AddJob(job);
+                return true;
             }
         }
 
+        return false;
     }
 
-    QcomJobDataPtr QcomGeneralStatus::MakeGeneralStatusJob()
+    bool QcomGeneralStatus::BuildGeneralStatusPoll(QcomJobDataPtr job)
     {
         if (auto it = m_qcom.lock())
         {
@@ -96,9 +95,7 @@ namespace sg
 
             size_t size = egmDatas.size();
             if (!size)
-                return nullptr;
-
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+                return false;
 
             for (uint8_t i = 0; i < size; ++i)
             {
@@ -112,10 +109,10 @@ namespace sg
                 }
             }
 
-            return job;
+            return true;
         }
 
-        return nullptr;
+        return false;
     }
 
 }

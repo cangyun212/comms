@@ -338,6 +338,32 @@ namespace sg
         }
     }
 
+    void QcomSim::GeneralStatus(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
+
+        m_qcom->GeneralStatus(m_curr_egm);
+
+    }
+
+    void QcomSim::PendingPoll(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        QcomPendingActionPtr p = std::static_pointer_cast<QcomPendingAction>(action);
+
+        m_qcom->PendingPoll(p->PollNum());
+    }
+
+    void QcomSim::SendPoll(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
+
+        m_qcom->SendPoll();
+    }
+
     void QcomSim::ChangeDev(const ActionCenter &sender, const ActionPtr &action)
     {
         SG_UNREF_PARAM(sender);

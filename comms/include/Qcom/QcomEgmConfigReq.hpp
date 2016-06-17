@@ -25,7 +25,7 @@ namespace sg {
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        void        BuildEGMConfigReqPoll(uint8_t poll_address, QcomEGMControlPollData const& data);
+        bool        BuildEGMConfigReqPoll(QcomJobDataPtr job, uint8_t poll_address, QcomEGMControlPollData const& data);
 
     private:
         QcomPollPtr MakeEGMConfigReqPoll(uint8_t poll_address, uint8_t last_control, QcomEGMControlPollData const& data);

@@ -76,6 +76,17 @@ namespace sg
         ptr->BuildOptions();
         m_actions["purgeevents"] = ptr;
         m_actions["pevents"] = ptr;
+
+        ptr = MakeSharedPtr<QcomEGMGeneralStatusAction>();
+        m_actions["genstatus"] = ptr;
+        m_actions["gss"] = ptr;
+
+        ptr = MakeSharedPtr<QcomPendingAction>();
+        ptr->BuildOptions();
+        m_actions["pending"] = ptr;
+
+        ptr = MakeSharedPtr<QcomSendAction>();
+        m_actions["send"] = ptr;
     }
 
 }

@@ -38,9 +38,9 @@ namespace sg
         return m_polls.size();
     }
 
-    QcomPollPtr QcomJobData::GetPoll(size_t poll_address) const
+    QcomPollPtr QcomJobData::GetPoll(size_t index) const
     {
-        return m_polls[poll_address];
+        return m_polls[index];
     }
 
     void QcomJobData::AddPoll(const QcomPollPtr &poll)
@@ -65,6 +65,7 @@ namespace sg
 
     CommsQcom::CommsQcom(const std::string &dev)
         : Comms(dev, Comms::CT_QCOM)
+        , m_pending(false)
     {
         m_egms.reserve(SG_QCOM_MAX_EGM_NUM);
     }
@@ -190,6 +191,8 @@ namespace sg
             switch (job->GetType())
             {
             case QcomJobData::JT_POLL:
+            case QcomJobData::JT_BROADCAST:
+            case QcomJobData::JT_BROADCAST_SEEK:
             {
                 size_t num = job->GetPollNum();
                 for (size_t i = 0; i < num; ++i)
@@ -197,30 +200,30 @@ namespace sg
                     // TODO : check and reset tcp time
                     QcomPollPtr poll = job->GetPoll(i);
 
-                    std::unique_lock<std::mutex> rsp_lock(m_response);
+                    //std::unique_lock<std::mutex> rsp_lock(m_response);
 
-                    if (m_resp_received)
-                    {
-                        if (!m_resp_finish)
-                        {
-                            if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TPC)) ==
-                                std::cv_status::timeout)
-                            {
-                                COMMS_LOG("EGM can't finish response in request time.\n", CLL_Error);
-                            }
-                        }
+                    //if (m_resp_received)
+                    //{
+                    //    if (!m_resp_finish)
+                    //    {
+                    //        if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TPC)) ==
+                    //            std::cv_status::timeout)
+                    //        {
+                    //            COMMS_LOG("EGM can't finish response in request time.\n", CLL_Error);
+                    //        }
+                    //    }
 
-                        m_resp_received = false;
-                        m_resp_finish = false;
-                    }
+                    //    m_resp_received = false;
+                    //    m_resp_finish = false;
+                    //}
 
                     this->SendPacket(poll->data, poll->length);
 
-                    if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TRT)) ==
-                        std::cv_status::timeout)
-                    {
-                        COMMS_LOG("EGM response timeout\n", CLL_Error);
-                    }
+                    //if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TRT)) ==
+                    //    std::cv_status::timeout)
+                    //{
+                    //    COMMS_LOG("EGM response timeout\n", CLL_Error);
+                    //}
 
                     //m_resp_timeout = false;
                     //m_response_cond.wait_for(rsp_lock, chrono::milliseconds(5)); // Ref Qcom1.6-14.1.7
@@ -240,17 +243,17 @@ namespace sg
 
                 break;
             }
-            case QcomJobData::JT_BROADCAST:
-            case QcomJobData::JT_BROADCAST_SEEK:
-            {
-                size_t num = job->GetBroadcastNum();
-                for (size_t i = 0; i < num; ++i)
-                {
-                    QcomPollPtr poll = job->GetBroadcast(i);
-                    this->SendPacket(poll->data, poll->length);
-                }
-                break;
-            }
+            //case QcomJobData::JT_BROADCAST:
+            //case QcomJobData::JT_BROADCAST_SEEK:
+            //{
+            //    size_t num = job->GetBroadcastNum();
+            //    for (size_t i = 0; i < num; ++i)
+            //    {
+            //        QcomPollPtr poll = job->GetBroadcast(i);
+            //        this->SendPacket(poll->data, poll->length);
+            //    }
+            //    break;
+            //}
             case QcomJobData::JT_QUIT:
                 return;
             default:
@@ -375,128 +378,436 @@ namespace sg
             // if seek egm is done, then
             // build poll general status
             // add the job as the top priority
+            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL); 
             QcomGenerlStatusPtr handler = std::static_pointer_cast<QcomGeneralStatus>(m_handler[QCOM_GSP_FC]);
-            QcomJobDataPtr job = handler->MakeGeneralStatusJob();
-            if (job)
+            if (handler->BuildGeneralStatusPoll(job))
             {
-                std::unique_lock<std::mutex> lock(m_job);
-                m_jobs.push_front(job);
-                m_job_cond.notify_one();
+                QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+                if (broadcast_handler->BuildTimeDateBroadcast(job))
+                {
+                    std::unique_lock<std::mutex> lock(m_job);
+                    m_jobs.push_front(job);
+                    m_job_cond.notify_one();
+                }
             }
-
-            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-            broadcast_handler->BuildTimeDateBroadcast();
 
             // send every 8 secs in case job thread is too busy
             std::this_thread::sleep_for(std::chrono::seconds(8));
         }
     }
 
+    void CommsQcom::PendingPoll(size_t poll_num)
+    {
+        if (!m_pending)
+        {
+            m_pending = true;
+            m_pending_job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL, poll_num);
+        }
+        else
+        {
+            COMMS_LOG("A pending poll is working, duplicate pending will be ignored\n", CLL_Error);
+        }
+    }
+
+    void CommsQcom::SendPoll()
+    {
+        if (m_pending)
+        {
+            this->AddJob(m_pending_job);
+            m_pending_job = nullptr;
+            m_pending = false;
+        }
+        else
+        {
+            COMMS_LOG("No available pending poll to send\n", CLL_Error);
+        }
+    }
+
     // TODO:
     void CommsQcom::SeekEGM()
     {
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST_SEEK);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
         // we have no need to protect m_handler since no one will touch it after init
         QcomBroadcastSeekPtr handler = std::static_pointer_cast<QcomBroadcastSeek>(m_handler[QCOM_BROADCAST_SEEK_FC]);
-        handler->BuildSeekEGMPoll();
+        if (!handler->BuildSeekEGMPoll(job))
+            return;
+
         QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDateBroadcast();
+        if (!broadcast_handler->BuildTimeDateBroadcast(job))
+            return;
+
+        if (!m_pending)
+        {
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::PollAddress(uint8_t poll_address)
     {
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         // we have no need to protect m_handler since no one will touch it after init
         QcomBroadcastPtr handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_ADDRESS]);
 
         if (poll_address > 0)
         {
-            handler->BuildPollAddressPoll(poll_address);
+            if (!handler->BuildPollAddressPoll(job, poll_address))
+                return;
         }
         else
         {
-            handler->BuildPollAddressPoll();
+            if (!handler->BuildPollAddressPoll(job))
+                return;
+        }
+
+
+
+        if (!m_pending)
+        {
+            if (!handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
         }
     }
 
     void CommsQcom::TimeData()
     {
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomBroadcastPtr handle = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
 
         COMMS_LOG("Send Time Data Broadcast\n", CLL_Info);
-        handle->BuildTimeDateBroadcast();
+        if (!handle->BuildTimeDateBroadcast(job))
+            return;
+
+        if (!m_pending)
+        {
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::LinkJPCurrentAmount(QcomLinkedProgressiveData const & data)
     {
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomBroadcastPtr handle = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
 
         COMMS_LOG("Send LP Current Amount Broadcast\n", CLL_Info);
-        handle->BuildLinkProgressiveCurrentAmountBroadcast(data);
+        if (!handle->BuildLinkProgressiveCurrentAmountBroadcast(job, data))
+            return;
+
+        if (!m_pending)
+        {
+            if (!handle->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::GeneralPromotional(std::string const & text)
     {
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomBroadcastPtr handle = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
 
         COMMS_LOG("Send General Promotional Message Broadcast\n", CLL_Info);
-        handle->BuildGeneralPromotionalMessageBroadcast(text);
+        if (!handle->BuildGeneralPromotionalMessageBroadcast(job, text))
+            return;
+
+        if (!m_pending)
+        {
+            if (!handle->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::SiteDetail(std::string const & stext, std::string const & ltext)
     {
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomBroadcastPtr handle = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
 
         COMMS_LOG("Send Site Detail Broadcast\n", CLL_Info);
-        handle->BuildSiteDetailsBroadcast(stext, ltext);
+        if (!handle->BuildSiteDetailsBroadcast(job, stext, ltext))
+            return;
+
+        if (!m_pending)
+        {
+            if (!handle->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
+    }
+
+    void CommsQcom::GeneralStatus(uint8_t poll_address)
+    {
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
+        QcomGenerlStatusPtr handler = std::static_pointer_cast<QcomGeneralStatus>(m_handler[QCOM_GSP_FC]);
+
+        if (poll_address > 0)
+        {
+            if (!handler->BuildGeneralStatusPoll(job, poll_address))
+                return;
+        }
+        else
+        {
+            if (!handler->BuildGeneralStatusPoll(job))
+                return;
+        }
+
+        if (!m_pending)
+        {
+
+            QcomBroadcastPtr handle = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!handle->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::EGMConfRequest(uint8_t poll_address, QcomEGMControlPollData const & data)
     {
         BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomEgmConfigurationRequestPtr handler = std::static_pointer_cast<QcomEgmConfigurationRequest>(m_handler[QCOM_EGMCRP_FC]);
-        handler->BuildEGMConfigReqPoll(poll_address, data);
-        QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDateBroadcast();
+        if (!handler->BuildEGMConfigReqPoll(job, poll_address, data))
+            return;
+
+        if (!m_pending)
+        {
+            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!broadcast_handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::EGMConfiguration(uint8_t poll_address, QcomEGMConfigPollData const & data)
     {
         BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomEgmConfigurationPtr handler = std::static_pointer_cast<QcomEgmConfiguration>(m_handler[QCOM_EGMCP_FC]);
-        handler->BuildEGMConfigPoll(poll_address, data);
-        QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDateBroadcast();
+        if (!handler->BuildEGMConfigPoll(job, poll_address, data))
+            return;
+
+        if (!m_pending)
+        {
+            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!broadcast_handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const& data)
     {
+        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomGameConfigurationPtr handler = std::static_pointer_cast<QcomGameConfiguration>(m_handler[QCOM_EGMGCP_FC]);
-        handler->BuildGameConfigPoll(poll_address, gvn, data);
-        QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDateBroadcast();
+        if (!handler->BuildGameConfigPoll(job, poll_address, gvn, data))
+            return;
+
+        if (!m_pending)
+        {
+            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!broadcast_handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data)
     {
+        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomGameConfigurationChangePtr handler = std::static_pointer_cast<QcomGameConfigurationChange>(m_handler[QCOM_EGMVCP_FC]);
-        handler->BuildGameConfigChangePoll(poll_address, gvn, data);
-        QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDateBroadcast();
+
+        if (!handler->BuildGameConfigChangePoll(job, poll_address, gvn, data))
+            return;
+
+        if (!m_pending)
+        {
+            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!broadcast_handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::PurgeEvents(uint8_t poll_address, uint8_t evtno)
     {
+        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomPurgeEventsPtr handler = std::static_pointer_cast<QcomPurgeEvents>(m_handler[QCOM_PEP_FC]);
-        handler->BuildPurgeEventsPoll(poll_address, evtno);
-        QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDateBroadcast();
+        if (!handler->BuildPurgeEventsPoll(job, poll_address, evtno))
+            return;
+
+        if (!m_pending)
+        {
+            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!broadcast_handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 
     void CommsQcom::EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data)
     {
+        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
         QcomEgmParametersPtr handler = std::static_pointer_cast<QcomEgmParameters>(m_handler[QCOM_EGMPP_FC]);
-        handler->BuildEgmParametersPoll(poll_address, data);
-        QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        broadcast_handler->BuildTimeDateBroadcast();
+        if (!handler->BuildEgmParametersPoll(job, poll_address, data))
+            return;
+
+        if (!m_pending)
+        {
+            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!broadcast_handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
     }
 }
 

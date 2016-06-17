@@ -45,6 +45,9 @@ namespace sg
             AT_QCOM_GAME_CONF_CHANGE,
             AT_QCOM_EGM_PARAMS,
             AT_QCOM_PURGE_EVENTS,
+            AT_QCOM_GENERAL_STATUS,
+            AT_QCOM_PENDING,
+            AT_QCOM_SEND,
  
             AT_HELP,
             AT_NUM

@@ -21,6 +21,9 @@ namespace sg {
     class QcomLPCurrentAmountAction;
     class QcomGeneralPromotionalAction;
     class QcomSiteDetailAction;
+    class QcomEGMGeneralStatusAction;
+    class QcomPendingAction;
+    class QcomSendAction;
     class ActionFactory;
     class QcomActionFactory;
     class Simulator;
@@ -47,6 +50,9 @@ namespace sg {
     typedef std::shared_ptr<QcomLPCurrentAmountAction> QcomLPCurrentAmountActionPtr;
     typedef std::shared_ptr<QcomGeneralPromotionalAction> QcomGeneralPromotionalActionPtr;
     typedef std::shared_ptr<QcomSiteDetailAction> QcomSiteDetailActionPtr;
+    typedef std::shared_ptr<QcomEGMGeneralStatusAction> QcomEGMGeneralStatusActionPtr;
+    typedef std::shared_ptr<QcomPendingAction> QcomPendingActionPtr;
+    typedef std::shared_ptr<QcomSendAction> QcomSendActionPtr;
 }
 
 

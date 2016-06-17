@@ -26,8 +26,8 @@ namespace sg
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        void            BuildGeneralStatusPoll(uint8_t poll_address);
-        QcomJobDataPtr  MakeGeneralStatusJob();
+        bool            BuildGeneralStatusPoll(QcomJobDataPtr job, uint8_t poll_address);
+        bool            BuildGeneralStatusPoll(QcomJobDataPtr job);
 
     private:
         QcomPollPtr     MakeGeneralStatusPoll(uint8_t poll_address, uint8_t last_control);

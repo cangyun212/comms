@@ -747,6 +747,102 @@ namespace sg
         return des;
     }
 
+    QcomEGMGeneralStatusAction::QcomEGMGeneralStatusAction()
+        : Action(Action::AT_QCOM_GENERAL_STATUS)
+    {
+    }
+
+    QcomEGMGeneralStatusAction::~QcomEGMGeneralStatusAction()
+    {
+    }
+
+    ActionPtr QcomEGMGeneralStatusAction::Clone()
+    {
+        return Action::DoClone<QcomEGMGeneralStatusAction>();
+    }
+
+    const char * QcomEGMGeneralStatusAction::Description() const
+    {
+        static const char* des = "\tGeneral Status: \n\t\tSolicit a response from the EGM to check if the status of the EGM has changed\n";
+        return des;
+    }
+
+    size_t QcomPendingAction::m_pollnum = 2;
+
+    QcomPendingAction::QcomPendingAction()
+        : Action(Action::AT_QCOM_PENDING)
+    {
+    }
+
+    QcomPendingAction::~QcomPendingAction()
+    {
+    }
+
+    bool QcomPendingAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: sd [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+
+            res = false;
+        }
+        else
+        {
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomPendingAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("pollnum", "number of pending polls", Value<size_t>(&m_pollnum)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomPendingAction::Clone()
+    {
+        return Action::DoClone<QcomPendingAction>();
+    }
+
+    const char * QcomPendingAction::Description() const
+    {
+        static const char* des = "\tPending Poll:\n\t\tPending all polls following this command\n";
+        return des;
+    }
+
+    QcomSendAction::QcomSendAction()
+        : Action(Action::AT_QCOM_SEND)
+    {
+    }
+
+    QcomSendAction::~QcomSendAction()
+    {
+    }
+
+    ActionPtr QcomSendAction::Clone()
+    {
+        return Action::DoClone<QcomSendAction>();
+    }
+
+    const char * QcomSendAction::Description() const
+    {
+        static const char* des = "\tSend Poll:\n\t\tSend all pending polls\n";
+        return des;
+    }
+
 }
 
 

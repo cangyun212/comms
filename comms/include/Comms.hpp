@@ -83,11 +83,11 @@ namespace sg {
         std::atomic<bool>   m_start;
         CommsType           m_type;
         std::thread         m_reader;
-        bool                m_resp_received;
-        bool                m_resp_finish;
-        //bool              m_resp_timeout;
-        std::mutex          m_response;
-        std::condition_variable m_response_cond;
+        //bool                m_resp_received;
+        //bool                m_resp_finish;
+        //bool                m_resp_timeout;
+        //std::mutex          m_response;
+        //std::condition_variable m_response_cond;
         std::thread             m_checker;
 
     };

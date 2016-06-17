@@ -129,6 +129,26 @@ namespace sg
                 center.GetEvent(Action::AT_QCOM_PURGE_EVENTS)->connect(
                     std::bind(&QcomSim::PurgeEvents, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            sim->Install(Action::AT_QCOM_GENERAL_STATUS);
+            center.Install(Action::AT_QCOM_GENERAL_STATUS);
+
+            sim->GetConnection(Action::AT_QCOM_GENERAL_STATUS) =
+                center.GetEvent(Action::AT_QCOM_GENERAL_STATUS)->connect(
+                    std::bind(&QcomSim::GeneralStatus, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            sim->Install(Action::AT_QCOM_PENDING);
+            center.Install(Action::AT_QCOM_PENDING);
+
+            sim->GetConnection(Action::AT_QCOM_PENDING) =
+                center.GetEvent(Action::AT_QCOM_PENDING)->connect(
+                    std::bind(&QcomSim::PendingPoll, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            sim->Install(Action::AT_QCOM_SEND);
+            center.Install(Action::AT_QCOM_SEND);
+
+            sim->GetConnection(Action::AT_QCOM_SEND) =
+                center.GetEvent(Action::AT_QCOM_SEND)->connect(
+                    std::bind(&QcomSim::SendPoll, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             sim->Install(Action::AT_RESET_DEV);
             center.Install(Action::AT_RESET_DEV);

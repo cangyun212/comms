@@ -21,24 +21,24 @@ namespace sg {
 
     }
 
-    void QcomEgmParameters::BuildEgmParametersPoll(uint8_t poll_address, QcomEGMParametersData const & data)
+    bool QcomEgmParameters::BuildEgmParametersPoll(QcomJobDataPtr job, uint8_t poll_address, QcomEGMParametersData const & data)
     {
         if (auto it = m_qcom.lock())
         {
             QcomDataPtr p = it->GetEgmData(poll_address);
             if (p)
             {
-                QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-
                 std::unique_lock<std::mutex> lock(p->locker);
 
                 job->AddPoll(this->MakeEgmParametersPoll(poll_address, p->data.control.last_control, data));
 
                 p->data.param = data;
 
-                it->AddJob(job);
+                return true;
             }
         }
+
+        return false;
     }
 
     QcomPollPtr QcomEgmParameters::MakeEgmParametersPoll(uint8_t poll_address, uint8_t last_control, QcomEGMParametersData const& data)

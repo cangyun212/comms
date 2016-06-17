@@ -11,6 +11,38 @@
 
 namespace sg 
 {
+    class QcomPendingAction : public Action
+    {
+    public:
+        QcomPendingAction();
+       ~QcomPendingAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        size_t      PollNum() const { return m_pollnum; }
+
+    private:
+        static size_t   m_pollnum;
+    };
+
+    class QcomSendAction : public Action
+    {
+    public:
+        QcomSendAction();
+       ~QcomSendAction();
+
+    public:
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    private:
+
+    };
 
     class QcomSeekEGMAction : public Action
     {
@@ -38,6 +70,17 @@ namespace sg
 
     private:
 
+    };
+
+    class QcomEGMGeneralStatusAction : public Action
+    {
+    public:
+        QcomEGMGeneralStatusAction();
+       ~QcomEGMGeneralStatusAction();
+
+    public:
+        ActionPtr   Clone() override;
+        const char* Description() const override;
     };
 
     class QcomEGMConfRequestAction : public Action

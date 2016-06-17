@@ -194,15 +194,13 @@ namespace sg
 
     }
 
-    void QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(uint8_t poll_address, QcomEGMControlPollData const & data)
+    bool QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(QcomJobDataPtr job, uint8_t poll_address, QcomEGMControlPollData const & data)
     {
         if (auto it = m_qcom.lock())
         {
             QcomDataPtr p = it->GetEgmData(poll_address);
             if (p)
             {
-                QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-
                 std::unique_lock<std::mutex> lock(p->locker);
 
                 job->AddPoll(this->MakeEGMConfigReqPoll(poll_address, p->data.control.last_control, data));
@@ -233,10 +231,11 @@ namespace sg
                     p->data.control.psn[Qcom_PSN_ECT] = QCOM_RESET_PSN;
                 }
 
-                it->AddJob(job);
+                return true;
             }
-
         }
+
+        return false;
     }
 
     QcomPollPtr QcomEgmConfigurationRequest::MakeEGMConfigReqPoll(uint8_t poll_address, uint8_t last_control, QcomEGMControlPollData const& data)

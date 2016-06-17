@@ -49,11 +49,11 @@ namespace sg
         return false;
     }
 
-    void QcomBroadcastSeek::BuildSeekEGMPoll()
+    bool QcomBroadcastSeek::BuildSeekEGMPoll(QcomJobDataPtr job)
     {
-        if (auto it = m_qcom.lock())
-        {
-            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST_SEEK);
+        //if (auto it = m_qcom.lock())
+        //{
+            //QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_BROADCAST_SEEK);
 
             QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
 
@@ -69,8 +69,10 @@ namespace sg
 
             job->AddBroadcast(poll);
 
-            it->AddJob(job);
-        }
+            return true;
+
+            //it->AddJob(job);
+        //}
     }
 
 }

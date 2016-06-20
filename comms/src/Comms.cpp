@@ -81,6 +81,7 @@ namespace sg {
     {
         int fd = -1;
 #ifdef SG_PLATFORM_LINUX
+        // Ref https://en.wikibooks.org/wiki/Serial_Programming/termios
         fd = open(m_dev.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 
         if (fd < 0)
@@ -94,14 +95,14 @@ namespace sg {
             tcgetattr(fd, &oldtio);
             memset(&newtio, 0, sizeof(newtio));
 
-            newtio.c_cflag |= B19200;
-            newtio.c_cflag |= CS8;
-            newtio.c_iflag |= IGNPAR;
-            newtio.c_cflag |= PARENB | CMSPAR;
-            newtio.c_iflag |= IGNBRK;
+            newtio.c_cflag |= B19200; // baud rate
+            newtio.c_cflag |= CS8; // character size
+            newtio.c_iflag |= IGNPAR; // ignore framing errors and parity errors
+            newtio.c_cflag |= PARENB | CMSPAR; // enable parity generation on output and parity checking for input/use "stick" parity [not in POSIX]
+            newtio.c_iflag |= IGNBRK;// ignore break condition on input
             newtio.c_oflag = 0;
             newtio.c_lflag = 0;
-            newtio.c_cflag |= CLOCAL | CREAD;
+            newtio.c_cflag |= CLOCAL | CREAD; // ignore modem control lines/enable receiver
 
             tcflush(fd, TCIFLUSH);
             tcsetattr(fd, TCSANOW, &newtio);
@@ -185,17 +186,18 @@ namespace sg {
 #ifdef SG_PLATFORM_LINUX
         fd_set  read_fds;
         int ret;
-        struct timeval  timeout;
+        //struct timeval  timeout;
 
         while(m_start)
         {
             FD_ZERO(&read_fds);
             FD_SET(m_fd, &read_fds);
 
-            timeout.tv_sec = 0;
-            timeout.tv_usec = TIMEOUT_USEC;
+            //timeout.tv_sec = 0;
+            //timeout.tv_usec = TIMEOUT_USEC;
 
-            ret = select(m_fd + 1, &read_fds, nullptr, nullptr, &timeout);
+            ret = select(m_fd + 1, &read_fds, nullptr, nullptr, nullptr);
+            //ret = select(m_fd + 1, &read_fds, nullptr, nullptr, &timeout);
             if (ret <= 0) // TODO : error or no device ready
             {
                 continue;

@@ -30,8 +30,9 @@ namespace sg {
 
     void ActionCenter::Install(uint type)
     {
-		SG_UNREF_PARAM(type);
-        BOOST_ASSERT(m_signals.insert(std::make_pair(type, MakeSharedPtr<ActionEvent>())).second);
+        bool res = m_signals.insert(std::make_pair(type, MakeSharedPtr<ActionEvent>())).second;
+        BOOST_ASSERT(res);
+        SG_UNREF_PARAM(res);
     }
 
     bool ActionCenter::HasEvent(uint type) const

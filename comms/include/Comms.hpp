@@ -13,7 +13,11 @@
 #include "Console/ConsolePrinter.hpp"
 #include "CommsPredeclare.hpp"
 
+#ifdef SG_PLATFORM_LINUX
 #define TIMEOUT_USEC    100000 // microseconds
+#else
+#define TIMEOUT_USEC    10000 // milliseconds
+#endif
 #define BUFF_SIZE       256
 
 #define COMMS_LOG(t, l)             SG_WS_SAFE_LOG(t, l)
@@ -74,9 +78,14 @@ namespace sg {
         void    StopResponseThread();
         void    StartCheckTimeoutThread();
         void    StopCheckTimeoutThread();
-        int     OpenDevFile();
+        bool    OpenDevFile();
     protected:
+#ifdef SG_PLATFORM_LINUX
         int                 m_fd;
+#else
+        void               *m_fd;
+#endif // SG_PLATFORM_LINUX
+
         std::string         m_dev;
         std::string         m_slave;
         bool                m_init;
@@ -88,7 +97,7 @@ namespace sg {
         //bool                m_resp_timeout;
         //std::mutex          m_response;
         //std::condition_variable m_response_cond;
-        std::thread             m_checker;
+        std::thread         m_checker;
 
     };
 

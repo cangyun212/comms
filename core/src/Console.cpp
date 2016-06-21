@@ -287,7 +287,7 @@ namespace sg
 
     void Console::ColorOff(ConsoleColorHandle const & h) const
     {
-		SG_UNREF_PARAM(h);
+        SG_UNREF_PARAM(h);
 
         BOOST_ASSERT(m_has_color && m_type != CT_Custom && h.i == 0);
 
@@ -374,7 +374,9 @@ namespace sg
         m_groups.push_back(group);
         if (m_type == CT_Custom)
         {
-            BOOST_ASSERT(init_pair(static_cast<short>(m_colId), static_cast<short>(group.f), static_cast<short>(group.b)) != ERR);
+            int pair = init_pair(static_cast<short>(m_colId), static_cast<short>(group.f), static_cast<short>(group.b));
+            BOOST_ASSERT(pair != ERR);
+            SG_UNREF_PARAM(pair);
         }
 
         ConsoleColorHandle h = { m_colId++ };

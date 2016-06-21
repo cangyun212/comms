@@ -29,7 +29,11 @@ namespace sg
         std::string dev = CmdParser::Instance().GetDevPath();
         if (dev.empty())
         {
-            dev = "/dev/ptmx";
+#ifdef SG_PLATFORM_LINUX
+            dev = "/dev/ttyS0";
+#else
+            dev = "COM1";
+#endif // SG_PLATFORM_LINUX
         }
 
         m_qcom = MakeSharedPtr<CommsQcom>(dev);

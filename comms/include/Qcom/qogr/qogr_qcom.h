@@ -72,8 +72,11 @@ extern "C" {
 #define WORD    USHORT
 #define BOOLEAN UCHAR
 #define BOOL    UCHAR
+#ifndef __GNUC__
+#define BITS    BYTE            // msvc prefer this to get the same size of the union structure as gcc
+#else
 #define BITS    WORD            // For var:x; defs. This may also be BYTE (but some compilers perfer WORD)
-                                // However sizeof(var:x) where x <= 8 must be 1
+#endif                          // However sizeof(var:x) where x <= 8 must be 1
 
 #ifndef __GNUC__                // GNUC doesnt support sizeof in directives
 //#if (sizeof(WORD) != 2)
@@ -486,8 +489,8 @@ enum QCOM_Meter_ID {
 //---------------------------------------------------------------------------
 
 
-#ifdef __WIN32__
-#pragma option -a1              // Force byte alignment for QCOM
+#if defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+#pragma pack(push, 1)              // Force byte alignment for QCOM
 #endif
 #ifdef __GNUC__
 #define HANDLE_SYSV_PRAGMA 1    // allow pragma
@@ -616,8 +619,8 @@ typedef struct {
     union {
         WORD    FLGA;
         struct {
-            BITS res:15;
-            BITS full:1;
+            WORD res:15;
+            WORD full:1;
             } bits;
         struct {
             BYTE LSB;
@@ -1557,8 +1560,8 @@ typedef struct {
     union {
         WORD    LFLG;
         struct {
-            BITS lev:3;     // 0...7
-            BITS res:13;
+            WORD lev:3;     // 0...7
+            WORD res:13;
             } bits;
         } LFLG;
     char    LNAME[QCOM_EXTJIP_MAX_LNAME];  // NULL term and padded with 0x00
@@ -1570,10 +1573,10 @@ typedef struct {
     union {
         WORD    FLG;
         struct {
-            BITS    num:4;         // 0...8
-            BITS    res1:3;
-            BITS    display:1;
-            BITS    res2:8;
+            WORD    num:4;         // 0...8
+            WORD    res1:3;
+            WORD    display:1;
+            WORD    res2:8;
             } bits;
         struct {
             BYTE    LSB;
@@ -1864,8 +1867,8 @@ typedef struct {        // QCOM v1.6
             BYTE msb;
             } bytes;
         struct {
-            BITS    res:15;
-            BITS    PrintTestTicket:1;
+            WORD    res:15;
+            WORD    PrintTestTicket:1;
             } bits;
         } FLG;
     BYTE RES;
@@ -2188,8 +2191,8 @@ typedef QCOM_PollMsgType *qcom_pollmsg;
 #define qcpt                ((QCOM_PollMsgType *)PollMsg)   // Generic cast into poll messages (PollMsg must be a defined pointer to the start of a qcom message)
 
 //---------------------------------------------------------------------------
-#ifdef __WIN32__
-#pragma option -a4      // return (force) to dword alignment
+#if defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+#pragma pack(pop)      // return (force) to dword alignment
 #endif
 #ifdef __GNUC__
 #pragma pack(pop)

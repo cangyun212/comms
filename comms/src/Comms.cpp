@@ -32,9 +32,61 @@ namespace sg
 {
 
 #ifdef SG_PLATFORM_WINDOWS
+    class CommsOverlapped
+    {
+    public:
+        CommsOverlapped()
+            : m_ol({ 0 })
+        {
+        }
+
+       ~CommsOverlapped()
+        {
+            this->Close();
+        }
+
+    public:
+        bool Init()
+        {
+            if (!m_ol.hEvent)
+            {
+                m_ol.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+                if (!m_ol.hEvent)
+                    return false;
+            }
+
+            return true;
+        }
+
+        bool Close()
+        {
+            if (m_ol.hEvent)
+            {
+                if (::CloseHandle(m_ol.hEvent))
+                {
+                    m_ol.hEvent = nullptr;
+                    return true;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        bool Reset()
+        {
+            return ::ResetEvent(m_ol.hEvent) == TRUE;
+        }
+
+        LPOVERLAPPED Get() { return &m_ol; }
+
+    private:
+        OVERLAPPED  m_ol;
+    };
+
     namespace
     {
-        OVERLAPPED ol = { 0 };
+        CommsOverlapped s_rol;
     }
 #endif
 
@@ -75,12 +127,6 @@ namespace sg
             if (m_fd >= 0)
                 close(m_fd);
 #else
-            if (ol.hEvent)
-            {
-                ::CloseHandle(ol.hEvent);
-                ol.hEvent = nullptr;
-            }
-
             if (m_fd != INVALID_HANDLE_VALUE)
                 ::CloseHandle(m_fd);
 #endif
@@ -161,10 +207,11 @@ namespace sg
 
             dcb.BaudRate = CBR_19200;
             //dcb.fParity = TRUE;
-            //dcb.Parity = MARKPARITY;
+            dcb.Parity = EVENPARITY;
             dcb.StopBits = ONESTOPBIT;
-            dcb.ByteSize = DATABITS_8;
-            dcb.fDtrControl = RTS_CONTROL_DISABLE;
+            //dcb.ByteSize = DATABITS_8;
+            dcb.ByteSize = 8;
+            dcb.fDtrControl = DTR_CONTROL_DISABLE;
             dcb.fRtsControl = RTS_CONTROL_DISABLE;
 
             if (!::SetCommState(h, &dcb))
@@ -295,10 +342,9 @@ namespace sg
             return;
         }
 
-        ol.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-        if (ol.hEvent == nullptr)
+        if (!s_rol.Init())
         {
-            COMMS_LOG("Failed to create Comm Event, response receiver stop working\n", CLL_Error);
+            COMMS_LOG("Failed to initialize Comm Event, response receiver stop working\n", CLL_Error);
             return;
         }
 
@@ -310,7 +356,7 @@ namespace sg
         {
             if (!waiting)
             {
-                if (!::WaitCommEvent(m_fd, &commev, &ol))
+                if (!::WaitCommEvent(m_fd, &commev, s_rol.Get()))
                 {
                     if (::GetLastError() == ERROR_IO_PENDING)
                         waiting = true;
@@ -325,25 +371,24 @@ namespace sg
 
             if (waiting)
             {
-                wres = ::WaitForSingleObject(ol.hEvent, TIMEOUT_USEC);
+                wres = ::WaitForSingleObject(s_rol.Get()->hEvent, TIMEOUT_USEC);
                 switch (wres)
                 {
                 case WAIT_OBJECT_0:
                     this->Read();
-                    ::ResetEvent(ol.hEvent);
+                    s_rol.Reset();
                     waiting = false;
                     break;
                 case WAIT_TIMEOUT:
                     break;
                 default:
-                    ::CloseHandle(ol.hEvent);
-                    ol.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-                    if (ol.hEvent == nullptr)
+                    if (s_rol.Close())
                     {
-                        COMMS_LOG("Failed to create Comm Event, response receiver stop working\n", CLL_Error);
-                        return;
+                        if (s_rol.Init())
+                            break;
                     }
-                    break;
+                    COMMS_LOG("Comm Event Error, response receiver stop working\n", CLL_Error);
+                    return;
                 }
             }
         }
@@ -409,12 +454,16 @@ namespace sg
 
         do
         {
-            if (::ReadFile(m_fd, ptr, sizeof(msg_buf) - length, &rd, &ol))
+            if (::ReadFile(m_fd, ptr, sizeof(msg_buf) - length, &rd, s_rol.Get()))
             {
+                COMMS_START_PRINT_BLOCK();
+
                 for (DWORD i = 0; i < rd; ++i)
                 {
                     ++ptr;
                     ++length;
+
+                    COMMS_PRINT_BLOCK(boost::format(" %|02X| ") % (unsigned int)(*(ptr -1)));
 
                     if (this->IsPacketComplete(msg_buf, length))
                     {
@@ -433,6 +482,8 @@ namespace sg
                         std::memset(ptr, 0, sizeof(msg_buf) - length);
                     }
                 }
+
+                COMMS_END_PRINT_BLOCK();
             }
         } while (rd);
 #endif
@@ -458,39 +509,128 @@ namespace sg
 #ifdef SG_PLATFORM_LINUX
         if (m_fd >= 0)
         {
-            for (int i = 0; i < length; ++i)
-            {
-                write(m_fd, &buf[i], 1);
-            }
+            termios tio;
+            tcgetattr(m_fd, &tio);
+
+            tio.c_cflag |= PARENB | CMSPAR | PARODD;
+            tcsetattr(m_fd, TCSADRAIN, &tio);
+
+            write(m_fd, &buf[0], 1);
+
+            tio.c_cflag &= ~PARODD;
+            tcsetattr(m_fd, TCSADRAIN, &tio);
+            write(m_fd, &buf[1], length - 1);
+
+            tcdrain(m_fd);
         }
 #else
         if (m_fd != INVALID_HANDLE_VALUE)
         {
-            OVERLAPPED olw = { 0 };
-            olw.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-            if (olw.hEvent == nullptr)
+//            COMMS_START_PRINT_BLOCK();
+//            COMMS_PRINT_BLOCK("Sending Package: ");
+//            for (int i = 0; i < length; ++i)
+//            {
+//                COMMS_PRINT_BLOCK(boost::format("%|02X| ") % (unsigned int)(buf[i]));
+//            }
+//            COMMS_PRINT_BLOCK("\n");
+//            COMMS_END_PRINT_BLOCK();
+
+            CommsOverlapped wol;
+            if (!wol.Init())
             {
-                COMMS_LOG("Failed to send package, cannot create Comm Event\n", CLL_Error);
+                COMMS_LOG("Failed to send package, cannot create Comm Event", CLL_Error);
                 return;
             }
 
-            if (!::WriteFile(m_fd, buf, length, nullptr, &olw))
+            DCB dcb = { 0 };
+            dcb.DCBlength= sizeof(DCB);
+
+            if (!::GetCommState(m_fd, &dcb))
+            {
+                COMMS_LOG("Failed to send package, cannot get Comm State\n", CLL_Error);
+                return;
+            }
+
+            dcb.Parity = MARKPARITY;
+
+            // TODO: this is ugly but necessary for windows, I don't know why now.
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+            if (!::SetCommState(m_fd, &dcb))
+            {
+                COMMS_LOG("Failed to send package, cannot change Comm Parity to Mark\n", CLL_Error);
+                return;
+            }
+
+            bool ok = false;
+            DWORD written;
+            if (!::WriteFile(m_fd, buf, 1, &written, wol.Get()))
             {
                 if (::GetLastError() != ERROR_IO_PENDING)
                 {
-                    COMMS_LOG("Failed to send package\n", CLL_Error);
+                    COMMS_LOG("Failed to send Mark Byte\n", CLL_Error);
                 }
                 else
                 {
-                    DWORD written;
-                    if (!::GetOverlappedResult(m_fd, &olw, &written, TRUE))
+                    if (!::GetOverlappedResult(m_fd, wol.Get(), &written, TRUE))
                     {
                         COMMS_LOG(boost::format("Error happened when send package: %||\n") % ::GetLastError(), CLL_Error);
                     }
+                    else
+                    {
+                        ok = true;
+                    }
                 }
             }
+            else
+            {
+                ok = true;
+            }
 
-            ::CloseHandle(olw.hEvent);
+            if (ok)
+            {
+                wol.Reset();
+
+                // TODO: this is ugly but necessary for windows, I don't know why now.
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                dcb.Parity = SPACEPARITY;
+                if (::SetCommState(m_fd, &dcb))
+                {
+                    if (!::WriteFile(m_fd, &buf[1], length - 1, &written, wol.Get()))
+                    {
+                        if (::GetLastError() == ERROR_IO_PENDING)
+                        {
+                            if (!::GetOverlappedResult(m_fd, wol.Get(), &written, TRUE))
+                            {
+                                COMMS_LOG(boost::format("Error happened when send package: %||\n") % ::GetLastError(), CLL_Error);
+                            }
+                            else
+                            {
+                                if (written != (DWORD)(length - 1))
+                                {
+                                    COMMS_LOG("Write operation time out when send package\n", CLL_Error);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            COMMS_LOG("Failed to send Space Bytes\n", CLL_Error);
+                        }
+                    }
+                    else
+                    {
+                        if (written != (DWORD)(length - 1))
+                        {
+                            COMMS_LOG("Write operation time out when send package\n", CLL_Error);
+                        }
+                    }
+                }
+                else
+                {
+                    COMMS_LOG("Failed to send package, cannot change Comms Parity to Space\n", CLL_Error);
+                }
+            }
         }
 #endif
         else

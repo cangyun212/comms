@@ -12,6 +12,8 @@
 #include "Comms.hpp"
 #include "Qcom/qogr/qogr_qcom.h"
 
+#define SG_QCOM_POLLCYCLE_TIME  250
+
 #define QCOM_MSG_EXTEND_SIZE 4 // (CNTL+FC+CRC) = (1 + 1 + 2)
 #define QCOM_GET_PACKET_LENGTH(MSG_SIZE) (MSG_SIZE + QCOM_MSG_EXTEND_SIZE)
 #define QCOM_DLL_HEADER_SIZE (sizeof(qc_dlltype))
@@ -210,7 +212,7 @@ namespace sg
         uint8_t length;
         union
         {
-            uint8_t data[BUFF_SIZE];
+            uint8_t data[SG_COMM_BUFF_SIZE];
             QCOM_PollMsgType    poll;
         };
     };
@@ -364,6 +366,8 @@ namespace sg
         std::thread     m_worker;
         std::mutex      m_job;
         std::condition_variable  m_job_cond;
+
+        Timer           m_pc_timer;
 
         bool            m_pending;
         QcomJobDataPtr  m_pending_job;

@@ -30,80 +30,419 @@
 
 namespace sg 
 {
-
-#ifdef SG_PLATFORM_WINDOWS
-    class CommsOverlapped
+    class CommsSerialPort
     {
     public:
-        CommsOverlapped()
-            : m_ol({ 0 })
+        enum EParity
+        {
+            None,
+            Odd,
+            Even,
+            Mark,
+            Space
+        };
+
+    public:
+        CommsSerialPort(bool multidrop = true)
+#ifdef SG_PLATFORM_LINUX
+            : m_fd(-1)
+#else
+            : m_fd(INVALID_HANDLE_VALUE)
+#endif // SG_PLATFORM_LINUX
+            , m_multidrop(multidrop)
+
         {
         }
 
-       ~CommsOverlapped()
+        ~CommsSerialPort()
         {
             this->Close();
         }
 
     public:
-        bool Init()
+        bool Open(std::string const& port, unsigned int baud, EParity parity)
         {
-            if (!m_ol.hEvent)
+            if (this->Close())
             {
-                m_ol.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-                if (!m_ol.hEvent)
+#ifdef SG_PLATFORM_LINUX
+                int fd = -1;
+                fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+
+                if (fd < 0)
+                {
+                    COMMS_LOG(boost::format("Failed open device: %||\n") % strerror(errno), CLL_Error);
                     return false;
+                }
+                else
+                {
+                    struct termios oldtio, newtio;
+                    tcgetattr(fd, &oldtio);
+                    memset(&newtio, 0, sizeof(newtio));
+
+                    newtio.c_cflag |= this->Baud(baud); // baud rate
+                    newtio.c_cflag |= CS8; // character size
+                    newtio.c_iflag |= IGNPAR; // ignore framing errors and parity errors
+                    newtio.c_cflag |= this->Parity(parity); // enable parity generation on output and parity checking for input/use "stick" parity [not in POSIX]
+                    newtio.c_iflag |= IGNBRK;// ignore break condition on input
+                    newtio.c_oflag = 0;
+                    newtio.c_lflag = 0;
+                    newtio.c_cflag |= CLOCAL | CREAD; // ignore modem control lines/enable receiver
+
+                    tcflush(fd, TCIFLUSH);
+                    tcsetattr(fd, TCSANOW, &newtio);
+
+                    COMMS_LOG(boost::format("Open device %1%\n") % port, CLL_Info);
+                    m_fd = fd;
+                }
+#else
+                HANDLE h = ::CreateFileA(port.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+
+                if (h == INVALID_HANDLE_VALUE)
+                {
+                    COMMS_LOG(boost::format("Failed open device: %||\n") % ::GetLastError(), CLL_Error);
+                    return false;
+                }
+                else
+                {
+#define SG_SER_BUFF_SIZE   4096
+                    if (::SetupComm(h, SG_SER_BUFF_SIZE, SG_SER_BUFF_SIZE) == TRUE)
+                    {
+                        DCB dcb = { 0 };
+                        dcb.DCBlength = sizeof(DCB);
+
+                        if (::GetCommState(h, &dcb) != TRUE)
+                        {
+                            COMMS_LOG(boost::format("Failed get serial state: %||\n") % ::GetLastError(), CLL_Error);
+                            return false;
+                        }
+
+                        dcb.BaudRate = this->Baud(baud);
+                        dcb.fBinary = 1;
+                        dcb.fParity = 0;
+                        dcb.Parity = (BYTE)this->Parity(parity);
+                        dcb.StopBits = ONESTOPBIT;
+                        dcb.ByteSize = 8;
+                        dcb.fDtrControl = DTR_CONTROL_DISABLE;
+                        dcb.fRtsControl = RTS_CONTROL_DISABLE;
+                        dcb.fOutxCtsFlow = 0;
+                        dcb.fOutxDsrFlow = 0;
+                        dcb.fDsrSensitivity = 0;
+                        dcb.fTXContinueOnXoff = 0;
+                        dcb.fOutX = 0;
+                        dcb.fInX = 0;
+                        dcb.fErrorChar = 0;
+                        dcb.fNull = 0;
+                        dcb.fAbortOnError = 0;
+
+                        if (::SetCommState(h, &dcb) != TRUE)
+                        {
+                            COMMS_LOG(boost::format("Failed set serial state: %||\n") % ::GetLastError(), CLL_Error);
+                            return false;
+                        }
+
+                        COMMTIMEOUTS to;
+                        to.ReadIntervalTimeout = 0;
+                        to.ReadTotalTimeoutMultiplier = 0;
+                        to.ReadTotalTimeoutConstant = SG_COMM_OP_TIMEOUT;
+                        to.WriteTotalTimeoutConstant = SG_COMM_OP_TIMEOUT;
+                        to.WriteTotalTimeoutMultiplier = 0;
+
+                        if (::SetCommTimeouts(h, &to) != TRUE)
+                        {
+                            COMMS_LOG(boost::format("Failed set serial timeout: %||\n") % ::GetLastError(), CLL_Error);
+                            return false;
+                        }
+
+                        if (::SetCommMask(h, 0) != TRUE)
+                        {
+                            COMMS_LOG(boost::format("Failed clear serial mask: %||\n") % ::GetLastError(), CLL_Error);
+                            return false;
+                        }
+
+                        if (::PurgeComm(h, PURGE_TXCLEAR | PURGE_RXCLEAR) != TRUE)
+                        {
+                            COMMS_LOG(boost::format("Failed discard all data in input/output serial buffer: %||\n") % ::GetLastError(),
+                                CLL_Error);
+                            return false;
+                        }
+
+                        COMMS_LOG(boost::format("Open device %||\n") % port, CLL_Info);
+                        m_fd = h;
+                    }
+                    else
+                    {
+                        COMMS_LOG(boost::format("Failed setup serial port buffer: %||\n") % ::GetLastError(), CLL_Error);
+                        return false;
+                    }
+                }
+#endif
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         bool Close()
         {
-            if (m_ol.hEvent)
+#ifdef SG_PLATFORM_LINUX
+            if (m_fd >= 0)
             {
-                if (::CloseHandle(m_ol.hEvent))
+                if (close(m_fd) == 0)
                 {
-                    m_ol.hEvent = nullptr;
+                    m_fd = -1;
                     return true;
                 }
-                return false;
+                else
+                {
+                    COMMS_LOG(boost::format("Failed close device: %||\n") % strerror(errno), CLL_Error);
+                    return false
+                }
             }
+
+#else
+            if (m_fd != INVALID_HANDLE_VALUE)
+            {
+                if (::CloseHandle(m_fd))
+                {
+                    m_fd = INVALID_HANDLE_VALUE;
+                    return true;
+                }
+                else
+                {
+                    COMMS_LOG(boost::format("Failed close device: %||\n") % ::GetLastError(), CLL_Error);
+                    return false;
+                }
+            }
+
+#endif // SG_PLATFORM_LINUX
 
             return true;
         }
 
-        bool Reset()
+        unsigned int Read(uint8_t *buffer, unsigned int length)
         {
-            return ::ResetEvent(m_ol.hEvent) == TRUE;
+#ifdef SG_PLATFORM_LINUX
+            if (m_fd >= 0)
+            {
+                fd_set  read_fds;
+
+                FD_ZERO(&read_fds);
+                FD_SET(m_fd, &read_fds);
+
+                struct timeval  timeout;
+
+                timeout.tv_sec = 0;
+                timeout.tv_usec = SG_COMM_OP_TIMEOUT * 1000;
+
+                int ret = select(m_fd + 1, &read_fds, nullptr, nullptr, &timeout);
+                if (ret > 0)
+                {
+                    if (FD_ISSET(m_fd, &read_fds))
+                    {
+                        ret = read(m_fd, buffer, length);
+
+                        if (ret > 0)
+                            return (unsigned int)(ret);
+                    }
+                }
+            }
+
+            return 0;
+#else
+            DWORD ret = 0;
+            if (m_fd != INVALID_HANDLE_VALUE)
+            {
+                ::ReadFile(m_fd, buffer, length, &ret, nullptr);
+            }
+
+            return (unsigned int)(ret);
+#endif
         }
 
-        LPOVERLAPPED Get() { return &m_ol; }
+        bool Write(uint8_t *buffer, unsigned int length)
+        {
+#ifdef SG_PLATFORM_LINUX
+            if (m_fd >= 0)
+            {
+#else
+            if (m_fd != INVALID_HANDLE_VALUE)
+            {
+#endif
+                if (m_multidrop)
+                    return (this->WriteMultidrop(buffer, length) == length);
+                else
+                    return (this->WriteNormal(buffer, length) == length);
+            }
+
+            return false;
+        }
 
     private:
-        OVERLAPPED  m_ol;
+        unsigned int WriteMultidrop(uint8_t *buffer, unsigned int length)
+        {
+#ifdef SG_PLATFORM_LINUX
+            termios tio;
+            tcgetattr(m_fd, &tio);
+
+            tio.c_cflag |= PARENB | CMSPAR | PARODD;
+            tcsetattr(m_fd, TCSADRAIN, &tio);
+
+            write(m_fd, &buffer[0], 1);
+
+            tio.c_cflag &= ~PARODD;
+            tcsetattr(m_fd, TCSADRAIN, &tio);
+            write(m_fd, &buffer[1], length - 1);
+
+            tcdrain(m_fd);
+
+            return length;
+#else
+            DCB dcb = { 0 };
+            dcb.DCBlength = sizeof(DCB);
+            ::GetCommState(m_fd, &dcb);
+
+            dcb.Parity = MARKPARITY;
+            ::SetCommState(m_fd, &dcb);
+
+            if (this->WriteNormal(&buffer[0], 1) == 1)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                ::FlushFileBuffers(m_fd);
+
+                dcb.Parity = SPACEPARITY;
+                ::SetCommState(m_fd, &dcb);
+
+                return this->WriteNormal(&buffer[1], length - 1) + 1;
+            }
+#endif // SG_PLATFORM_LINUX
+
+            return 0;
+        }
+
+        unsigned int WriteNormal(uint8_t *buffer, unsigned int length)
+        {
+#ifdef SG_PLATFORM_LINUX
+            write(m_fd, buffer, length);
+            tcdrain(m_fd);
+            return length;
+#else
+            DWORD ret = 0, send = length;
+            unsigned int retry = 0;
+            bool quit = false;
+
+            while (!quit)
+            {
+                ::WriteFile(m_fd, buffer, send, &ret, nullptr);
+                if (ret == send || (++retry) > length)
+                    quit = true;
+                else
+                {
+                    buffer += ret;
+                    send -= ret;
+                    ::FlushFileBuffers(m_fd);
+                }
+            }
+
+            return (length - (unsigned int)(send - ret));
+#endif
+        }
+
+        unsigned int Baud(unsigned int baud)
+        {
+#ifdef SG_PLATFORM_LINUX
+            switch (baud)
+            {
+            case 19200:
+                baud = B19200;
+            default:
+                BOOST_ASSERT(false);
+                baud = B19200;
+                break;
+            }
+#endif
+            return baud;
+        }
+
+        unsigned int Parity(unsigned int parity)
+        {
+#ifdef SG_PLATFORM_LINUX
+            switch (parity)
+            {
+            case None:
+                parity = 0;
+                break;
+            case Odd:
+                parity = PARENB | PARODD;
+                break;
+            case Even:
+                parity = PARENB;
+                break;
+            case Mark:
+                parity = PARENB | CMSPAR | PARODD;
+                break;
+            case Space:
+                parity = PARENB | CMSPAR;
+                break;
+            default:
+                BOOST_ASSERT(false);
+                parity = 0;
+                break;
+            }
+#else
+            switch (parity)
+            {
+            case None:
+                parity = NOPARITY;
+                break;
+            case Odd:
+                parity = ODDPARITY;
+                break;
+            case Even:
+                parity = EVENPARITY;
+                break;
+            case Mark:
+                parity = MARKPARITY;
+                break;
+            case Space:
+                parity = SPACEPARITY;
+                break;
+            default:
+                BOOST_ASSERT(false);
+                parity = NOPARITY;
+                break;
+            }
+#endif
+            return parity;
+        }
+
+    private:
+#ifdef SG_PLATFORM_LINUX
+        int         m_fd;
+#else
+        HANDLE      m_fd;
+#endif
+        bool        m_multidrop;
     };
 
-    namespace
-    {
-        CommsOverlapped s_rol;
-    }
-#endif
-
     Comms::Comms(const std::string &dev, CommsType type)
-#ifdef SG_PLATFORM_LINUX
-        : m_fd(-1)
-#else
-        : m_fd(INVALID_HANDLE_VALUE)
-#endif
-        , m_dev(dev)
+        : m_dev_name(dev)
         , m_init(false)
         , m_start(false)
         , m_type(type)
-        //, m_resp_received(false)
-        //, m_resp_finish(false)
-        //, m_resp_timeout(true)
+        , m_dev(nullptr)
+        , m_resp_task(false)
+        , m_resp_timeout(false)
     {
+        switch (m_type)
+        {
+        case sg::Comms::CT_QCOM:
+            m_dev = MakeSharedPtr<CommsSerialPort>();
+            break;
+        default:
+            BOOST_ASSERT(false);
+            m_dev = MakeSharedPtr<CommsSerialPort>();
+            break;
+        }
     }
 
     Comms::~Comms()
@@ -123,25 +462,22 @@ namespace sg
         if (m_init)
         {
             COMMS_LOG("Comms is shutting down...\n", CLL_Info);
-#ifdef SG_PLATFORM_LINUX
-            if (m_fd >= 0)
-                close(m_fd);
-#else
-            if (m_fd != INVALID_HANDLE_VALUE)
-                ::CloseHandle(m_fd);
-#endif
+            if (!m_dev->Close())
+                return;
+
             m_init = false;
         }
 
     }
 
-    bool Comms::ChangeDev(std::string dev)
+    bool Comms::ChangeDev(std::string const& dev)
     {
         this->Quit();
-        m_dev = dev;
+
+        m_dev_name = dev;
         if (!this->Init())
         {
-            COMMS_LOG(boost::format("Change device to %1% failed\n") % m_dev, CLL_Error);
+            COMMS_LOG(boost::format("Change device to %1% failed\n") % m_dev_name, CLL_Error);
             return false;
         }
 
@@ -149,102 +485,14 @@ namespace sg
         return true;
     }
 
-    bool Comms::OpenDevFile() 
-    {
-#ifdef SG_PLATFORM_LINUX
-        int fd = -1;
-        // Ref https://en.wikibooks.org/wiki/Serial_Programming/termios
-        fd = open(m_dev.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-
-        if (fd < 0)
-        {
-            COMMS_LOG(boost::format("%d\n") % strerror(errno), CLL_Error);
-            return false;
-        }
-        else
-        {
-            m_fd = fd;
-
-            COMMS_LOG(boost::format("Comms open device %1%\n") % m_dev, CLL_Info);
-            struct termios oldtio, newtio;
-            tcgetattr(fd, &oldtio);
-            memset(&newtio, 0, sizeof(newtio));
-
-            newtio.c_cflag |= B19200; // baud rate
-            newtio.c_cflag |= CS8; // character size
-            newtio.c_iflag |= IGNPAR; // ignore framing errors and parity errors
-            newtio.c_cflag |= PARENB | CMSPAR; // enable parity generation on output and parity checking for input/use "stick" parity [not in POSIX]
-            newtio.c_iflag |= IGNBRK;// ignore break condition on input
-            newtio.c_oflag = 0;
-            newtio.c_lflag = 0;
-            newtio.c_cflag |= CLOCAL | CREAD; // ignore modem control lines/enable receiver
-
-            tcflush(fd, TCIFLUSH);
-            tcsetattr(fd, TCSANOW, &newtio);
-        }
-
-        return true;
-#else
-        HANDLE h = ::CreateFileA(m_dev.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
-
-        if (h == INVALID_HANDLE_VALUE)
-        {
-            COMMS_LOG(boost::format("%||") % ::GetLastError(), CLL_Error);
-            return false;
-        }
-        else
-        {
-            COMMS_LOG(boost::format("Comms open device %1%\n") % m_dev, CLL_Info);
-
-            DCB dcb = { 0 };
-            dcb.DCBlength = sizeof(DCB);
-
-            if (!::GetCommState(h, &dcb))
-            {
-                COMMS_LOG(boost::format("Failed to get Comm State: %||\n") % ::GetLastError(), CLL_Error);
-                return false;
-            }
-
-            dcb.BaudRate = CBR_19200;
-            //dcb.fParity = TRUE;
-            dcb.Parity = EVENPARITY;
-            dcb.StopBits = ONESTOPBIT;
-            //dcb.ByteSize = DATABITS_8;
-            dcb.ByteSize = 8;
-            dcb.fDtrControl = DTR_CONTROL_DISABLE;
-            dcb.fRtsControl = RTS_CONTROL_DISABLE;
-
-            if (!::SetCommState(h, &dcb))
-            {
-                COMMS_LOG(boost::format("Failed to set Comm State: %||\n") % ::GetLastError(), CLL_Error);
-                return false;
-            }
-
-            COMMTIMEOUTS to;
-            to.ReadIntervalTimeout = MAXWORD;
-            to.ReadTotalTimeoutMultiplier = 0;
-            to.ReadTotalTimeoutConstant = 0;
-            to.WriteTotalTimeoutConstant = 0;
-            to.WriteTotalTimeoutMultiplier = 0;
-
-            if (!::SetCommTimeouts(h, &to))
-            {
-                COMMS_LOG(boost::format("Failed to set Comm timeout: %||\n") % ::GetLastError(), CLL_Error);
-                return false;
-            }
-
-            m_fd = h;
-        }
-
-        return true;
-#endif
-    }
-
     bool Comms::Init()
     {
         if (!m_init)
         {
-            if (this->OpenDevFile())
+            unsigned int baud = 19200U;
+            CommsSerialPort::EParity parity = CommsSerialPort::Space;
+
+            if (m_dev->Open(m_dev_name, baud, parity))
             {
                 m_init = true;
                 this->DoInit();
@@ -311,96 +559,28 @@ namespace sg
 
     void Comms::ReceiveResponse()
     {
-#ifdef SG_PLATFORM_LINUX
-        fd_set  read_fds;
-        int ret;
-        struct timeval  timeout;
-
-        while(m_start)
-        {
-            FD_ZERO(&read_fds);
-            FD_SET(m_fd, &read_fds);
-
-            timeout.tv_sec = 0;
-            timeout.tv_usec = TIMEOUT_USEC;
-
-            ret = select(m_fd + 1, &read_fds, nullptr, nullptr, &timeout);
-            if (ret <= 0) // TODO : error or no device ready
-            {
-                continue;
-            }
-
-            if (FD_ISSET(m_fd, &read_fds))
-            {
-                Read();
-            }
-        }
-#else
-        if (!::SetCommMask(m_fd, EV_RXCHAR))
-        {
-            COMMS_LOG("Failed to set Comm Mask, response receiver stop working\n", CLL_Error);
-            return;
-        }
-
-        if (!s_rol.Init())
-        {
-            COMMS_LOG("Failed to initialize Comm Event, response receiver stop working\n", CLL_Error);
-            return;
-        }
-
-        DWORD commev;
-        DWORD wres;
-        bool waiting = false;
-
         while (m_start)
         {
-            if (!waiting)
-            {
-                if (!::WaitCommEvent(m_fd, &commev, s_rol.Get()))
-                {
-                    if (::GetLastError() == ERROR_IO_PENDING)
-                        waiting = true;
-                    else
-                        continue;
-                }
-                else
-                {
-                    this->Read();
-                }
-            }
+            std::unique_lock<std::mutex> lock(m_response);
+            if (!m_resp_task)
+                m_response_cond.wait_for(lock, std::chrono::milliseconds(SG_COMM_WAKEUP_TIME));
 
-            if (waiting)
+            if (m_resp_task)
             {
-                wres = ::WaitForSingleObject(s_rol.Get()->hEvent, TIMEOUT_USEC);
-                switch (wres)
-                {
-                case WAIT_OBJECT_0:
-                    this->Read();
-                    s_rol.Reset();
-                    waiting = false;
-                    break;
-                case WAIT_TIMEOUT:
-                    break;
-                default:
-                    if (s_rol.Close())
-                    {
-                        if (s_rol.Init())
-                            break;
-                    }
-                    COMMS_LOG("Comm Event Error, response receiver stop working\n", CLL_Error);
-                    return;
-                }
+                this->Read();
+                m_resp_task = false;
+                lock.unlock();
+                m_response_cond.notify_one();
             }
         }
-#endif
     }
 
     void Comms::Read()
     {
         static uint8_t  *ptr;
-        static uint8_t  msg_buf[BUFF_SIZE];
+        static uint8_t  msg_buf[SG_COMM_BUFF_SIZE];
+        static unsigned int length;
         static bool first_time = true;
-        static int length;
 
         if (first_time)
         {
@@ -410,83 +590,52 @@ namespace sg
             first_time = false;
         }
 
-#ifdef SG_PLATFORM_LINUX
-        int ret;
+        bool firstbyte = true;
+        bool trt = false;
+        unsigned int ret = 0;
 
-        ret = read(m_fd, ptr, 1);
-        ptr += ret;
-        length += ret;
-
-        //if (length && !m_resp_received)
-        //{
-            //std::unique_lock<std::mutex> lock(m_response);
-            //m_resp_received = true;
-            //if (!m_resp_timeout)
-            //{
-            //    m_response_cond.notify_one();
-            //}
-        //}
-
-        if (length && this->IsPacketComplete(msg_buf, length))
+        do
         {
-            //{
-            //    std::unique_lock<std::mutex> lock(m_response);
-            //    m_resp_finish = true;
-            //    m_response_cond.notify_one();
-            //}
-            //unique_lock<mutex> lock(m_response);
-            //if (!m_resp_timeout)
-            //{
+            if (firstbyte)
+            {
+                ret = m_dev->Read(ptr, 1U);
+                if (!ret && !trt && (m_resp_timer.Elapsed() > SG_TRT_TIMEOUT))
+                {
+                    COMMS_LOG("Trt reach\n", CLL_Warning);
+                    trt = true;
+                }
+
+                if (ret)
+                {
+                    ++ptr;
+                    ++length;
+                    firstbyte = false;
+                }
+            }
+            else
+            {
+                ret = m_dev->Read(ptr, sizeof(msg_buf) - length);
+                ptr += ret;
+                length += ret;
+            }
+
+            if (ret && this->IsPacketComplete(msg_buf, length))
+            {
                 if (this->IsCRCValid(msg_buf, length))
                 {
                     this->HandlePacket(msg_buf, length);
                 }
-            //}
 
-            ptr = msg_buf;
-            length = 0;
-            std::memset(msg_buf, 0, BUFF_SIZE);
-
-           //m_resp_received = false;
-        }
-#else
-        DWORD rd = 0;
-
-        do
-        {
-            if (::ReadFile(m_fd, ptr, sizeof(msg_buf) - length, &rd, s_rol.Get()))
-            {
-                COMMS_START_PRINT_BLOCK();
-
-                for (DWORD i = 0; i < rd; ++i)
-                {
-                    ++ptr;
-                    ++length;
-
-                    COMMS_PRINT_BLOCK(boost::format(" %|02X| ") % (unsigned int)(*(ptr -1)));
-
-                    if (this->IsPacketComplete(msg_buf, length))
-                    {
-                        if (this->IsCRCValid(msg_buf, length))
-                        {
-                            this->HandlePacket(msg_buf, length);
-                        }
-
-                        length = rd - i - 1;
-                        if (length)
-                        {
-                            std::memcpy(msg_buf, ptr, length);
-                        }
-
-                        ptr = msg_buf + length;
-                        std::memset(ptr, 0, sizeof(msg_buf) - length);
-                    }
-                }
-
-                COMMS_END_PRINT_BLOCK();
+                ptr = msg_buf;
+                length = 0;
+                std::memset(msg_buf, 0, SG_COMM_BUFF_SIZE);
+                break;
             }
-        } while (rd);
-#endif
+
+            if (m_resp_timer.Elapsed() > SG_RESPONSE_TIMEOUT)
+                m_resp_timeout = true;
+
+        } while (!m_resp_timeout);
     }
 
     bool Comms::IsPacketComplete(uint8_t [], int /*length*/)
@@ -506,136 +655,9 @@ namespace sg
 
     void Comms::SendPacket(uint8_t buf[], int length)
     {
-#ifdef SG_PLATFORM_LINUX
-        if (m_fd >= 0)
+        if (!m_dev->Write(buf, length))
         {
-            termios tio;
-            tcgetattr(m_fd, &tio);
-
-            tio.c_cflag |= PARENB | CMSPAR | PARODD;
-            tcsetattr(m_fd, TCSADRAIN, &tio);
-
-            write(m_fd, &buf[0], 1);
-
-            tio.c_cflag &= ~PARODD;
-            tcsetattr(m_fd, TCSADRAIN, &tio);
-            write(m_fd, &buf[1], length - 1);
-
-            tcdrain(m_fd);
-        }
-#else
-        if (m_fd != INVALID_HANDLE_VALUE)
-        {
-//            COMMS_START_PRINT_BLOCK();
-//            COMMS_PRINT_BLOCK("Sending Package: ");
-//            for (int i = 0; i < length; ++i)
-//            {
-//                COMMS_PRINT_BLOCK(boost::format("%|02X| ") % (unsigned int)(buf[i]));
-//            }
-//            COMMS_PRINT_BLOCK("\n");
-//            COMMS_END_PRINT_BLOCK();
-
-            CommsOverlapped wol;
-            if (!wol.Init())
-            {
-                COMMS_LOG("Failed to send package, cannot create Comm Event", CLL_Error);
-                return;
-            }
-
-            DCB dcb = { 0 };
-            dcb.DCBlength= sizeof(DCB);
-
-            if (!::GetCommState(m_fd, &dcb))
-            {
-                COMMS_LOG("Failed to send package, cannot get Comm State\n", CLL_Error);
-                return;
-            }
-
-            dcb.Parity = MARKPARITY;
-
-            // TODO: this is ugly but necessary for windows, I don't know why now.
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-            if (!::SetCommState(m_fd, &dcb))
-            {
-                COMMS_LOG("Failed to send package, cannot change Comm Parity to Mark\n", CLL_Error);
-                return;
-            }
-
-            bool ok = false;
-            DWORD written;
-            if (!::WriteFile(m_fd, buf, 1, &written, wol.Get()))
-            {
-                if (::GetLastError() != ERROR_IO_PENDING)
-                {
-                    COMMS_LOG("Failed to send Mark Byte\n", CLL_Error);
-                }
-                else
-                {
-                    if (!::GetOverlappedResult(m_fd, wol.Get(), &written, TRUE))
-                    {
-                        COMMS_LOG(boost::format("Error happened when send package: %||\n") % ::GetLastError(), CLL_Error);
-                    }
-                    else
-                    {
-                        ok = true;
-                    }
-                }
-            }
-            else
-            {
-                ok = true;
-            }
-
-            if (ok)
-            {
-                wol.Reset();
-
-                // TODO: this is ugly but necessary for windows, I don't know why now.
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-                dcb.Parity = SPACEPARITY;
-                if (::SetCommState(m_fd, &dcb))
-                {
-                    if (!::WriteFile(m_fd, &buf[1], length - 1, &written, wol.Get()))
-                    {
-                        if (::GetLastError() == ERROR_IO_PENDING)
-                        {
-                            if (!::GetOverlappedResult(m_fd, wol.Get(), &written, TRUE))
-                            {
-                                COMMS_LOG(boost::format("Error happened when send package: %||\n") % ::GetLastError(), CLL_Error);
-                            }
-                            else
-                            {
-                                if (written != (DWORD)(length - 1))
-                                {
-                                    COMMS_LOG("Write operation time out when send package\n", CLL_Error);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            COMMS_LOG("Failed to send Space Bytes\n", CLL_Error);
-                        }
-                    }
-                    else
-                    {
-                        if (written != (DWORD)(length - 1))
-                        {
-                            COMMS_LOG("Write operation time out when send package\n", CLL_Error);
-                        }
-                    }
-                }
-                else
-                {
-                    COMMS_LOG("Failed to send package, cannot change Comms Parity to Space\n", CLL_Error);
-                }
-            }
-        }
-#endif
-        else
-        {
-            COMMS_LOG("Comms send package failed, invalid device\n", CLL_Error);
+            COMMS_LOG("Failed to send packet\n", CLL_Error);
         }
     }
 

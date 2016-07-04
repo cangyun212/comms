@@ -68,6 +68,7 @@ namespace sg
         , m_pending(false)
     {
         m_egms.reserve(SG_QCOM_MAX_EGM_NUM);
+        m_pc_timer.ReStart();
     }
 
     CommsQcom::~CommsQcom()
@@ -188,50 +189,43 @@ namespace sg
 
             lock.unlock();
 
+            double tpc = m_pc_timer.Elapsed();
+            if (tpc < SG_QCOM_POLLCYCLE_TIME)
+                std::this_thread::sleep_for(std::chrono::milliseconds((SG_QCOM_POLLCYCLE_TIME - (long long)tpc)));
+
             switch (job->GetType())
             {
             case QcomJobData::JT_POLL:
             case QcomJobData::JT_BROADCAST:
-            case QcomJobData::JT_BROADCAST_SEEK:
             {
+                std::unique_lock<std::mutex> rsp_lock(m_response);
+
                 size_t num = job->GetPollNum();
                 for (size_t i = 0; i < num; ++i)
                 {
-                    // TODO : check and reset tcp time
                     QcomPollPtr poll = job->GetPoll(i);
 
-                    //std::unique_lock<std::mutex> rsp_lock(m_response);
-
-                    //if (m_resp_received)
-                    //{
-                    //    if (!m_resp_finish)
-                    //    {
-                    //        if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TPC)) ==
-                    //            std::cv_status::timeout)
-                    //        {
-                    //            COMMS_LOG("EGM can't finish response in request time.\n", CLL_Error);
-                    //        }
-                    //    }
-
-                    //    m_resp_received = false;
-                    //    m_resp_finish = false;
-                    //}
+                    m_resp_task = true;
 
                     this->SendPacket(poll->data, poll->length);
+                    m_resp_timer.ReStart();
 
-                    //if (m_response_cond.wait_for(rsp_lock, std::chrono::milliseconds(SG_QCOM_TRT)) ==
-                    //    std::cv_status::timeout)
-                    //{
-                    //    COMMS_LOG("EGM response timeout\n", CLL_Error);
-                    //}
+                    m_response_cond.notify_one();
 
-                    //m_resp_timeout = false;
-                    //m_response_cond.wait_for(rsp_lock, chrono::milliseconds(5)); // Ref Qcom1.6-14.1.7
-                    //if (!m_resp_received)
-                    //{
-                        // TODO : log warning for this
-                    //    m_resp_timeout = true;
-                    //}
+                    while (m_resp_task)
+                        m_response_cond.wait(rsp_lock);
+
+                    if (m_resp_timeout)
+                    {
+                        COMMS_LOG("Qcom response timeout, abandon current poll cycle", CLL_Error);
+                        break;
+                    }
+                }
+
+                if (m_resp_timeout)
+                {
+                    m_resp_timeout = false;
+                    break;
                 }
 
                 num = job->GetBroadcastNum(); // at least 1 broadcast exist in 1 poll cycle
@@ -243,22 +237,43 @@ namespace sg
 
                 break;
             }
-            //case QcomJobData::JT_BROADCAST:
-            //case QcomJobData::JT_BROADCAST_SEEK:
-            //{
-            //    size_t num = job->GetBroadcastNum();
-            //    for (size_t i = 0; i < num; ++i)
-            //    {
-            //        QcomPollPtr poll = job->GetBroadcast(i);
-            //        this->SendPacket(poll->data, poll->length);
-            //    }
-            //    break;
-            //}
+            case QcomJobData::JT_BROADCAST_SEEK:
+            {
+                std::unique_lock<std::mutex> rsp_lock(m_response);
+
+                size_t num = job->GetBroadcastNum();
+
+                QcomPollPtr seek = job->GetBroadcast(0);
+
+                m_resp_task = true;
+                this->SendPacket(seek->data, seek->length);
+                m_resp_timer.ReStart();
+
+                while (m_resp_task)
+                    m_response_cond.wait(rsp_lock);
+
+                if (m_resp_timeout)
+                {
+                    COMMS_LOG("Qcom seek broadcast response timeout\n", CLL_Error);
+                    m_resp_timeout = false;
+                    break;
+                }
+
+                for (size_t i = 1; i < num; ++i)
+                {
+                    QcomPollPtr poll = job->GetBroadcast(i);
+                    this->SendPacket(poll->data, poll->length);
+                }
+
+                break;
+            }
             case QcomJobData::JT_QUIT:
                 return;
             default:
                 break;
             }
+
+            m_pc_timer.ReStart();
 
             // TODO : wait for all substage finishing
         }
@@ -477,8 +492,6 @@ namespace sg
             if (!handler->BuildPollAddressPoll(job))
                 return;
         }
-
-
 
         if (!m_pending)
         {

@@ -10,6 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "Timer.hpp"
 #include "Console/ConsolePrinter.hpp"
 #include "CommsPredeclare.hpp"
 
@@ -18,7 +19,11 @@
 #else
 #define TIMEOUT_USEC    10000 // milliseconds
 #endif
-#define BUFF_SIZE       256
+#define SG_COMM_BUFF_SIZE           256
+#define SG_COMM_WAKEUP_TIME         6000
+#define SG_COMM_OP_TIMEOUT          10
+#define SG_TRT_TIMEOUT              5
+#define SG_RESPONSE_TIMEOUT         200
 
 #define COMMS_LOG(t, l)             SG_WS_SAFE_LOG(t, l)
 #define COMMS_START_LOG_BLOCK()     SG_START_WS_LOG_BLOCK()
@@ -30,7 +35,10 @@
 #define COMMS_PRINT_BLOCK(t)        SG_WS_PRINT_BLOCK(t)
 #define COMMS_END_PRINT_BLOCK()     SG_END_WS_PRINT_BLOCK()
 
-namespace sg {
+namespace sg 
+{
+    class CommsSerialPort;
+    typedef std::shared_ptr<CommsSerialPort> CommsSerialPortPtr;
 
     class COMMS_API Comms : public std::enable_shared_from_this<Comms>
     {
@@ -57,9 +65,8 @@ namespace sg {
         bool    IsInited() const { return m_init; }
         bool    IsStarted() const { return m_start; }
         CommsType   GetType() const { return m_type; }
-        std::string const &     GetDev() const { return m_dev;}
-        std::string const &     GetSlave() const { return m_slave; }
-        bool    ChangeDev(std::string dev ) ;
+        std::string const &     GetDev() const { return m_dev_name;}
+        bool    ChangeDev(std::string const& dev ) ;
 
     protected:
         virtual void    DoInit() {}
@@ -78,27 +85,20 @@ namespace sg {
         void    StopResponseThread();
         void    StartCheckTimeoutThread();
         void    StopCheckTimeoutThread();
-        bool    OpenDevFile();
-    protected:
-#ifdef SG_PLATFORM_LINUX
-        int                 m_fd;
-#else
-        void               *m_fd;
-#endif // SG_PLATFORM_LINUX
 
-        std::string         m_dev;
-        std::string         m_slave;
+    protected:
+        std::string         m_dev_name;
         bool                m_init;
         std::atomic<bool>   m_start;
         CommsType           m_type;
         std::thread         m_reader;
-        //bool                m_resp_received;
-        //bool                m_resp_finish;
-        //bool                m_resp_timeout;
-        //std::mutex          m_response;
-        //std::condition_variable m_response_cond;
+        CommsSerialPortPtr  m_dev;
+        Timer               m_resp_timer;
+        bool                m_resp_task;
+        bool                m_resp_timeout;
+        std::mutex          m_response;
         std::thread         m_checker;
-
+        std::condition_variable m_response_cond;
     };
 
     class CommsPacketHandler

@@ -195,7 +195,7 @@ namespace sg
                 else
                 {
                     COMMS_LOG(boost::format("Failed close device: %||\n") % strerror(errno), CLL_Error);
-                    return false
+                    return false;
                 }
             }
 

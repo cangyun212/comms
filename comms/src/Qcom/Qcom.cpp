@@ -217,7 +217,7 @@ namespace sg
 
                     if (m_resp_timeout)
                     {
-                        COMMS_LOG("Qcom response timeout, abandon current poll cycle", CLL_Error);
+                        COMMS_LOG("Qcom response timeout, abandon current poll cycle\n", CLL_Error);
                         break;
                     }
                 }

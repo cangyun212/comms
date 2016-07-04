@@ -354,6 +354,7 @@ namespace sg
             {
             case 19200:
                 baud = B19200;
+                break;
             default:
                 BOOST_ASSERT(false);
                 baud = B19200;

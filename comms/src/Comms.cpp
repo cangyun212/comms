@@ -292,6 +292,8 @@ namespace sg
 #ifdef SG_PLATFORM_LINUX
             if (m_fd >= 0)
             {
+                fd_set read_fds;
+
                 FD_ZERO(&read_fds);
                 FD_SET(m_fd, &read_fds);
 
@@ -362,7 +364,7 @@ namespace sg
 #ifdef SG_PLATFORM_LINUX
             if (m_fd >= 0)
             {
-                ret = read(m_fd, buffer, length);
+                int ret = read(m_fd, buffer, length);
 
                 if (ret > 0)
                     return (unsigned int)(ret);

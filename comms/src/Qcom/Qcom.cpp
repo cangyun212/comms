@@ -213,14 +213,11 @@ namespace sg
                         m_resp_timeout = true;
 
                     if (m_resp_timeout)
+                    {
+                        COMMS_LOG("Qcom response timeout, abandon remaining polls\n", CLL_Error);
+                        m_resp_timeout = false;
                         break;
-                }
-
-                if (m_resp_timeout)
-                {
-                    COMMS_LOG("Qcom response timeout, abandon current poll cycle\n", CLL_Error);
-                    m_resp_timeout = false;
-                    break;
+                    }
                 }
 
                 num = job->GetBroadcastNum(); // at least 1 broadcast exist in 1 poll cycle

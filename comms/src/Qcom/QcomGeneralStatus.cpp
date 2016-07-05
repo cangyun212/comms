@@ -105,11 +105,13 @@ namespace sg
                 {
                     std::unique_lock<std::mutex> lock(p->locker);
 
-                    job->AddPoll(this->MakeGeneralStatusPoll(i + 1, p->data.control.last_control));
+                    if (p->data.control.poll_address)
+                        job->AddPoll(this->MakeGeneralStatusPoll(p->data.control.poll_address, p->data.control.last_control));
                 }
             }
 
-            return true;
+            if (job->GetPollNum())
+                return true;
         }
 
         return false;

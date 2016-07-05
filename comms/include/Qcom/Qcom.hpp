@@ -368,6 +368,7 @@ namespace sg
         std::condition_variable  m_job_cond;
 
         cstt            m_tpc;
+        bool            m_skip;
 
         bool            m_pending;
         QcomJobDataPtr  m_pending_job;

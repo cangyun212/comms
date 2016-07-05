@@ -66,6 +66,7 @@ namespace sg
     CommsQcom::CommsQcom(const std::string &dev)
         : Comms(dev, Comms::CT_QCOM)
         , m_tpc(this->Now())
+        , m_skip(true)
         , m_pending(false)
     {
         m_egms.reserve(SG_QCOM_MAX_EGM_NUM);
@@ -209,16 +210,23 @@ namespace sg
                     this->SendPacket(poll->data, poll->length);
                     m_resp_time = this->Now();
 
-                    if (m_response_cond.wait_for(rsp_lock, cstime(SG_JOB_TIMEOUT)) == std::cv_status::timeout)
-                        m_resp_timeout = true;
-
-                    if (m_resp_timeout)
+                    if (!m_skip)
                     {
-                        COMMS_LOG("Qcom response timeout, abandon remaining polls\n", CLL_Error);
-                        m_resp_timeout = false;
-                        break;
+                        if (m_response_cond.wait_for(rsp_lock, cstime(SG_JOB_TIMEOUT)) == std::cv_status::timeout)
+                            m_resp_timeout = true;
+
+                        if (m_resp_timeout)
+                        {
+                            COMMS_LOG("Qcom response timeout, abandon remaining polls\n", CLL_Error);
+                            m_resp_timeout = false;
+                            break;
+                        }
                     }
-                }
+                    else
+                    {
+                        m_skip = false;
+                    }
+               }
 
                 num = job->GetBroadcastNum(); // at least 1 broadcast exist in 1 poll cycle
                 for (size_t i = 0; i < num; ++i)

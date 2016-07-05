@@ -367,7 +367,7 @@ namespace sg
         std::mutex      m_job;
         std::condition_variable  m_job_cond;
 
-        Timer           m_pc_timer;
+        cstt            m_tpc;
 
         bool            m_pending;
         QcomJobDataPtr  m_pending_job;

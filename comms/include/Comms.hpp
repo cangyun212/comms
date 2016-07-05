@@ -10,7 +10,6 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "Timer.hpp"
 #include "Console/ConsolePrinter.hpp"
 #include "CommsPredeclare.hpp"
 
@@ -21,9 +20,14 @@
 #endif
 #define SG_COMM_BUFF_SIZE           256
 #define SG_COMM_WAKEUP_TIME         6000
+#ifdef SG_PLATFORM_LINUX
 #define SG_COMM_OP_TIMEOUT          10
+#else
+#define SG_COMM_OP_TIMEOUT          10000
+#endif
 #define SG_TRT_TIMEOUT              5
 #define SG_RESPONSE_TIMEOUT         200
+#define SG_JOB_TIMEOUT              400
 
 #define COMMS_LOG(t, l)             SG_WS_SAFE_LOG(t, l)
 #define COMMS_START_LOG_BLOCK()     SG_START_WS_LOG_BLOCK()
@@ -37,9 +41,6 @@
 
 namespace sg 
 {
-    class CommsSerialPort;
-    typedef std::shared_ptr<CommsSerialPort> CommsSerialPortPtr;
-
     class COMMS_API Comms : public std::enable_shared_from_this<Comms>
     {
     public:
@@ -87,14 +88,21 @@ namespace sg
         void    StopCheckTimeoutThread();
 
     protected:
+        typedef std::chrono::milliseconds cstime;
+        typedef std::chrono::milliseconds::rep cstt;
+        cstt Now() const
+        {
+            std::chrono::steady_clock::time_point tp = std::chrono::steady_clock::now(); // thread safe
+            return std::chrono::duration_cast<cstime> (tp.time_since_epoch()).count();
+        }
+
         std::string         m_dev_name;
         bool                m_init;
         std::atomic<bool>   m_start;
         CommsType           m_type;
         std::thread         m_reader;
-        CommsSerialPortPtr  m_dev;
-        Timer               m_resp_timer;
-        bool                m_resp_task;
+        void               *m_dev;
+        std::atomic<cstt>   m_resp_time;
         bool                m_resp_timeout;
         std::mutex          m_response;
         std::thread         m_checker;

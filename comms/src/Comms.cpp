@@ -27,9 +27,66 @@
 
 #include "Comms.hpp"
 
+#define _dev    ((CommsSerialPort*)m_dev)
 
 namespace sg 
 {
+
+#ifdef SG_PLATFORM_WINDOWS
+    class CommsOverlapped
+    {
+    public:
+        CommsOverlapped()
+            : m_ol({ 0 })
+        {
+        }
+
+        ~CommsOverlapped()
+        {
+            this->Close();
+        }
+
+    public:
+        bool Init()
+        {
+            if (!m_ol.hEvent)
+            {
+                m_ol.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+                if (!m_ol.hEvent)
+                    return false;
+            }
+
+            return true;
+        }
+
+        bool Close()
+        {
+            if (m_ol.hEvent)
+            {
+                if (::CloseHandle(m_ol.hEvent))
+                {
+                    m_ol.hEvent = nullptr;
+                    return true;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        bool Reset()
+        {
+            return ::ResetEvent(m_ol.hEvent) == TRUE;
+        }
+
+        LPOVERLAPPED Get() { return &m_ol;  }
+
+    private:
+        OVERLAPPED  m_ol;
+    };
+#endif
+
     class CommsSerialPort
     {
     public:
@@ -95,7 +152,7 @@ namespace sg
                     m_fd = fd;
                 }
 #else
-                HANDLE h = ::CreateFileA(port.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+                HANDLE h = ::CreateFileA(port.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
 
                 if (h == INVALID_HANDLE_VALUE)
                 {
@@ -104,8 +161,8 @@ namespace sg
                 }
                 else
                 {
-#define SG_SER_BUFF_SIZE   4096
-                    if (::SetupComm(h, SG_SER_BUFF_SIZE, SG_SER_BUFF_SIZE) == TRUE)
+#define _SG_SER_BUFF_SIZE   4096
+                    if (::SetupComm(h, _SG_SER_BUFF_SIZE, _SG_SER_BUFF_SIZE) == TRUE)
                     {
                         DCB dcb = { 0 };
                         dcb.DCBlength = sizeof(DCB);
@@ -153,7 +210,7 @@ namespace sg
                             return false;
                         }
 
-                        if (::SetCommMask(h, 0) != TRUE)
+                        if (::SetCommMask(h, EV_RXCHAR) != TRUE)
                         {
                             COMMS_LOG(boost::format("Failed clear serial mask: %||\n") % ::GetLastError(), CLL_Error);
                             return false;
@@ -163,6 +220,12 @@ namespace sg
                         {
                             COMMS_LOG(boost::format("Failed discard all data in input/output serial buffer: %||\n") % ::GetLastError(),
                                 CLL_Error);
+                            return false;
+                        }
+
+                        if (!m_ol.Init())
+                        {
+                            COMMS_LOG("Failed to initialize Comm Event\n", CLL_Error);
                             return false;
                         }
 
@@ -205,6 +268,11 @@ namespace sg
                 if (::CloseHandle(m_fd))
                 {
                     m_fd = INVALID_HANDLE_VALUE;
+                    if (!m_ol.Close())
+                    {
+                        COMMS_LOG("Failed to close Comm Event\n", CLL_Error);
+                        return false;
+                    }
                     return true;
                 }
                 else
@@ -219,32 +287,85 @@ namespace sg
             return true;
         }
 
-        unsigned int Read(uint8_t *buffer, unsigned int length)
+        bool WaitForRead()
         {
 #ifdef SG_PLATFORM_LINUX
             if (m_fd >= 0)
             {
-                fd_set  read_fds;
-
                 FD_ZERO(&read_fds);
                 FD_SET(m_fd, &read_fds);
 
                 struct timeval  timeout;
 
-                timeout.tv_sec = 0;
-                timeout.tv_usec = SG_COMM_OP_TIMEOUT * 1000;
+                timeout.tv_sec = SG_COMM_OP_TIMEOUT;
+                timeout.tv_usec = 0;
 
                 int ret = select(m_fd + 1, &read_fds, nullptr, nullptr, &timeout);
+
                 if (ret > 0)
                 {
                     if (FD_ISSET(m_fd, &read_fds))
-                    {
-                        ret = read(m_fd, buffer, length);
+                        return true;
+                }
 
-                        if (ret > 0)
-                            return (unsigned int)(ret);
+                return false;
+            }
+#else
+            if (m_fd != INVALID_HANDLE_VALUE)
+            {
+                static bool waiting = false;
+
+                DWORD commev;
+                if (!waiting)
+                {
+                    if (!::WaitCommEvent(m_fd, &commev, m_ol.Get()))
+                    {
+                        if (::GetLastError() == ERROR_IO_PENDING)
+                            waiting = true;
+                        else
+                            return false;
+                    }
+                    else
+                    {
+                        return true;
                     }
                 }
+
+                if (waiting)
+                {
+                    DWORD res = ::WaitForSingleObject(m_ol.Get()->hEvent, SG_COMM_OP_TIMEOUT);
+                    switch (res)
+                    {
+                    case WAIT_OBJECT_0:
+                        m_ol.Reset();
+                        waiting = false;
+                        return true;
+                    case WAIT_TIMEOUT:
+                        return false;
+                    default:
+                        if (m_ol.Close())
+                        {
+                            if (m_ol.Init())
+                                return false;
+                        }
+                        COMMS_LOG("Error happened when waiting for reading buffer\n", CLL_Error);
+                        return false;
+                    }
+                }
+            }
+#endif
+            return false;
+        }
+
+        unsigned int Read(uint8_t *buffer, unsigned int length)
+        {
+#ifdef SG_PLATFORM_LINUX
+            if (m_fd >= 0)
+            {
+                ret = read(m_fd, buffer, length);
+
+                if (ret > 0)
+                    return (unsigned int)(ret);
             }
 
             return 0;
@@ -252,7 +373,7 @@ namespace sg
             DWORD ret = 0;
             if (m_fd != INVALID_HANDLE_VALUE)
             {
-                ::ReadFile(m_fd, buffer, length, &ret, nullptr);
+                ::ReadFile(m_fd, buffer, length, &ret, m_ol.Get());
             }
 
             return (unsigned int)(ret);
@@ -326,13 +447,28 @@ namespace sg
             tcdrain(m_fd);
             return length;
 #else
+            CommsOverlapped ol;
+            if (!ol.Init())
+                return 0;
+
             DWORD ret = 0, send = length;
             unsigned int retry = 0;
             bool quit = false;
 
             while (!quit)
             {
-                ::WriteFile(m_fd, buffer, send, &ret, nullptr);
+                if (!::WriteFile(m_fd, buffer, send, &ret, ol.Get()))
+                {
+                    if (::GetLastError() == ERROR_IO_PENDING)
+                    {
+                        if (::GetOverlappedResult(m_fd, ol.Get(), &ret, TRUE));
+                        else
+                            return 0;
+                    }
+                    else
+                        return 0;
+                }
+
                 if (ret == send || (++retry) > length)
                     quit = true;
                 else
@@ -421,6 +557,7 @@ namespace sg
         int         m_fd;
 #else
         HANDLE      m_fd;
+        CommsOverlapped m_ol;
 #endif
         bool        m_multidrop;
     };
@@ -431,24 +568,27 @@ namespace sg
         , m_start(false)
         , m_type(type)
         , m_dev(nullptr)
-        , m_resp_task(false)
         , m_resp_timeout(false)
     {
         switch (m_type)
         {
         case sg::Comms::CT_QCOM:
-            m_dev = MakeSharedPtr<CommsSerialPort>();
+            m_dev = new CommsSerialPort();
             break;
         default:
             BOOST_ASSERT(false);
-            m_dev = MakeSharedPtr<CommsSerialPort>();
+            m_dev = new CommsSerialPort();
             break;
         }
     }
 
     Comms::~Comms()
     {
-        Quit();
+        this->Quit();
+
+        CommsSerialPort *dev = _dev;
+        SG_SAFE_DELETE(dev);
+        m_dev = nullptr;
     }
 
     void Comms::Quit()
@@ -463,7 +603,7 @@ namespace sg
         if (m_init)
         {
             COMMS_LOG("Comms is shutting down...\n", CLL_Info);
-            if (!m_dev->Close())
+            if (!_dev->Close())
                 return;
 
             m_init = false;
@@ -493,7 +633,7 @@ namespace sg
             unsigned int baud = 19200U;
             CommsSerialPort::EParity parity = CommsSerialPort::Space;
 
-            if (m_dev->Open(m_dev_name, baud, parity))
+            if (_dev->Open(m_dev_name, baud, parity))
             {
                 m_init = true;
                 this->DoInit();
@@ -562,16 +702,9 @@ namespace sg
     {
         while (m_start)
         {
-            std::unique_lock<std::mutex> lock(m_response);
-            if (!m_resp_task)
-                m_response_cond.wait_for(lock, std::chrono::milliseconds(SG_COMM_WAKEUP_TIME));
-
-            if (m_resp_task)
+            if (_dev->WaitForRead())
             {
                 this->Read();
-                m_resp_task = false;
-                lock.unlock();
-                m_response_cond.notify_one();
             }
         }
     }
@@ -591,31 +724,32 @@ namespace sg
             first_time = false;
         }
 
-        bool firstbyte = true;
-        bool trt = false;
+        //bool firstbyte = true;
+        //bool trt = false;
         unsigned int ret = 0;
+        bool timeout = false;
 
         do
         {
-            if (firstbyte)
+//            if (firstbyte)
+//            {
+//                ret = _dev->Read(ptr, 1U);
+//                if (!ret && !trt && (m_resp_timer.Elapsed() > SG_TRT_TIMEOUT))
+//                {
+//                    COMMS_LOG("Trt reach\n", CLL_Warning);
+//                    trt = true;
+//                }
+//
+//                if (ret)
+//                {
+//                    ++ptr;
+//                    ++length;
+//                    firstbyte = false;
+//                }
+//            }
+//            else
             {
-                ret = m_dev->Read(ptr, 1U);
-                if (!ret && !trt && (m_resp_timer.Elapsed() > SG_TRT_TIMEOUT))
-                {
-                    COMMS_LOG("Trt reach\n", CLL_Warning);
-                    trt = true;
-                }
-
-                if (ret)
-                {
-                    ++ptr;
-                    ++length;
-                    firstbyte = false;
-                }
-            }
-            else
-            {
-                ret = m_dev->Read(ptr, sizeof(msg_buf) - length);
+                ret = _dev->Read(ptr, sizeof(msg_buf) - length);
                 ptr += ret;
                 length += ret;
             }
@@ -633,10 +767,21 @@ namespace sg
                 break;
             }
 
-            if (m_resp_timer.Elapsed() > SG_RESPONSE_TIMEOUT)
-                m_resp_timeout = true;
+            if ((m_resp_time != 0) && ((this->Now() - m_resp_time) > SG_RESPONSE_TIMEOUT))
+                timeout = true;
 
-        } while (!m_resp_timeout);
+        } while (!timeout);
+
+        std::unique_lock<std::mutex> lock(m_response);
+
+        if (timeout)
+            m_resp_timeout = true;
+        else
+            m_resp_timeout = false;
+
+        lock.unlock();
+
+        m_response_cond.notify_one();
     }
 
     bool Comms::IsPacketComplete(uint8_t [], int /*length*/)
@@ -656,7 +801,7 @@ namespace sg
 
     void Comms::SendPacket(uint8_t buf[], int length)
     {
-        if (!m_dev->Write(buf, length))
+        if (!_dev->Write(buf, length))
         {
             COMMS_LOG("Failed to send packet\n", CLL_Error);
         }

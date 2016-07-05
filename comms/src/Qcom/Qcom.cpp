@@ -65,10 +65,10 @@ namespace sg
 
     CommsQcom::CommsQcom(const std::string &dev)
         : Comms(dev, Comms::CT_QCOM)
+        , m_tpc(this->Now())
         , m_pending(false)
     {
         m_egms.reserve(SG_QCOM_MAX_EGM_NUM);
-        m_pc_timer.ReStart();
     }
 
     CommsQcom::~CommsQcom()
@@ -189,9 +189,9 @@ namespace sg
 
             lock.unlock();
 
-            double tpc = m_pc_timer.Elapsed();
+            cstt tpc = this->Now() - m_tpc;
             if (tpc < SG_QCOM_POLLCYCLE_TIME)
-                std::this_thread::sleep_for(std::chrono::milliseconds((SG_QCOM_POLLCYCLE_TIME - (long long)tpc)));
+                std::this_thread::sleep_for(std::chrono::milliseconds((SG_QCOM_POLLCYCLE_TIME - tpc)));
 
             switch (job->GetType())
             {
@@ -205,25 +205,20 @@ namespace sg
                 {
                     QcomPollPtr poll = job->GetPoll(i);
 
-                    m_resp_task = true;
-
+                    m_resp_time = 0;
                     this->SendPacket(poll->data, poll->length);
-                    m_resp_timer.ReStart();
+                    m_resp_time = this->Now();
 
-                    m_response_cond.notify_one();
-
-                    while (m_resp_task)
-                        m_response_cond.wait(rsp_lock);
+                    if (m_response_cond.wait_for(rsp_lock, cstime(SG_JOB_TIMEOUT)) == std::cv_status::timeout)
+                        m_resp_timeout = true;
 
                     if (m_resp_timeout)
-                    {
-                        COMMS_LOG("Qcom response timeout, abandon current poll cycle\n", CLL_Error);
                         break;
-                    }
                 }
 
                 if (m_resp_timeout)
                 {
+                    COMMS_LOG("Qcom response timeout, abandon current poll cycle\n", CLL_Error);
                     m_resp_timeout = false;
                     break;
                 }
@@ -245,12 +240,12 @@ namespace sg
 
                 QcomPollPtr seek = job->GetBroadcast(0);
 
-                m_resp_task = true;
+                m_resp_time = 0;
                 this->SendPacket(seek->data, seek->length);
-                m_resp_timer.ReStart();
+                m_resp_time = this->Now();
 
-                while (m_resp_task)
-                    m_response_cond.wait(rsp_lock);
+                if (m_response_cond.wait_for(rsp_lock, cstime(SG_JOB_TIMEOUT)) == std::cv_status::timeout)
+                    m_resp_timeout = true;
 
                 if (m_resp_timeout)
                 {
@@ -273,7 +268,7 @@ namespace sg
                 break;
             }
 
-            m_pc_timer.ReStart();
+            m_tpc = this->Now();
 
             // TODO : wait for all substage finishing
         }

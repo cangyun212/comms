@@ -215,7 +215,8 @@ namespace sg
 
                 QcomPollPtr poll = job->GetBroadcast();
 
-                this->SendPacket(poll->data, poll->length);
+                if (poll)
+                    this->SendPacket(poll->data, poll->length);
 
                 break;
             }

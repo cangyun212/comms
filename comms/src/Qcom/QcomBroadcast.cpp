@@ -19,17 +19,25 @@ namespace sg
         std::memset(poll.get(), 0, sizeof(QcomPoll));
 
         poll->poll.DLL.PollAddress = QCOM_BROADCAST_ADDRESS;
-        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype);
         poll->poll.DLL.ControlByte.CNTL = QCOM_CNTL_POLL_BIT;
         poll->poll.DLL.FunctionCode = QCOM_BROADCAST_POLL_FC;
 
+        this->MakeTimeDate(poll);
+
+        u8 esiz = static_cast<u8>(sizeof(qc_egmpacretype));
+        u8 num = static_cast<u8>(size);
+        u8 resiz = static_cast<u8>(sizeof(poll->poll.Data.Broadcast.extd.EXTD.egmpac.re));
+
+        poll->poll.Data.Broadcast.extd.EXTD.egmpac.EFUNC = QCOM_BMEGMPAC_FC;
+        poll->poll.Data.Broadcast.extd.EXTD.egmpac.ESIZ = esiz;
+        poll->poll.Data.Broadcast.extd.EXTD.egmpac.NUM = num;
+
         poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
         poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+        poll->poll.Data.Broadcast.ESIZ = static_cast<u8>(sizeof(qc_egmpactype)) - resiz + esiz * num;
 
-        poll->poll.Data.Broadcast.ESIZ = sizeof(qc_egmpactype);
-        poll->poll.Data.Broadcast.extd.EXTD.egmpac.EFUNC = QCOM_BMEGMPAC_FC;
-        poll->poll.Data.Broadcast.extd.EXTD.egmpac.ESIZ = static_cast<u8>(size * sizeof(qc_egmpacretype));
-        poll->poll.Data.Broadcast.extd.EXTD.egmpac.NUM = static_cast<u8>(size);
+        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + static_cast<u8>(sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype)) +
+            poll->poll.Data.Broadcast.ESIZ;
 
         PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
@@ -58,37 +66,29 @@ namespace sg
             if(!size)
                 return false;
 
-            // batch by QCOM_REMAX_BMEGMPAC, ref Qcom1.6-15.5.4
-            size_t group = size / QCOM_REMAX_BMEGMPAC;
-            size_t extra = size % QCOM_REMAX_BMEGMPAC;
+            size_t count = 0;
+            u8 padrs[QCOM_REMAX_BMEGMPAC];
+            uint32_t sers[QCOM_REMAX_BMEGMPAC];
 
-            QcomPollPtr poll_extra = this->MakePollAddressPoll(extra);
-            for (size_t i = 0; i < extra; ++i)
+            for (size_t i = 0; i < size && count <= QCOM_REMAX_BMEGMPAC; ++i)
             {
                 std::unique_lock<std::mutex> lock(egmDatas[i]->locker);
+                if (egmDatas[i]->data.control.poll_address)
+                    continue;
 
-                poll_extra->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].SN.SER = egmDatas[i]->data.control.serialMidBCD;
-                poll_extra->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = static_cast<u8>(i + 1);
-                egmDatas[i]->data.control.poll_address = static_cast<u8>(i + 1);
+                padrs[count] = static_cast<u8>(i + 1);
+                egmDatas[i]->data.control.poll_address = padrs[count];
+                sers[count++] = egmDatas[i]->data.control.serialMidBCD;
             }
 
-            job->AddBroadcast(poll_extra);
-
-            for (size_t j = 0; j < group; ++j)
+            QcomPollPtr poll = this->MakePollAddressPoll(count);
+            for (size_t i = 0; i < count; ++i)
             {
-                QcomPollPtr poll = this->MakePollAddressPoll(QCOM_REMAX_BMEGMPAC);
-                size_t low_bound = extra + j * QCOM_REMAX_BMEGMPAC;
-                size_t high_bound = low_bound + QCOM_REMAX_BMEGMPAC;
-                for (size_t i = low_bound; i < high_bound; ++i)
-                {
-                    std::unique_lock<std::mutex> lock(egmDatas[i]->locker);
-
-                    poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].SN.SER = egmDatas[i]->data.control.serialMidBCD;
-                    poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = static_cast<u8>(i + 1);
-                    egmDatas[i]->data.control.poll_address = static_cast<u8>(i + 1);
-                }
-                job->AddBroadcast(poll);
+                poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].SN.SER = sers[i];
+                poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = padrs[i];
             }
+
+            job->SetBroadcast(poll);
 
             return true;
         }
@@ -116,7 +116,7 @@ namespace sg
             {
                 std::unique_lock<std::mutex> lock(d->locker);
 
-                job->AddBroadcast(this->MakePollAddressPoll(d->data.control.serialMidBCD, poll_address));
+                job->SetBroadcast(this->MakePollAddressPoll(d->data.control.serialMidBCD, poll_address));
 
                 d->data.control.poll_address = poll_address;
 
@@ -127,21 +127,8 @@ namespace sg
         return false;
     }
 
-    //Time Data broadcast
-    QcomPollPtr QcomBroadcast::MakeTimeDateBroadcast()
+    void QcomBroadcast::MakeTimeDate(QcomPollPtr &poll)
     {
-        QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
-        std::memset(poll.get(), 0, sizeof(QcomPoll));
-
-        poll->poll.DLL.PollAddress = QCOM_BROADCAST_ADDRESS;
-        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype);
-        poll->poll.DLL.ControlByte.CNTL = QCOM_CNTL_POLL_BIT;
-        poll->poll.DLL.FunctionCode = QCOM_BROADCAST_POLL_FC;
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
-
-        poll->poll.Data.Broadcast.ESIZ = 0;
-
         time_t now_time = time(NULL);
         struct tm cTime;
 
@@ -155,6 +142,24 @@ namespace sg
                     sizeof(poll->poll.Data.Broadcast.TIMEDATE.minutes));
         _QComPutBCD(cTime.tm_sec, &poll->poll.Data.Broadcast.TIMEDATE.seconds,
                     sizeof(poll->poll.Data.Broadcast.TIMEDATE.seconds));
+    }
+
+    //Time Data broadcast
+    QcomPollPtr QcomBroadcast::MakeTimeDateBroadcast()
+    {
+        QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
+        std::memset(poll.get(), 0, sizeof(QcomPoll));
+
+        poll->poll.DLL.PollAddress = QCOM_BROADCAST_ADDRESS;
+        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype);
+        poll->poll.DLL.ControlByte.CNTL = QCOM_CNTL_POLL_BIT;
+        poll->poll.DLL.FunctionCode = QCOM_BROADCAST_POLL_FC;
+        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
+        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+
+        poll->poll.Data.Broadcast.ESIZ = 0;
+
+        this->MakeTimeDate(poll);
 
         PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
@@ -167,7 +172,7 @@ namespace sg
     {
         //if (auto it = m_qcom.lock())
         //{
-            job->AddBroadcast(this->MakeTimeDateBroadcast());
+            job->SetBroadcast(this->MakeTimeDateBroadcast());
 
             return true;
         //}
@@ -180,16 +185,21 @@ namespace sg
         std::memset(poll.get(), 0, sizeof(QcomPoll));
 
         poll->poll.DLL.PollAddress = QCOM_BROADCAST_ADDRESS;
-        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype);
         poll->poll.DLL.ControlByte.CNTL = QCOM_CNTL_POLL_BIT;
         poll->poll.DLL.FunctionCode = QCOM_BROADCAST_POLL_FC;
 
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+        this->MakeTimeDate(poll);
 
-        poll->poll.Data.Broadcast.ESIZ = static_cast<u8>(sizeof(qc_lpcatype) + sizeof(qc_lpcaretype) * (data.pnum));
         poll->poll.Data.Broadcast.extd.EXTD.lpca.EFUNC = QCOM_BMLPCA_FC;
         poll->poll.Data.Broadcast.extd.EXTD.lpca.NUM.bits.levels = data.pnum - 1;
+        poll->poll.Data.Broadcast.extd.EXTD.lpca.NUM.bits.res = 0;
+
+        u8 resiz = static_cast<u8>(sizeof(poll->poll.Data.Broadcast.extd.EXTD.lpca.re));
+        u8 esiz = static_cast<u8>(sizeof(qc_lpcaretype));
+
+        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
+        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+        poll->poll.Data.Broadcast.ESIZ = static_cast<u8>(sizeof(qc_lpcatype)) - resiz + esiz * data.pnum;
 
         for(size_t i = 0; i < data.pnum; ++i)
         {
@@ -197,6 +207,9 @@ namespace sg
             poll->poll.Data.Broadcast.extd.EXTD.lpca.re[i].PLVL.bits.level = i;
             poll->poll.Data.Broadcast.extd.EXTD.lpca.re[i].CAMT = data.lpamt[i];
         }
+
+        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype) +
+            poll->poll.Data.Broadcast.ESIZ;
 
         PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
@@ -208,7 +221,7 @@ namespace sg
     {
         //if (auto it = m_qcom.lock())
         //{
-            job->AddBroadcast(this->MakeLinkProgressiveCurrentAmountBroadcast(data));
+            job->SetBroadcast(this->MakeLinkProgressiveCurrentAmountBroadcast(data));
 
             return true;
         //}
@@ -221,20 +234,18 @@ namespace sg
         std::memset(poll.get(), 0, sizeof(QcomPoll));
 
         poll->poll.DLL.PollAddress = QCOM_BROADCAST_ADDRESS;
-        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype);
         poll->poll.DLL.ControlByte.CNTL = QCOM_CNTL_POLL_BIT;
         poll->poll.DLL.FunctionCode = QCOM_BROADCAST_POLL_FC;
 
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+        this->MakeTimeDate(poll);
 
-        poll->poll.Data.Broadcast.ESIZ = sizeof(qc_gpmtype);
-        poll->poll.Data.Broadcast.extd.EXTD.gpm.EFUNC = QCOM_BMGPM_FC;
 
         uint8_t length = text.size() <= QCOM_BMGPM_TEXT_SIZE ? static_cast<uint8_t>(text.size()) : QCOM_BMGPM_TEXT_SIZE;
-
         uint8_t flag = length ? 1 : 0;
+
+        poll->poll.Data.Broadcast.extd.EXTD.gpm.EFUNC = QCOM_BMGPM_FC;
         poll->poll.Data.Broadcast.extd.EXTD.gpm.FMT.bits.chime = flag;
+
         if(flag)
         {
             poll->poll.Data.Broadcast.extd.EXTD.gpm.LEN = length;
@@ -244,6 +255,15 @@ namespace sg
         {
             poll->poll.Data.Broadcast.extd.EXTD.gpm.LEN = 0;
         }
+
+        u8 tsiz = sizeof(poll->poll.Data.Broadcast.extd.EXTD.gpm.TEXT);
+
+        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
+        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+        poll->poll.Data.Broadcast.ESIZ = sizeof(qc_gpmtype) - tsiz + poll->poll.Data.Broadcast.extd.EXTD.gpm.LEN;
+
+        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype) +
+            poll->poll.Data.Broadcast.ESIZ;
 
         PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
@@ -255,7 +275,7 @@ namespace sg
     {
         //if (auto it = m_qcom.lock())
         //{
-            job->AddBroadcast(this->MakeGeneralPromotionalMessageBroadcast(text));
+            job->SetBroadcast(this->MakeGeneralPromotionalMessageBroadcast(text));
 
             return true;
         //}
@@ -268,14 +288,11 @@ namespace sg
         std::memset(poll.get(), 0, sizeof(QcomPoll));
 
         poll->poll.DLL.PollAddress = QCOM_BROADCAST_ADDRESS;
-        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype);
         poll->poll.DLL.ControlByte.CNTL = QCOM_CNTL_POLL_BIT;
         poll->poll.DLL.FunctionCode = QCOM_BROADCAST_POLL_FC;
 
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+        this->MakeTimeDate(poll);
 
-        poll->poll.Data.Broadcast.ESIZ = sizeof(qc_sdtype);
         poll->poll.Data.Broadcast.extd.EXTD.sd.EFUNC = QCOM_BMSD_FC;
 
         uint8_t slen = stext.size() <= QCOM_BMSD_SLEN ? static_cast<uint8_t>(stext.size()) : QCOM_BMSD_SLEN;
@@ -285,6 +302,15 @@ namespace sg
         poll->poll.Data.Broadcast.extd.EXTD.sd.LLEN = llen;
         strncpy(poll->poll.Data.Broadcast.extd.EXTD.sd.TEXT, stext.c_str(), slen);
         strncat(poll->poll.Data.Broadcast.extd.EXTD.sd.TEXT + slen, ltext.c_str(), llen);
+
+        u8 tsiz = sizeof(poll->poll.Data.Broadcast.extd.EXTD.sd.TEXT);
+
+        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
+        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+        poll->poll.Data.Broadcast.ESIZ = sizeof(qc_sdtype) - tsiz + slen + llen;
+
+        poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype) +
+            poll->poll.Data.Broadcast.ESIZ;
 
         PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
@@ -297,7 +323,7 @@ namespace sg
     {
         //if (auto it = m_qcom.lock())
         //{
-            job->AddBroadcast(this->MakeSiteDetailsBroadcast(stext, ltext));
+            job->SetBroadcast(this->MakeSiteDetailsBroadcast(stext, ltext));
 
             return true;
         //}

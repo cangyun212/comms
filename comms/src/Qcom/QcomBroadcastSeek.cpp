@@ -67,7 +67,7 @@ namespace sg
             PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
             poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
-            job->AddBroadcast(poll);
+            job->SetBroadcast(poll);
 
             return true;
 

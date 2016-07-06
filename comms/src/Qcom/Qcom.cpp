@@ -48,21 +48,6 @@ namespace sg
         m_polls.push_back(poll);
     }
 
-    size_t QcomJobData::GetBroadcastNum() const
-    {
-        return m_broadcast.size();
-    }
-
-    QcomPollPtr QcomJobData::GetBroadcast(size_t index) const
-    {
-        return m_broadcast[index];
-    }
-
-    void QcomJobData::AddBroadcast(const QcomPollPtr &broadcast)
-    {
-        m_broadcast.push_back(broadcast);
-    }
-
     CommsQcom::CommsQcom(const std::string &dev)
         : Comms(dev, Comms::CT_QCOM)
         , m_tpc(this->Now())
@@ -228,12 +213,9 @@ namespace sg
                     }
                }
 
-                num = job->GetBroadcastNum(); // at least 1 broadcast exist in 1 poll cycle
-                for (size_t i = 0; i < num; ++i)
-                {
-                    QcomPollPtr poll = job->GetBroadcast(i);
-                    this->SendPacket(poll->data, poll->length);
-                }
+                QcomPollPtr poll = job->GetBroadcast();
+
+                this->SendPacket(poll->data, poll->length);
 
                 break;
             }
@@ -241,12 +223,10 @@ namespace sg
             {
                 std::unique_lock<std::mutex> rsp_lock(m_response);
 
-                size_t num = job->GetBroadcastNum();
-
-                QcomPollPtr seek = job->GetBroadcast(0);
+                QcomPollPtr poll = job->GetBroadcast();
 
                 m_resp_time = 0;
-                this->SendPacket(seek->data, seek->length);
+                this->SendPacket(poll->data, poll->length);
                 m_resp_time = this->Now();
 
                 if (m_response_cond.wait_for(rsp_lock, cstime(SG_JOB_TIMEOUT)) == std::cv_status::timeout)
@@ -257,12 +237,6 @@ namespace sg
                     COMMS_LOG("Qcom seek broadcast response timeout\n", CLL_Error);
                     m_resp_timeout = false;
                     break;
-                }
-
-                for (size_t i = 1; i < num; ++i)
-                {
-                    QcomPollPtr poll = job->GetBroadcast(i);
-                    this->SendPacket(poll->data, poll->length);
                 }
 
                 break;
@@ -456,10 +430,6 @@ namespace sg
         if (!handler->BuildSeekEGMPoll(job))
             return;
 
-        QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
-        if (!broadcast_handler->BuildTimeDateBroadcast(job))
-            return;
-
         if (!m_pending)
         {
             this->AddJob(job);
@@ -495,9 +465,6 @@ namespace sg
 
         if (!m_pending)
         {
-            if (!handler->BuildTimeDateBroadcast(job))
-                return;
-
             this->AddJob(job);
         }
     }
@@ -548,9 +515,6 @@ namespace sg
 
         if (!m_pending)
         {
-            if (!handle->BuildTimeDateBroadcast(job))
-                return;
-
             this->AddJob(job);
         }
     }
@@ -576,9 +540,6 @@ namespace sg
 
         if (!m_pending)
         {
-            if (!handle->BuildTimeDateBroadcast(job))
-                return;
-
             this->AddJob(job);
         }
     }
@@ -604,9 +565,6 @@ namespace sg
 
         if (!m_pending)
         {
-            if (!handle->BuildTimeDateBroadcast(job))
-                return;
-
             this->AddJob(job);
         }
     }

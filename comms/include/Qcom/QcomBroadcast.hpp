@@ -44,6 +44,7 @@ namespace sg
         QcomPollPtr     MakePollAddressPoll(uint32_t ser, uint8_t poll_address);
         bool            MakePollAddressJob(QcomJobDataPtr job);
         QcomPollPtr     MakeTimeDateBroadcast();
+        void            MakeTimeDate(QcomPollPtr &poll);
         QcomPollPtr     MakeLinkProgressiveCurrentAmountBroadcast(QcomLinkedProgressiveData const& data);
         QcomPollPtr     MakeGeneralPromotionalMessageBroadcast(std::string const& text);
         QcomPollPtr     MakeSiteDetailsBroadcast(std::string const& stext, std::string const& ltext);

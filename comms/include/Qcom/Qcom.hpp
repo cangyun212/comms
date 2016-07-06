@@ -239,15 +239,14 @@ namespace sg
         size_t      GetPollNum() const;
         QcomPollPtr GetPoll(size_t index) const;
         void        AddPoll(QcomPollPtr const & poll);
-        size_t      GetBroadcastNum() const;
-        QcomPollPtr GetBroadcast(size_t index) const;
-        void        AddBroadcast(QcomPollPtr const & broadcast);
+        QcomPollPtr GetBroadcast() const { return m_broadcast; };
+        void        SetBroadcast(QcomPollPtr const & broadcast) { BOOST_ASSERT(!m_broadcast); m_broadcast = broadcast; };
         JobType     GetType() const { return m_type; }
 
     private:
         typedef std::vector<QcomPollPtr>   PollsType;
         PollsType   m_polls;
-        PollsType   m_broadcast;
+        QcomPollPtr m_broadcast;
         JobType     m_type;
     };
 

@@ -95,6 +95,8 @@ namespace sg
                 PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
                 job->SetBroadcast(poll);
+
+                return true;
             }
        }
 

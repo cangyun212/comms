@@ -39,7 +39,6 @@ namespace sg
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + static_cast<u8>(sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype)) +
             poll->poll.Data.Broadcast.ESIZ;
 
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
         poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
@@ -51,6 +50,9 @@ namespace sg
 
         poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[0].SN.SER = ser;
         poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[0].PADR = poll_address;
+
+        // CRC must be set after all field are filled.
+        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
 
         return poll;
     }
@@ -81,17 +83,20 @@ namespace sg
                 sers[count++] = egmDatas[i]->data.control.serialMidBCD;
             }
 
-            QcomPollPtr poll = this->MakePollAddressPoll(count);
-            for (size_t i = 0; i < count; ++i)
+            if (count)
             {
-                poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].SN.SER = sers[i];
-                poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = padrs[i];
+                QcomPollPtr poll = this->MakePollAddressPoll(count);
+                for (size_t i = 0; i < count; ++i)
+                {
+                    poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].SN.SER = sers[i];
+                    poll->poll.Data.Broadcast.extd.EXTD.egmpac.re[i].PADR = padrs[i];
+                }
+
+                PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+
+                job->SetBroadcast(poll);
             }
-
-            job->SetBroadcast(poll);
-
-            return true;
-        }
+       }
 
         return false;
     }

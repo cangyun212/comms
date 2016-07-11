@@ -198,9 +198,9 @@ namespace sg
                         }
 
                         COMMTIMEOUTS to;
-                        to.ReadIntervalTimeout = 0;
+                        to.ReadIntervalTimeout = MAXDWORD;
                         to.ReadTotalTimeoutMultiplier = 0;
-                        to.ReadTotalTimeoutConstant = SG_COMM_OP_TIMEOUT;
+                        to.ReadTotalTimeoutConstant = 0;
                         to.WriteTotalTimeoutConstant = SG_COMM_OP_TIMEOUT;
                         to.WriteTotalTimeoutMultiplier = 0;
 
@@ -429,7 +429,8 @@ namespace sg
 
             if (this->WriteNormal(&buffer[0], 1) == 1)
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
                 ::FlushFileBuffers(m_fd);
 
                 dcb.Parity = SPACEPARITY;
@@ -750,11 +751,11 @@ namespace sg
 //                }
 //            }
 //            else
-            {
+//            {
                 ret = _dev->Read(ptr, sizeof(msg_buf) - length);
                 ptr += ret;
                 length += ret;
-            }
+//            }
 
             if (ret && this->IsPacketComplete(msg_buf, length))
             {
@@ -784,6 +785,13 @@ namespace sg
         lock.unlock();
 
         m_response_cond.notify_one();
+
+        if (timeout && length)
+        {
+            ptr = msg_buf;
+            length = 0;
+            std::memset(msg_buf, 0, SG_COMM_BUFF_SIZE);
+        }
     }
 
     bool Comms::IsPacketComplete(uint8_t [], int /*length*/)

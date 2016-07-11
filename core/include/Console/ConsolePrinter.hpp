@@ -161,7 +161,7 @@ namespace sg
 #define SG_SAFE_LOG(s, t, l)        sg::ConsolePrinter::Instance().SafeLog(s, t, l);\
                                     s.flush()
 
-#define SG_START_LOG_BLOCK(s)       {   std::lock_guard<std::mutex> lock(g_log_guard)
+#define SG_START_LOG_BLOCK(s)       {   std::lock_guard<std::mutex> __lock(g_log_guard)
 #define SG_LOG_BLOCK(s, t, l)           sg::ConsolePrinter::Instance().Log(s, t, l)
 #define SG_END_LOG_BLOCK(s)             s.flush();}
 
@@ -170,7 +170,7 @@ namespace sg
 #define SG_SAFE_PRINT(s, t)         sg::ConsolePrinter::Instance().SafePrint(s, t);\
                                     s.flush()
 
-#define SG_START_PRINT_BLOCK(s)     {   std::lock_guard<std::mutex> lock(g_log_guard)
+#define SG_START_PRINT_BLOCK(s)     {   std::lock_guard<std::mutex> __lock(g_log_guard)
 #define SG_PRINT_BLOCK(s, t)            sg::ConsolePrinter::Instance().Print(s, t)
 #define SG_END_PRINT_BLOCK(s)           s.flush();}
 
@@ -232,7 +232,7 @@ namespace sg
 #define SG_SAFE_PRINT_DEBUG(s, t)   sg::ConsolePrinter::Instance().SafeDebug(s, t, std::string(__FILE__), std::string(__FUNCTION__), std::string(_SG_PRINT_I2C(__LINE__)));\
                                     s.flush()
 
-#define SG_START_DEBUG_BLOCK(s)     {   std::lock_guard<std::mutex> lock(g_log_guard)
+#define SG_START_DEBUG_BLOCK(s)     {   std::lock_guard<std::mutex> __lock(g_log_guard)
 #define SG_DEBUG_BLOCK(s, t)            sg::ConsolePrinter::Instance().Debug(s, t, std::string(__FILE__), std::string(__FUNCTION__), std::string(_SG_PRINT_I2C(__LINE__)));
 #define SG_END_DEBUG_BLOCK(s)           s.flush();}
 

@@ -21,13 +21,15 @@
 #define SG_COMM_BUFF_SIZE           256
 #define SG_COMM_WAKEUP_TIME         6000
 #ifdef SG_PLATFORM_LINUX
-#define SG_COMM_OP_TIMEOUT          10
-#else
-#define SG_COMM_OP_TIMEOUT          10000
-#endif
-#define SG_TRT_TIMEOUT              5
 #define SG_RESPONSE_TIMEOUT         200
 #define SG_JOB_TIMEOUT              400
+#define SG_COMM_OP_TIMEOUT          10
+#else
+#define SG_RESPONSE_TIMEOUT         300
+#define SG_JOB_TIMEOUT              500
+#define SG_COMM_OP_TIMEOUT          10000
+#endif
+//#define SG_TRT_TIMEOUT              5
 
 #define COMMS_LOG(t, l)             SG_WS_SAFE_LOG(t, l)
 #define COMMS_START_LOG_BLOCK()     SG_START_WS_LOG_BLOCK()

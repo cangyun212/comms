@@ -13,7 +13,6 @@
 #define SG_CONSOLE_KEY_UP                          0403
 #define SG_CONSOLE_KEY_LEFT                        0404
 #define SG_CONSOLE_KEY_RIGHT                       0405
-#define SG_CONSOLE_KEY_BACKSPACE                   0407
 #define SG_CONSOLE_KEY_DC                          0512
 #define SG_CONSOLE_KEY_ENTER                       0527
 

@@ -192,6 +192,30 @@ namespace
 
 #endif // !SG_PLATFORM_LINUX
 
+    short sColorCode(sg::ConsoleColor color)
+    {
+        switch (color)
+        {
+        case sg::CC_Black:
+            return COLOR_BLACK;
+        case sg::CC_Red:
+            return COLOR_RED;
+        case sg::CC_Green:
+            return COLOR_GREEN;
+        case sg::CC_Yellow:
+            return COLOR_YELLOW;
+        case sg::CC_Blue:
+            return COLOR_BLUE;
+        case sg::CC_Magenta:
+            return COLOR_MAGENTA;
+        case sg::CC_Cyan:
+            return COLOR_CYAN;
+        case sg::CC_White:
+            return COLOR_WHITE;
+        default:
+            return COLOR_BLACK;
+        }
+    }
 }
 
 
@@ -374,7 +398,7 @@ namespace sg
         m_groups.push_back(group);
         if (m_type == CT_Custom)
         {
-            int pair = init_pair(static_cast<short>(m_colId), static_cast<short>(group.f), static_cast<short>(group.b));
+            int pair = init_pair(static_cast<short>(m_colId), sColorCode(group.f), sColorCode(group.b));
             BOOST_ASSERT(pair != ERR);
             SG_UNREF_PARAM(pair);
         }

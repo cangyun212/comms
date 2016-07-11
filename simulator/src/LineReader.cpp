@@ -115,7 +115,7 @@ namespace sg
         case SG_CONSOLE_KEY_RIGHT:
             if (m_pos < m_len) ++m_pos;
             break;
-        case SG_CONSOLE_KEY_BACKSPACE:
+        case '\b':
             if (m_pos > 0)
             {
                 memmove(m_buffer.get() + m_pos - 1, m_buffer.get() + m_pos, m_len - m_pos);

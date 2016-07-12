@@ -157,6 +157,8 @@ namespace sg
         SG_UNREF_PARAM(action);
 
         m_qcom->PollAddress(m_curr_egm);
+        m_qcom->GeneralStatus(m_curr_egm);
+
         if (m_curr_egm)
         {
             COMMS_LOG(boost::format("Config the poll address of EGM %1%\n") % static_cast<uint32_t>(m_curr_egm), CLL_Info);

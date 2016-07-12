@@ -131,6 +131,10 @@ namespace sg {
                 actions.push_back(action.first);
         }
     }
+    void ActionFactory::HandleInvalidAction(std::string const & act) const
+    {
+        COMMS_LOG(boost::format("Invalid command '%||'\n") % act, CLL_Error);
+    }
 }
 
 

@@ -26,6 +26,7 @@ namespace sg
         virtual void        Help(ActionCenter const& , const ActionPtr&);
 
         void                MatchActions(std::string const& token, std::vector<std::string> &actions) const;
+        void                HandleInvalidAction(std::string const& act) const;
     protected:
 
 

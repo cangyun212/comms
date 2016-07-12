@@ -29,6 +29,7 @@
 #define SG_JOB_TIMEOUT              400
 #define SG_COMM_OP_TIMEOUT          10000
 #endif
+#define SG_RETRY_TIME               300
 //#define SG_TRT_TIMEOUT              5
 
 #define COMMS_LOG(t, l)             SG_WS_SAFE_LOG(t, l)

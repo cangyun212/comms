@@ -211,7 +211,7 @@ namespace sg
                     {
                         m_skip = false;
                     }
-               }
+                }
 
                 QcomPollPtr poll = job->GetBroadcast();
 
@@ -235,9 +235,23 @@ namespace sg
 
                 if (m_resp_timeout)
                 {
-                    COMMS_LOG("Qcom seek broadcast response timeout\n", CLL_Error);
                     m_resp_timeout = false;
-                    break;
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(SG_RETRY_TIME));
+
+                    m_resp_time = 0;
+                    this->SendPacket(poll->data, poll->length);
+                    m_resp_time = this->Now();
+
+                    if (m_response_cond.wait_for(rsp_lock, cstime(SG_JOB_TIMEOUT)) == std::cv_status::timeout)
+                        m_resp_timeout = true;
+
+                    if (m_resp_timeout)
+                    {
+                        COMMS_LOG("Qcom seek broadcast response timeout\n", CLL_Error);
+                        m_resp_timeout = false;
+                        break;
+                    }
                 }
 
                 break;

@@ -73,6 +73,10 @@ int main(int argc, char *argv[])
                         center.SendAction(action);
                     }
                 }
+                else
+                {
+                    sg::g_fac->HandleInvalidAction(args.front());
+                }
             }
         }
     }

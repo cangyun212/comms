@@ -115,6 +115,7 @@ namespace sg
         case SG_CONSOLE_KEY_RIGHT:
             if (m_pos < m_len) ++m_pos;
             break;
+        case SG_CONSOLE_KEY_BACKSPACE:
         case '\b':
             if (m_pos > 0)
             {

@@ -26,7 +26,7 @@
 #define SG_COMM_OP_TIMEOUT          10
 #else
 #define SG_RESPONSE_TIMEOUT         300
-#define SG_JOB_TIMEOUT              500
+#define SG_JOB_TIMEOUT              400
 #define SG_COMM_OP_TIMEOUT          10000
 #endif
 //#define SG_TRT_TIMEOUT              5

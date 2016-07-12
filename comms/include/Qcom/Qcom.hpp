@@ -34,6 +34,7 @@
 #define QCOM_GAME_CONFIG_REQ    0x02
 #define QCOM_GAME_CONFIG_READY  0x04
 #define QCOM_GAME_CONFIG_GVN    0x08
+#define QCOM_GAME_PC_CHANGE     0x10
 
 #define QCOM_MAX_GAME_NUM       0xFF
 
@@ -152,14 +153,30 @@ namespace sg
         QcomGameSettingData             settings;
     };
 
+    struct QcomProgressiveData
+    {
+        uint32_t        pinc[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level percentage increment x 10000
+        uint32_t        ceil[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level ceiling
+        uint32_t        auxrtp[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, nw auxiliary RTP for the level x 10000
+    };
+
+    struct QcomProgressiveChangeData
+    {
+        uint32_t            sup[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level start-up amount
+        QcomProgressiveData prog;
+        uint8_t             pnum;
+    };
+
     struct QcomGameConfigData
     {
         QcomGameConfigPollData          config;
         QcomVariationData               variations;
+        QcomProgressiveData             prog;
         uint16_t                        gvn;
         uint8_t                         var_hot_switching; // ref Qcom1.6-15.6.11, set if the game support on-the-fly variation switching
         uint8_t                         lp_only; // ref Qcom1.6-15.6.11
         uint8_t                         plbm; // ref Qcom1.6-15.6.11
+        uint8_t                         customSAP; // ref Qcom1.6-15.6.4
     };
 
     struct QcomEGMParametersData
@@ -289,6 +306,7 @@ namespace sg
         void    GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const& data);
         void    GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);
         void    EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data);
+        void    ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const& data);
         void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
 
         void    PendingPoll(size_t poll_num = 2);

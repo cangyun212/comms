@@ -390,7 +390,7 @@ namespace sg
 
     void ConsoleWindow::MsgProc(const ConsoleEvent &event)
     {
-        if (isprint(event.ch))
+        if (event.ch >=0 && event.ch <= 0xFF && isprint(event.ch))
         {
             this->CharEvent()(*this, event.ch);
         }

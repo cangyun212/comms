@@ -21,7 +21,7 @@ namespace sg
 
     }
 
-    bool QcomEgmConfiguration::BuildEGMConfigPoll(QcomJobDataPtr job, uint8_t poll_address, QcomEGMConfigPollData const & data)
+    bool QcomEgmConfiguration::BuildEGMConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, QcomEGMConfigPollData const & data)
     {
         if (auto it = m_qcom.lock())
         {

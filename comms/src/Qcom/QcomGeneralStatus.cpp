@@ -68,7 +68,7 @@ namespace sg
     }
 
 
-    bool QcomGeneralStatus::BuildGeneralStatusPoll(QcomJobDataPtr job, uint8_t poll_address)
+    bool QcomGeneralStatus::BuildGeneralStatusPoll(QcomJobDataPtr &job, uint8_t poll_address)
     {
         if (auto it = m_qcom.lock())
         {
@@ -86,7 +86,7 @@ namespace sg
         return false;
     }
 
-    bool QcomGeneralStatus::BuildGeneralStatusPoll(QcomJobDataPtr job)
+    bool QcomGeneralStatus::BuildGeneralStatusPoll(QcomJobDataPtr &job)
     {
         if (auto it = m_qcom.lock())
         {

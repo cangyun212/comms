@@ -194,7 +194,7 @@ namespace sg
 
     }
 
-    bool QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(QcomJobDataPtr job, uint8_t poll_address, QcomEGMControlPollData const & data)
+    bool QcomEgmConfigurationRequest::BuildEGMConfigReqPoll(QcomJobDataPtr &job, uint8_t poll_address, QcomEGMControlPollData const & data)
     {
         if (auto it = m_qcom.lock())
         {

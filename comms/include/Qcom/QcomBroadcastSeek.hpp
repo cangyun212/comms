@@ -24,7 +24,7 @@ namespace sg {
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        bool        BuildSeekEGMPoll(QcomJobDataPtr job);
+        bool        BuildSeekEGMPoll(QcomJobDataPtr &job);
 
 
     private:

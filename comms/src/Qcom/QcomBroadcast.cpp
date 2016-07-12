@@ -57,7 +57,7 @@ namespace sg
         return poll;
     }
 
-    bool QcomBroadcast::MakePollAddressJob(QcomJobDataPtr job)
+    bool QcomBroadcast::MakePollAddressJob(QcomJobDataPtr &job)
     {
         if (auto it = m_qcom.lock())
         {
@@ -103,7 +103,7 @@ namespace sg
         return false;
     }
 
-    bool QcomBroadcast::BuildPollAddressPoll(QcomJobDataPtr job)
+    bool QcomBroadcast::BuildPollAddressPoll(QcomJobDataPtr &job)
     {
         //if (auto it = m_qcom.lock())
         //{
@@ -113,7 +113,7 @@ namespace sg
         //return false;
     }
 
-    bool QcomBroadcast::BuildPollAddressPoll(QcomJobDataPtr job, uint8_t poll_address)
+    bool QcomBroadcast::BuildPollAddressPoll(QcomJobDataPtr &job, uint8_t poll_address)
     {
         if (auto it = m_qcom.lock())
         {
@@ -175,7 +175,7 @@ namespace sg
         return poll;
     }
 
-    bool QcomBroadcast::BuildTimeDateBroadcast(QcomJobDataPtr job)
+    bool QcomBroadcast::BuildTimeDateBroadcast(QcomJobDataPtr &job)
     {
         //if (auto it = m_qcom.lock())
         //{
@@ -224,7 +224,7 @@ namespace sg
         return poll;
     }
 
-    bool QcomBroadcast::BuildLinkProgressiveCurrentAmountBroadcast(QcomJobDataPtr job, QcomLinkedProgressiveData const& data)
+    bool QcomBroadcast::BuildLinkProgressiveCurrentAmountBroadcast(QcomJobDataPtr &job, QcomLinkedProgressiveData const& data)
     {
         //if (auto it = m_qcom.lock())
         //{
@@ -278,7 +278,7 @@ namespace sg
         return poll;
     }
 
-    bool QcomBroadcast::BuildGeneralPromotionalMessageBroadcast(QcomJobDataPtr job, std::string const& text)
+    bool QcomBroadcast::BuildGeneralPromotionalMessageBroadcast(QcomJobDataPtr &job, std::string const& text)
     {
         //if (auto it = m_qcom.lock())
         //{
@@ -326,7 +326,7 @@ namespace sg
         return poll;
     }
 
-    bool QcomBroadcast::BuildSiteDetailsBroadcast(QcomJobDataPtr job, std::string const& stext, std::string const& ltext)
+    bool QcomBroadcast::BuildSiteDetailsBroadcast(QcomJobDataPtr &job, std::string const& stext, std::string const& ltext)
     {
         //if (auto it = m_qcom.lock())
         //{

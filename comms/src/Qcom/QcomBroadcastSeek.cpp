@@ -49,7 +49,7 @@ namespace sg
         return false;
     }
 
-    bool QcomBroadcastSeek::BuildSeekEGMPoll(QcomJobDataPtr job)
+    bool QcomBroadcastSeek::BuildSeekEGMPoll(QcomJobDataPtr &job)
     {
         //if (auto it = m_qcom.lock())
         //{

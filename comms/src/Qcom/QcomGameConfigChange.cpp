@@ -21,7 +21,7 @@ namespace sg {
 
     }
 
-    bool QcomGameConfigurationChange::BuildGameConfigChangePoll(QcomJobDataPtr job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const & data)
+    bool QcomGameConfigurationChange::BuildGameConfigChangePoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const & data)
     {
         if (auto it = m_qcom.lock())
         {

@@ -145,7 +145,7 @@ namespace sg
         return false;
     }
 
-    bool QcomProgressiveConfig::BuildProgConfigPoll(QcomJobDataPtr job, uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const & data)
+    bool QcomProgressiveConfig::BuildProgConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const & data)
     {
         if (auto it = m_qcom.lock())
         {

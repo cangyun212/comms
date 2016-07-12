@@ -32,17 +32,17 @@ namespace sg
         }
 
     public:
-        bool    BuildPollAddressPoll(QcomJobDataPtr job);
-        bool    BuildPollAddressPoll(QcomJobDataPtr job, uint8_t poll_address);
-        bool    BuildTimeDateBroadcast(QcomJobDataPtr job);
-        bool    BuildLinkProgressiveCurrentAmountBroadcast(QcomJobDataPtr job, QcomLinkedProgressiveData const& data);
-        bool    BuildGeneralPromotionalMessageBroadcast(QcomJobDataPtr job, std::string const& text);
-        bool    BuildSiteDetailsBroadcast(QcomJobDataPtr job, std::string const& stext, std::string const& ltext);
+        bool    BuildPollAddressPoll(QcomJobDataPtr &job);
+        bool    BuildPollAddressPoll(QcomJobDataPtr &job, uint8_t poll_address);
+        bool    BuildTimeDateBroadcast(QcomJobDataPtr &job);
+        bool    BuildLinkProgressiveCurrentAmountBroadcast(QcomJobDataPtr &job, QcomLinkedProgressiveData const& data);
+        bool    BuildGeneralPromotionalMessageBroadcast(QcomJobDataPtr &job, std::string const& text);
+        bool    BuildSiteDetailsBroadcast(QcomJobDataPtr &job, std::string const& stext, std::string const& ltext);
 
     private:
         QcomPollPtr     MakePollAddressPoll(size_t size);
         QcomPollPtr     MakePollAddressPoll(uint32_t ser, uint8_t poll_address);
-        bool            MakePollAddressJob(QcomJobDataPtr job);
+        bool            MakePollAddressJob(QcomJobDataPtr &job);
         QcomPollPtr     MakeTimeDateBroadcast();
         void            MakeTimeDate(QcomPollPtr &poll);
         QcomPollPtr     MakeLinkProgressiveCurrentAmountBroadcast(QcomLinkedProgressiveData const& data);

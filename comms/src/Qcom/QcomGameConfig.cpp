@@ -138,7 +138,7 @@ namespace sg
         return false;
     }
 
-    bool QcomGameConfiguration::BuildGameConfigPoll(QcomJobDataPtr job, uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const & data)
+    bool QcomGameConfiguration::BuildGameConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const & data)
     {
         if (auto it = m_qcom.lock())
         {

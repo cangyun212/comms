@@ -21,7 +21,7 @@ namespace sg {
 
     }
 
-    bool QcomEgmParameters::BuildEgmParametersPoll(QcomJobDataPtr job, uint8_t poll_address, QcomEGMParametersData const & data)
+    bool QcomEgmParameters::BuildEgmParametersPoll(QcomJobDataPtr &job, uint8_t poll_address, QcomEGMParametersData const & data)
     {
         if (auto it = m_qcom.lock())
         {

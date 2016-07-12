@@ -52,7 +52,7 @@ namespace sg
 
     }
 
-    bool QcomPurgeEvents::BuildPurgeEventsPoll(QcomJobDataPtr job, uint8_t poll_address, uint8_t evtno)
+    bool QcomPurgeEvents::BuildPurgeEventsPoll(QcomJobDataPtr &job, uint8_t poll_address, uint8_t evtno)
     {
         if (auto it = m_qcom.lock())
         {

@@ -127,7 +127,7 @@ namespace sg
         return des;
     }
    
-    bool ListEGMAction::m_list_all = false;
+    bool ListEGMAction::s_list_all = false;
 
     ListEGMAction::ListEGMAction()
         : Action(Action::AT_LIST_EGM)
@@ -164,7 +164,7 @@ namespace sg
         {
             if (vm.count("all"))
             {
-                m_list_all = true;
+                s_list_all = true;
             }
 
             res = true;
@@ -190,7 +190,7 @@ namespace sg
         return des;
     }
 
-    uint8 PickEGMAction::m_egm = 0;
+    uint8 PickEGMAction::s_egm = 0;
 
     PickEGMAction::PickEGMAction()
         : Action(Action::AT_PICK_EGM)
@@ -213,7 +213,7 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("egm", "", Value<uint8>(&m_egm), 1));
+            m_options->AddOption(ActionOption("egm", "", Value<uint8>(&s_egm), 1));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -237,7 +237,7 @@ namespace sg
         }
         else
         {
-            if (m_egm > 0)
+            if (s_egm > 0)
             {
                 res = true;
             }
@@ -271,7 +271,7 @@ namespace sg
         return des;
     }
 
-    std::string ResetDevAction::m_dev;
+    std::string ResetDevAction::s_dev;
 
     ResetDevAction::ResetDevAction() : Action(Action::AT_RESET_DEV)
     {
@@ -316,7 +316,7 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("dev", "", Value<std::string>(&m_dev), 1));
+            m_options->AddOption(ActionOption("dev", "", Value<std::string>(&s_dev), 1));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }

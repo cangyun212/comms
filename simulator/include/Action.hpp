@@ -108,10 +108,10 @@ namespace sg
         const char* Description() const override;
 
     public:
-        bool        ListAll() const { return m_list_all; }
+        bool        ListAll() const { return s_list_all; }
 
     private:
-        static bool        m_list_all;
+        static bool        s_list_all;
     };
 
     class PickEGMAction : public Action
@@ -127,10 +127,10 @@ namespace sg
         const char* Description() const override;
 
     public:
-        uint8_t     Target() const { return m_egm; }
+        uint8_t     Target() const { return s_egm; }
 
     private:
-        static uint8       m_egm;
+        static uint8       s_egm;
     };
 
     class HelpAction : public Action
@@ -156,9 +156,9 @@ namespace sg
         void        BuildOptions() override;
         const char* Description() const override;
 
-        const std::string  & GetDev() { return m_dev; }
+        const std::string  & GetDev() { return s_dev; }
     private:
-        static std::string m_dev;
+        static std::string s_dev;
     };
 }
 

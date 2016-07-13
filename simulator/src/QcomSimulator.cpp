@@ -240,15 +240,15 @@ namespace sg
             {
                 p->DEN(),
                 p->TOK(),
-                p->MAXDEN(),
-                p->MINRTP(),
-                p->MAXRTP(),
-                p->MAXSD(),
-                p->MAXLINES(),
-                p->MAXBET(),
-                p->MAXNPWIN(),
-                p->MAXPWIN(),
-                p->MAXECT(),
+                p->MaxDEN(),
+                p->MinRTP(),
+                p->MaxRTP(),
+                p->MaxSD(),
+                p->MaxLines(),
+                p->MaxBet(),
+                p->MaxNPWin(),
+                p->MaxPWin(),
+                p->MaxECT(),
                 p->JUR()
             };
 
@@ -271,8 +271,8 @@ namespace sg
 
             data.settings.pgid = p->PGID();
             data.settings.var = p->VAR();
-            data.settings.var_lock = p->VAR_LOCK();
-            data.settings.game_enable = p->GAME_ENABLE();
+            data.settings.var_lock = p->VARLock();
+            data.settings.game_enable = p->GameEnable();
             data.progressive_config.pnum = p->ProgressiveConfig(data.progressive_config.flag_p, data.progressive_config.camt);
 
             m_qcom->GameConfiguration(m_curr_egm, p->GVN(), data);
@@ -290,7 +290,7 @@ namespace sg
         {
             QcomGameConfigurationChangeActionPtr p = std::static_pointer_cast<QcomGameConfigurationChangeAction>(action);
 
-            QcomGameSettingData data{ p->PGID(), p->VAR(), 0, p->GAME_ENABLE() };
+            QcomGameSettingData data{ p->PGID(), p->VAR(), 0, p->GameEnable() };
 
             m_qcom->GameConfigurationChange(m_curr_egm, p->GVN(), data);
         }
@@ -309,19 +309,19 @@ namespace sg
 
             QcomEGMParametersData data 
             {
-                p->RESERVE(), 
-                p->AUTOPLAY(), 
-                p->CRLIMITMODE(), 
+                p->Reserve(), 
+                p->AutoPlay(), 
+                p->CRLimitMode(), 
                 p->OPR(), 
-                p->LWIN(), 
-                p->CRLIMIT(), 
-                p->DULIMIT(), 
-                p->DUMAX(),
+                p->LWin(), 
+                p->CRLimit(), 
+                p->DULimit(), 
+                p->DUMax(),
                 p->TZADJ(), 
                 p->PID(), 
-                p->PWRTIME(), 
-                p->NPWINP(), 
-                p->SAPWINP(),
+                p->PWRTime(), 
+                p->NPWinP(), 
+                p->SAPWinP(),
                 p->EODT()
             };
 

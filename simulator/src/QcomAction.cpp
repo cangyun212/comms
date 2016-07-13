@@ -60,9 +60,9 @@ namespace sg
         return des;
     }
 
-    uint8 QcomEGMConfRequestAction::m_mef = 1;
-    uint8 QcomEGMConfRequestAction::m_gcr = 1;
-    uint8 QcomEGMConfRequestAction::m_psn = 1;
+    uint8 QcomEGMConfRequestAction::s_mef = 1;
+    uint8 QcomEGMConfRequestAction::s_gcr = 1;
+    uint8 QcomEGMConfRequestAction::s_psn = 1;
 
     QcomEGMConfRequestAction::QcomEGMConfRequestAction()
         : Action(Action::AT_QCOM_EGM_CONF_REQ)
@@ -82,20 +82,20 @@ namespace sg
 
         if (vm.count("mef"))
         {
-            m_mef = 1;
+            s_mef = 1;
         }
 
         if (vm.count("gcr"))
         {
-            m_gcr = 1;
+            s_gcr = 1;
         }
 
         if (vm.count("psn"))
         {
-            m_psn = 1;
+            s_psn = 1;
         }
 
-        if (vm.count("help") || (!m_mef && !m_gcr && !m_psn))
+        if (vm.count("help") || (!s_mef && !s_gcr && !s_psn))
         {
             COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: configreq [options]\n");
@@ -139,18 +139,18 @@ namespace sg
         return des;
     }
 
-    uint8     QcomEGMConfAction::m_jur = 0;
-    uint32    QcomEGMConfAction::m_den = 1;
-    uint32    QcomEGMConfAction::m_tok = 100;
-    uint32    QcomEGMConfAction::m_maxden = 100;
-    uint16    QcomEGMConfAction::m_minrtp = 8500;
-    uint16    QcomEGMConfAction::m_maxrtp = 10000;
-    uint16    QcomEGMConfAction::m_maxsd = 15;
-    uint16    QcomEGMConfAction::m_maxlines = 1024;
-    uint32    QcomEGMConfAction::m_maxbet = 5000;
-    uint32    QcomEGMConfAction::m_maxnpwin = 100000;
-    uint32    QcomEGMConfAction::m_maxpwin = 2500000;
-    uint32    QcomEGMConfAction::m_maxect = 1000000;
+    uint8     QcomEGMConfAction::s_jur = 0;
+    uint32    QcomEGMConfAction::s_den = 1;
+    uint32    QcomEGMConfAction::s_tok = 100;
+    uint32    QcomEGMConfAction::s_maxden = 100;
+    uint16    QcomEGMConfAction::s_minrtp = 8500;
+    uint16    QcomEGMConfAction::s_maxrtp = 10000;
+    uint16    QcomEGMConfAction::s_maxsd = 15;
+    uint16    QcomEGMConfAction::s_maxlines = 1024;
+    uint32    QcomEGMConfAction::s_maxbet = 5000;
+    uint32    QcomEGMConfAction::s_maxnpwin = 100000;
+    uint32    QcomEGMConfAction::s_maxpwin = 2500000;
+    uint32    QcomEGMConfAction::s_maxect = 1000000;
 
     QcomEGMConfAction::QcomEGMConfAction()
                     : Action(Action::AT_QCOM_EGM_CONF)
@@ -193,36 +193,36 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("jur","jurisdictions", Value<uint8>(&m_jur)));
-            m_options->AddOption(ActionOption("den", "credit denomination", Value<uint32>(&m_den)));
-            m_options->AddOption(ActionOption("tok", "coin/token denomination", Value<uint32>(&m_tok)));
-            m_options->AddOption(ActionOption("maxden", "EGM credit meter max denomination", Value<uint32>(&m_maxden)));
-            m_options->AddOption(ActionOption("minrtp", "minimum RTP", Value<uint16>(&m_minrtp)));
-            m_options->AddOption(ActionOption("maxrtp", "maximum RTP", Value<uint16>(&m_maxrtp)));
+            m_options->AddOption(ActionOption("jur","jurisdictions", Value<uint8>(&s_jur)));
+            m_options->AddOption(ActionOption("den", "credit denomination", Value<uint32>(&s_den)));
+            m_options->AddOption(ActionOption("tok", "coin/token denomination", Value<uint32>(&s_tok)));
+            m_options->AddOption(ActionOption("maxden", "EGM credit meter max denomination", Value<uint32>(&s_maxden)));
+            m_options->AddOption(ActionOption("minrtp", "minimum RTP", Value<uint16>(&s_minrtp)));
+            m_options->AddOption(ActionOption("maxrtp", "maximum RTP", Value<uint16>(&s_maxrtp)));
 
             m_options->AddOption(ActionOption(
                 "maxsd",
                 "regulatory maximum EGM game theoretical standard deviation", 
-                Value<uint16>(&m_maxsd)));
+                Value<uint16>(&s_maxsd)));
 
             m_options->AddOption(ActionOption(
                 "maxlines", 
                 "regulatory maximum number of playlines in any game in the EGM", 
-                Value<uint16>(&m_maxlines)));
+                Value<uint16>(&s_maxlines)));
 
-            m_options->AddOption(ActionOption("maxbet", "maximum bet per play", Value<uint32>(&m_maxbet)));
+            m_options->AddOption(ActionOption("maxbet", "maximum bet per play", Value<uint32>(&s_maxbet)));
 
             m_options->AddOption(ActionOption(
                 "maxnpwin", 
                 "regulatory maximum non-progressive EGM win permitted uint32 any game element", 
-                Value<uint32>(&m_maxnpwin)));
+                Value<uint32>(&s_maxnpwin)));
 
             m_options->AddOption(ActionOption(
                 "maxpwin", 
                 "regulatory maximum SAP progressive EGM win permitted per SAP hit", 
-                Value<uint32>(&m_maxpwin)));
+                Value<uint32>(&s_maxpwin)));
 
-            m_options->AddOption(ActionOption("maxect", "regulatory maximum allowable ECT to/from the EGM", Value<uint32>(&m_maxect)));
+            m_options->AddOption(ActionOption("maxect", "regulatory maximum allowable ECT to/from the EGM", Value<uint32>(&s_maxect)));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -238,13 +238,13 @@ namespace sg
         return des;
     }
 
-    uint16 QcomGameConfigurationAction::m_gvn = 0;
-    uint16 QcomGameConfigurationAction::m_pgid = 0xFFFF;
-    uint8  QcomGameConfigurationAction::m_var = 0;
-    uint8  QcomGameConfigurationAction::m_var_lock = 0;
-    uint8  QcomGameConfigurationAction::m_game_enable = 0;
-    std::vector<uint8> QcomGameConfigurationAction::m_lp;
-    std::vector<uint32> QcomGameConfigurationAction::m_camt;
+    uint16 QcomGameConfigurationAction::s_gvn = 0;
+    uint16 QcomGameConfigurationAction::s_pgid = 0xFFFF;
+    uint8  QcomGameConfigurationAction::s_var = 0;
+    uint8  QcomGameConfigurationAction::s_var_lock = 0;
+    uint8  QcomGameConfigurationAction::s_game_enable = 0;
+    std::vector<uint8> QcomGameConfigurationAction::s_lp;
+    std::vector<uint32> QcomGameConfigurationAction::s_camt;
 
     QcomGameConfigurationAction::QcomGameConfigurationAction()
         : Action(Action::AT_QCOM_GAME_CONF)
@@ -286,13 +286,13 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&m_gvn)));
-            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&m_pgid)));
-            m_options->AddOption(ActionOption("var", "TODO:", Value<uint8>(&m_var)));
-            m_options->AddOption(ActionOption("varlock", "TODO", Value<uint8>(&m_var_lock)));
-            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&m_game_enable)));
-            m_options->AddOption(ActionOption("jptype", "TODO", Value< std::vector<uint8> >(&m_lp), true));
-            m_options->AddOption(ActionOption("amount", "TODO", Value< std::vector<uint32> >(&m_camt), true));
+            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&s_gvn)));
+            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&s_pgid)));
+            m_options->AddOption(ActionOption("var", "TODO:", Value<uint8>(&s_var)));
+            m_options->AddOption(ActionOption("varlock", "TODO", Value<uint8>(&s_var_lock)));
+            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&s_game_enable)));
+            m_options->AddOption(ActionOption("jptype", "TODO", Value< std::vector<uint8> >(&s_lp), true));
+            m_options->AddOption(ActionOption("amount", "TODO", Value< std::vector<uint32> >(&s_camt), true));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -310,21 +310,21 @@ namespace sg
 
     uint8_t QcomGameConfigurationAction::ProgressiveConfig(uint8_t * lp, uint32_t * camt)
     {
-        size_t pnum = m_lp.size() < m_camt.size() ? m_lp.size() : m_camt.size();
+        size_t pnum = s_lp.size() < s_camt.size() ? s_lp.size() : s_camt.size();
 
         for (size_t i = 0; i < pnum; ++i)
         {
-            lp[i] = m_lp[i];
-            camt[i] = m_camt[i];
+            lp[i] = s_lp[i];
+            camt[i] = s_camt[i];
         }
 
         return static_cast<uint8_t>(pnum);
     }
 
-    uint16 QcomGameConfigurationChangeAction::m_gvn = 0;
-    uint16 QcomGameConfigurationChangeAction::m_pgid = 0xFFFF;
-    uint8  QcomGameConfigurationChangeAction::m_var = 0;
-    uint8  QcomGameConfigurationChangeAction::m_game_enable = 1;
+    uint16 QcomGameConfigurationChangeAction::s_gvn = 0;
+    uint16 QcomGameConfigurationChangeAction::s_pgid = 0xFFFF;
+    uint8  QcomGameConfigurationChangeAction::s_var = 0;
+    uint8  QcomGameConfigurationChangeAction::s_game_enable = 1;
 
     QcomGameConfigurationChangeAction::QcomGameConfigurationChangeAction()
         : Action(Action::AT_QCOM_GAME_CONF_CHANGE)
@@ -368,10 +368,10 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&m_gvn)));
-            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&m_pgid)));
-            m_options->AddOption(ActionOption("var", "TODO", Value<uint8>(&m_var)));
-            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&m_game_enable)));
+            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&s_gvn)));
+            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&s_pgid)));
+            m_options->AddOption(ActionOption("var", "TODO", Value<uint8>(&s_var)));
+            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&s_game_enable)));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -388,20 +388,20 @@ namespace sg
     }
 
 
-     uint8   QcomEGMParametersAction::m_reserve = 1;
-     uint8   QcomEGMParametersAction::m_autoplay = 0;
-     uint8   QcomEGMParametersAction::m_crlimitmode = 0;
-     uint8   QcomEGMParametersAction::m_opr = 0;
-     uint32  QcomEGMParametersAction::m_lwin = 1000000;
-     uint32  QcomEGMParametersAction::m_crlimit = 1000000;
-     uint8   QcomEGMParametersAction::m_dumax = 5;
-     uint32  QcomEGMParametersAction::m_dulimit = 1000000;
-     int16   QcomEGMParametersAction::m_tzadj = 0;
-     uint32  QcomEGMParametersAction::m_pwrtime = 900;
-     uint8   QcomEGMParametersAction::m_pid = 0;
-     uint16  QcomEGMParametersAction::m_eodt = 180;
-     uint32  QcomEGMParametersAction::m_npwinp = 1000000;
-     uint32  QcomEGMParametersAction::m_sapwinp = 1000000;
+     uint8   QcomEGMParametersAction::s_reserve = 1;
+     uint8   QcomEGMParametersAction::s_autoplay = 0;
+     uint8   QcomEGMParametersAction::s_crlimitmode = 0;
+     uint8   QcomEGMParametersAction::s_opr = 0;
+     uint32  QcomEGMParametersAction::s_lwin = 1000000;
+     uint32  QcomEGMParametersAction::s_crlimit = 1000000;
+     uint8   QcomEGMParametersAction::s_dumax = 5;
+     uint32  QcomEGMParametersAction::s_dulimit = 1000000;
+     int16   QcomEGMParametersAction::s_tzadj = 0;
+     uint32  QcomEGMParametersAction::s_pwrtime = 900;
+     uint8   QcomEGMParametersAction::s_pid = 0;
+     uint16  QcomEGMParametersAction::s_eodt = 180;
+     uint32  QcomEGMParametersAction::s_npwinp = 1000000;
+     uint32  QcomEGMParametersAction::s_sapwinp = 1000000;
 
     QcomEGMParametersAction::QcomEGMParametersAction()
         :Action(Action::AT_QCOM_EGM_PARAMS)
@@ -445,20 +445,20 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("reserve", "Enable or Disable RESERV", Value<uint8>(&m_reserve)));
-            m_options->AddOption(ActionOption("autoplay", "Enable or Disable autoplay", Value<uint8>(&m_autoplay)));
-            m_options->AddOption(ActionOption("crlimitmode", "credit limit", Value<uint8>(&m_crlimitmode)));
-            m_options->AddOption(ActionOption("opr", "Monitoring system operator ID", Value<uint8>(&m_opr)));
-            m_options->AddOption(ActionOption("lwin", "Large win lockup threshold", Value<uint32>(&m_lwin)));
-            m_options->AddOption(ActionOption("crlimit", "Credit-in lockout value", Value<uint32>(&m_crlimit)));
-            m_options->AddOption(ActionOption("dumax", "Maximum allowable number of Gambles", Value<uint8>(&m_dumax)));
-            m_options->AddOption(ActionOption("dulimit", "Double-Up/Gamble Limit", Value<uint32>(&m_dulimit)));
-            m_options->AddOption(ActionOption("tzadj", "Time zone adjust", Value<int16>(&m_tzadj)));
-            m_options->AddOption(ActionOption("pwrtime", "Power-save Time-out value", Value<uint32>(&m_pwrtime)));
-            m_options->AddOption(ActionOption("pid", "Player Information Display", Value<uint8>(&m_pid)));
-            m_options->AddOption(ActionOption("eodt", "End of the day time", Value<uint16>(&m_eodt)));
-            m_options->AddOption(ActionOption("npwinp", "Non-Progressive Win Payout Threshold", Value<uint32>(&m_npwinp)));
-            m_options->AddOption(ActionOption("sapwinp", "Stand alone progressive win payout threshold", Value<uint32>(&m_sapwinp)));
+            m_options->AddOption(ActionOption("reserve", "Enable or Disable RESERV", Value<uint8>(&s_reserve)));
+            m_options->AddOption(ActionOption("autoplay", "Enable or Disable autoplay", Value<uint8>(&s_autoplay)));
+            m_options->AddOption(ActionOption("crlimitmode", "credit limit", Value<uint8>(&s_crlimitmode)));
+            m_options->AddOption(ActionOption("opr", "Monitoring system operator ID", Value<uint8>(&s_opr)));
+            m_options->AddOption(ActionOption("lwin", "Large win lockup threshold", Value<uint32>(&s_lwin)));
+            m_options->AddOption(ActionOption("crlimit", "Credit-in lockout value", Value<uint32>(&s_crlimit)));
+            m_options->AddOption(ActionOption("dumax", "Maximum allowable number of Gambles", Value<uint8>(&s_dumax)));
+            m_options->AddOption(ActionOption("dulimit", "Double-Up/Gamble Limit", Value<uint32>(&s_dulimit)));
+            m_options->AddOption(ActionOption("tzadj", "Time zone adjust", Value<int16>(&s_tzadj)));
+            m_options->AddOption(ActionOption("pwrtime", "Power-save Time-out value", Value<uint32>(&s_pwrtime)));
+            m_options->AddOption(ActionOption("pid", "Player Information Display", Value<uint8>(&s_pid)));
+            m_options->AddOption(ActionOption("eodt", "End of the day time", Value<uint16>(&s_eodt)));
+            m_options->AddOption(ActionOption("npwinp", "Non-Progressive Win Payout Threshold", Value<uint32>(&s_npwinp)));
+            m_options->AddOption(ActionOption("sapwinp", "Stand alone progressive win payout threshold", Value<uint32>(&s_sapwinp)));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -767,7 +767,7 @@ namespace sg
         return des;
     }
 
-    size_t QcomPendingAction::m_pollnum = 2;
+    size_t QcomPendingAction::s_pollnum = 2;
 
     QcomPendingAction::QcomPendingAction()
         : Action(Action::AT_QCOM_PENDING)
@@ -807,7 +807,7 @@ namespace sg
         if (!m_options)
         {
             m_options = MakeSharedPtr<ActionOptions>();
-            m_options->AddOption(ActionOption("pollnum", "number of pending polls", Value<size_t>(&m_pollnum)));
+            m_options->AddOption(ActionOption("pollnum", "number of pending polls", Value<size_t>(&s_pollnum)));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }

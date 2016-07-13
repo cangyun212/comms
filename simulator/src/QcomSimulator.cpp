@@ -353,6 +353,24 @@ namespace sg
 
     }
 
+    void QcomSim::ProgressiveChange(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomProgressiveConfigActionPtr p = std::static_pointer_cast<QcomProgressiveConfigAction>(action);
+
+            QcomProgressiveChangeData data;
+            data.pnum = p->ProgChangeData(data.sup, data.prog.pinc, data.prog.ceil, data.prog.auxrtp);
+            
+            m_qcom->ProgressiveChange(m_curr_egm, p->GVN(), data);
+        }
+    }
+
     void QcomSim::PendingPoll(const ActionCenter & sender, const ActionPtr & action)
     {
         SG_UNREF_PARAM(sender);

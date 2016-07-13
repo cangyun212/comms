@@ -32,6 +32,8 @@ namespace sg
     private:
         std::weak_ptr<CommsQcom>    m_qcom;
     };
+
+    typedef std::shared_ptr<QcomProgressiveConfig> QcomProgressiveConfigPtr;
 }
 
 

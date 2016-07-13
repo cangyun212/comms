@@ -269,6 +269,30 @@ namespace sg
         static uint8  m_evtno;
     };
 
+    class QcomProgressiveConfigAction : public Action
+    {
+    public:
+        QcomProgressiveConfigAction();
+       ~QcomProgressiveConfigAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        uint8_t     ProgChangeData(uint32_t *sup, uint32_t *pinc, uint32_t *ceil, uint32_t *auxrtp) const;
+        uint16_t    GVN() const { return s_gvn; }
+
+    private:
+        static std::vector<uint32>      s_sup;
+        static std::vector<uint32>      s_pinc;
+        static std::vector<uint32>      s_ceil;
+        static std::vector<uint32>      s_auxrtp;
+        static uint16                   s_gvn;
+    };
+
     class QcomTimeDateAction : public Action
     {
     public:

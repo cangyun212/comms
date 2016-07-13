@@ -81,6 +81,10 @@ namespace sg
         m_actions["genstatus"] = ptr;
         m_actions["gss"] = ptr;
 
+        ptr = MakeSharedPtr<QcomProgressiveConfigAction>();
+        m_actions["progressive"] = ptr;
+        m_actions["prog"] = ptr;
+
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();
         m_actions["pending"] = ptr;

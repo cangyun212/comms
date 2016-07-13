@@ -17,6 +17,7 @@
 #include "Qcom/QcomEgmParameters.hpp"
 #include "Qcom/QcomPurgeEvents.hpp"
 #include "Qcom/QcomEvent.hpp"
+#include "Qcom/QcomProgressiveConfig.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -102,6 +103,10 @@ namespace sg
         p = MakeSharedPtr<QcomEvent>(this_ptr);
         m_resp_handler.insert(std::make_pair(p->RespId(), p));
         
+        p = MakeSharedPtr<QcomProgressiveConfig>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
         // TODO : ...
 
     }
@@ -369,7 +374,7 @@ namespace sg
 
     void CommsQcom::DoCheckCommsTimeout()
     {
-        // TODO: we should hanlde comms timeout, ref Qcom1.6-6.1.2
+        // Note: we should hanlde comms timeout, ref Qcom1.6-6.1.2
         // if we don't send poll to an EGM more than 10 secs then
         // it will go into comms timeout error and then we must send
         // poll address configuration again.
@@ -427,7 +432,6 @@ namespace sg
         }
     }
 
-    // TODO:
     void CommsQcom::SeekEGM()
     {
         QcomJobDataPtr job = nullptr;
@@ -784,6 +788,35 @@ namespace sg
 
         QcomEgmParametersPtr handler = std::static_pointer_cast<QcomEgmParameters>(m_handler[QCOM_EGMPP_FC]);
         if (!handler->BuildEgmParametersPoll(job, poll_address, data))
+            return;
+
+        if (!m_pending)
+        {
+            QcomBroadcastPtr broadcast_handler = std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);
+            if (!broadcast_handler->BuildTimeDateBroadcast(job))
+                return;
+
+            this->AddJob(job);
+        }
+    }
+
+    void CommsQcom::ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const & data)
+    {
+        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        QcomJobDataPtr job = nullptr;
+
+        if (!m_pending)
+        {
+            job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+        }
+        else
+        {
+            job = m_pending_job;
+        }
+
+        QcomProgressiveConfigPtr handler = std::static_pointer_cast<QcomProgressiveConfig>(m_handler[QCOM_PCP_FC]);
+        if (!handler->BuildProgConfigPoll(job, poll_address, gvn, data))
             return;
 
         if (!m_pending)

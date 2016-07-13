@@ -292,9 +292,8 @@ namespace sg
        ~CommsQcom();
 
     public:
-        // Seek EGM Broadcast Poll
-        void    SeekEGM(); // TODO : For test purpose refactor later
-        void    PollAddress(uint8_t poll_address); // TODO : For test purpose refactor later
+        void    SeekEGM();
+        void    PollAddress(uint8_t poll_address);
         void    TimeData();
         void    LinkJPCurrentAmount(QcomLinkedProgressiveData const& data);
         void    GeneralPromotional(std::string const& text);

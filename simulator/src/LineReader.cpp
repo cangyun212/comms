@@ -21,7 +21,6 @@ namespace sg
 
         this->NextLine(m_input_wnd->Row(), t, b, l);
 
-        // TODO
         m_buf_len = m_input_wnd->Width() - l - r - static_cast<uint>(m_prompt.size());
         m_buffer = MakeArraryPtr(char, m_buf_len);
 

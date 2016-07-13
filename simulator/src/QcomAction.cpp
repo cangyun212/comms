@@ -6,8 +6,11 @@
 
 #include "Utils.hpp"
 #include "Comms.hpp"
+#include "Qcom/qogr/qogr_qcom.h"
 #include "QcomAction.hpp"
 #include "ActionOptions.hpp"
+
+#define SG_QCOMAC_MAX_PROG_LEVEL    QCOM_MAX_PROGR_LEV_PER_GAME
 
 namespace po = boost::program_options;
 namespace nm = boost::numeric;
@@ -269,12 +272,17 @@ namespace sg
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
-
-            res = false;
         }
         else
         {
-            res = true;
+            if (s_lp.size() == s_camt.size() && s_lp.size() < SG_QCOMAC_MAX_PROG_LEVEL)
+                res = true;
+            else
+            {
+                COMMS_LOG(
+                    boost::format("Entry number of 'jptype' and 'amount' option must be equal and less then %||\n") %
+                    SG_QCOMAC_MAX_PROG_LEVEL, CLL_Error);
+            }
         }
 
         return res;
@@ -286,13 +294,23 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&s_gvn)));
-            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&s_pgid)));
-            m_options->AddOption(ActionOption("var", "TODO:", Value<uint8>(&s_var)));
-            m_options->AddOption(ActionOption("varlock", "TODO", Value<uint8>(&s_var_lock)));
-            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&s_game_enable)));
-            m_options->AddOption(ActionOption("jptype", "TODO", Value< std::vector<uint8> >(&s_lp), true));
-            m_options->AddOption(ActionOption("amount", "TODO", Value< std::vector<uint32> >(&s_camt), true));
+            m_options->AddOption(
+                ActionOption("gvn", "game version number, indentifies the game being configured", Value<uint16>(&s_gvn)));
+            m_options->AddOption(
+                ActionOption("pgid", "linked progressive group ID", Value<uint16>(&s_pgid)));
+            m_options->AddOption(
+                ActionOption("var", "game variation number, indicates to the EGM what variation to use", Value<uint8>(&s_var)));
+            m_options->AddOption(
+                ActionOption("varlock", "variation lock, if set, the EGM must lock the variation and \
+                             not allow the variation to be changed", Value<uint8>(&s_var_lock)));
+            m_options->AddOption(
+                ActionOption("gameenable", "game enable flag, if set, enable game denoted by GVN", Value<uint8>(&s_game_enable)));
+            m_options->AddOption(
+                ActionOption("jptype", "progressive level type, if set, denotes the level is to be set as LP", 
+                    Value< std::vector<uint8> >(&s_lp), true));
+            m_options->AddOption(
+                ActionOption("amount", "initial jackpot contribution/current amount for progressive level", 
+                    Value< std::vector<uint32> >(&s_camt), true));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -310,7 +328,7 @@ namespace sg
 
     uint8_t QcomGameConfigurationAction::ProgressiveConfig(uint8_t * lp, uint32_t * camt)
     {
-        size_t pnum = s_lp.size() < s_camt.size() ? s_lp.size() : s_camt.size();
+        size_t pnum = s_lp.size(); //< s_camt.size() ? s_lp.size() : s_camt.size();
 
         for (size_t i = 0; i < pnum; ++i)
         {
@@ -841,6 +859,99 @@ namespace sg
     {
         static const char* des = "\tSend Poll:\n\t\tSend all pending polls\n";
         return des;
+    }
+
+    std::vector<uint32> QcomProgressiveConfigAction::s_sup;
+    std::vector<uint32> QcomProgressiveConfigAction::s_pinc;
+    std::vector<uint32> QcomProgressiveConfigAction::s_ceil;
+    std::vector<uint32> QcomProgressiveConfigAction::s_auxrtp;
+    uint16 QcomProgressiveConfigAction::s_gvn = 0;
+
+    QcomProgressiveConfigAction::QcomProgressiveConfigAction()
+        : Action(AT_QCOM_PROGRESSIVE_CONFIG)
+    {
+    }
+
+    QcomProgressiveConfigAction::~QcomProgressiveConfigAction()
+    {
+    }
+
+    bool QcomProgressiveConfigAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (s_sup.size() == s_pinc.size() &&
+                s_sup.size() == s_ceil.size() &&
+                s_sup.size() == s_auxrtp.size() &&
+                s_sup.size() <= SG_QCOMAC_MAX_PROG_LEVEL)
+                res = true;
+            else
+            {
+                COMMS_LOG(
+                    boost::format("Entry number of 'sup', 'pinc', 'ceil' and 'auxrtp' must be equal and less than %||\n") %
+                    SG_QCOMAC_MAX_PROG_LEVEL, CLL_Error);
+            }
+        }
+
+        return res;
+    }
+
+    void QcomProgressiveConfigAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(
+                ActionOption("sup", "new jackpot level start-up amount", Value<std::vector<uint32> >(&s_sup), true));
+            m_options->AddOption(
+                ActionOption("pinc", "new jackpot level percentage increment x 10000", Value<std::vector<uint32> >(&s_pinc), true));
+            m_options->AddOption(
+                ActionOption("ceil", "new jackpot level ceiling", Value<std::vector<uint32> >(&s_ceil), true));
+            m_options->AddOption(
+                ActionOption("auxrtp", "new auxiliary RTP for the level x 10000", Value<std::vector<uint32> >(&s_auxrtp), true));
+            m_options->AddOption(
+                ActionOption("gvn", "game version number, identifies the game being re-configured", Value<uint16>(&s_gvn)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomProgressiveConfigAction::Clone()
+    {
+        return Action::DoClone<QcomProgressiveConfigAction>();
+    }
+
+    const char * QcomProgressiveConfigAction::Description() const
+    {
+        static const char* des = "\tProgressive Config Change Poll:\n\t\tChange a game's current SAP configuration and inform the\
+                                EGM of the current parameters being used for its LP level (if any)\n";
+        return des;
+    }
+
+    uint8_t QcomProgressiveConfigAction::ProgChangeData(uint32_t * sup, uint32_t * pinc, uint32_t * ceil, uint32_t *auxrtp) const
+    {
+        size_t num = s_sup.size();
+
+        for (size_t i = 0; i < num; ++i)
+        {
+            sup[i] = s_sup[i];
+            pinc[i] = s_pinc[i];
+            ceil[i] = s_ceil[i];
+            auxrtp[i] = s_auxrtp[i];
+        }
+
+        return static_cast<uint8_t>(num);
     }
 
 }

@@ -35,6 +35,7 @@ namespace sg {
         void    EGMParameters(const ActionCenter &sender, const ActionPtr &action);
         void    PurgeEvents(const ActionCenter &sender, const ActionPtr &action);
         void    GeneralStatus(const ActionCenter &sender, const ActionPtr &action);
+        void    ProgressiveChange(const ActionCenter &sender, const ActionPtr &action);
         void    PendingPoll(const ActionCenter &sender, const ActionPtr &action);
         void    SendPoll(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);

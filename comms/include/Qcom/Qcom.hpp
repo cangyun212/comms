@@ -147,7 +147,7 @@ namespace sg
         uint8_t         game_enable; // ref Qcom1.6-15.4.3, indicates the game is enable or not
     };
 
-    struct QcomGameConfigPollData
+    struct QcomGameConfigData
     {
         QcomProgressiveConfigData       progressive_config;
         QcomGameSettingData             settings;
@@ -167,9 +167,20 @@ namespace sg
         uint8_t             pnum;
     };
 
-    struct QcomGameConfigData
+    struct QcomExtJPInfoData
     {
-        QcomGameConfigPollData          config;
+        uint16_t            epgid[QCOM_REMAX_EXTJIP];
+        uint8_t             lumf[QCOM_REMAX_EXTJIP];
+        char                lname[QCOM_REMAX_EXTJIP][QCOM_EXTJIP_MAX_LNAME];
+        uint16_t            rtp;
+        uint8_t             levels;
+        uint8_t             display;
+        uint8_t             icon;
+    };
+
+    struct QcomGameData
+    {
+        QcomGameConfigData              config;
         QcomVariationData               variations;
         QcomProgressiveData             prog;
         uint16_t                        gvn;
@@ -212,7 +223,8 @@ namespace sg
         QcomEGMConfigRespData           config;
         QcomEGMParametersData           param;
         QcomEGMStatusData               status;
-        QcomGameConfigData              games[QCOM_MAX_GAME_NUM];
+        QcomExtJPInfoData               extjpinfo;
+        QcomGameData                    games[QCOM_MAX_GAME_NUM];
     };
 
 
@@ -302,10 +314,11 @@ namespace sg
         void    GeneralStatus(uint8_t poll_address);
         void    EGMConfRequest(uint8_t poll_address, QcomEGMControlPollData const& data);
         void    EGMConfiguration(uint8_t poll_address, QcomEGMConfigPollData const& data);
-        void    GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const& data);
+        void    GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data);
         void    GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);
         void    EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data);
         void    ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const& data);
+        void    ExtJPInfo(uint8_t poll_address, QcomExtJPInfoData const& data);
         void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
 
         void    PendingPoll(size_t poll_num = 2);

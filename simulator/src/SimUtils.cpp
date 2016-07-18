@@ -164,6 +164,13 @@ namespace sg
                 center.GetEvent(Action::AT_QCOM_PROGRESSIVE_CONFIG)->connect(
                     std::bind(&QcomSim::ProgressiveChange, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            sim->Install(Action::AT_QCOM_EXTJP_INFO);
+            center.Install(Action::AT_QCOM_EXTJP_INFO);
+
+            sim->GetConnection(Action::AT_QCOM_EXTJP_INFO) =
+                center.GetEvent(Action::AT_QCOM_EXTJP_INFO)->connect(
+                    std::bind(&QcomSim::ExtJPInfo, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             return sim;
         }
 

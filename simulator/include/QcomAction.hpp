@@ -293,6 +293,33 @@ namespace sg
         static uint16                   s_gvn;
     };
 
+    class QcomExtJPInfoAction : public Action
+    {
+    public:
+        QcomExtJPInfoAction();
+       ~QcomExtJPInfoAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        uint8_t     ExtJPData(uint16_t *epgid, uint8_t *lumf, char (*lname)[16]) const;
+        uint16_t    ExtJPRTP() const { return s_rtp; }
+        uint8_t     ExtJPDisplay() const { return s_display; }
+        uint8_t     ExtJPIcon() const { return s_icon; }
+
+    private:
+        static std::vector<uint16>      s_epgid;
+        static std::vector<uint8>       s_umf;
+        static std::vector<std::string> s_name;
+        uint16                          s_rtp;
+        uint8                           s_display;
+        uint8                           s_icon;
+    };
+
     class QcomTimeDateAction : public Action
     {
     public:

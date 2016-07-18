@@ -330,6 +330,8 @@ namespace sg
     {
         size_t pnum = s_lp.size(); //< s_camt.size() ? s_lp.size() : s_camt.size();
 
+        BOOST_ASSERT(pnum == s_camt.size() && pnum < SG_QCOMAC_MAX_PROG_LEVEL);
+
         for (size_t i = 0; i < pnum; ++i)
         {
             lp[i] = s_lp[i];
@@ -943,12 +945,109 @@ namespace sg
     {
         size_t num = s_sup.size();
 
+        BOOST_ASSERT(num == s_pinc.size() && num == s_ceil.size() && num <= SG_QCOMAC_MAX_PROG_LEVEL);
+
         for (size_t i = 0; i < num; ++i)
         {
             sup[i] = s_sup[i];
             pinc[i] = s_pinc[i];
             ceil[i] = s_ceil[i];
             auxrtp[i] = s_auxrtp[i];
+        }
+
+        return static_cast<uint8_t>(num);
+    }
+
+    std::vector<uint16> QcomExtJPInfoAction::s_epgid;
+    std::vector<uint8> QcomExtJPInfoAction::s_umf;
+    std::vector<std::string> QcomExtJPInfoAction::s_name;
+
+    QcomExtJPInfoAction::QcomExtJPInfoAction()
+        : Action(AT_QCOM_EXTJP_INFO)
+    {
+    }
+
+    QcomExtJPInfoAction::~QcomExtJPInfoAction()
+    {
+    }
+
+    bool QcomExtJPInfoAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (s_epgid.size() == s_umf.size() &&
+                s_epgid.size() == s_name.size() &&
+                s_epgid.size() <= SG_QCOMAC_MAX_PROG_LEVEL)
+            {
+                res = true;
+            }
+            else
+            {
+                COMMS_LOG(boost::format("Entry number of 'epgid', 'umf' and 'name' must be equal and less than %||\n") %
+                    SG_QCOMAC_MAX_PROG_LEVEL, CLL_Error);
+            }
+        }
+        
+        return res;
+    }
+
+    void QcomExtJPInfoAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(
+                ActionOption("epgid", "external jackpot progressive group ID", Value<std::vector<uint16> >(&s_epgid), true));
+            m_options->AddOption(
+                ActionOption("umf", "unit modifier flag", Value<std::vector<uint8> >(&s_umf), true));
+            m_options->AddOption(
+                ActionOption("name", "name of the external jackpot group level", Value<std::vector<std::string> >(&s_name), true));
+            m_options->AddOption(
+                ActionOption("rtp", "total percentage RTP of the external jackpots on this EGM", Value<uint16>(&s_rtp)));
+            m_options->AddOption(
+                ActionOption("display", "display flag", Value<uint8>(&s_display)));
+            m_options->AddOption(
+                ActionOption("icon", "icon display ID", Value<uint8>(&s_icon)));
+        }
+    }
+
+    ActionPtr QcomExtJPInfoAction::Clone()
+    {
+        return Action::DoClone<QcomExtJPInfoAction>();
+    }
+
+    const char * QcomExtJPInfoAction::Description() const
+    {
+        static const char* des = "\tExternal Jackpot Information Poll:\n\t\tInforms the EGM regarding details \
+                                of any external jackpot system it has been placed in.\n";
+        return des;
+    }
+
+    uint8_t QcomExtJPInfoAction::ExtJPData(uint16_t * epgid, uint8_t * lumf, char (*lname)[16]) const
+    {
+        size_t num = s_epgid.size();
+
+        BOOST_ASSERT(num == s_umf.size() && num == s_name.size() && num <= SG_QCOMAC_MAX_PROG_LEVEL);
+
+        for (size_t i = 0; i < num; ++i)
+        {
+            epgid[i] = s_epgid[i];
+            lumf[i] = s_umf[i];
+            strncpy(lname[i], s_name[i].c_str(), s_name[i].size());
+
+            lname[i][s_name[i].size()] = 0;
         }
 
         return static_cast<uint8_t>(num);

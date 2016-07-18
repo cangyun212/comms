@@ -21,7 +21,6 @@ namespace sg {
 
     public:
         uint8_t     Id() const override;
-        bool        Parse(uint8_t buf[], int length) override;
 
     public:
         bool        BuildEgmParametersPoll(QcomJobDataPtr &job, uint8_t poll_address, QcomEGMParametersData const& data);

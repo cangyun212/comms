@@ -82,8 +82,13 @@ namespace sg
         m_actions["gss"] = ptr;
 
         ptr = MakeSharedPtr<QcomProgressiveConfigAction>();
+        ptr->BuildOptions();
         m_actions["progressive"] = ptr;
         m_actions["prog"] = ptr;
+
+        ptr = MakeSharedPtr<QcomExtJPInfoAction>();
+        ptr->BuildOptions();
+        m_actions["extjp"] = ptr;
 
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();

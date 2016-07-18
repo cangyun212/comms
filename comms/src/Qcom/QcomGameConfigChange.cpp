@@ -12,15 +12,6 @@ namespace sg {
         return QCOM_EGMVCP_FC;
     }
 
-    bool QcomGameConfigurationChange::Parse(uint8_t buf[], int length)
-    {
-        SG_UNREF_PARAM(buf);
-        SG_UNREF_PARAM(length);
-
-        return true;
-
-    }
-
     bool QcomGameConfigurationChange::BuildGameConfigChangePoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const & data)
     {
         if (auto it = m_qcom.lock())

@@ -12,15 +12,6 @@ namespace sg {
         return QCOM_EGMPP_FC;
     }
 
-    bool QcomEgmParameters::Parse(uint8_t buf[], int length)
-    {
-        SG_UNREF_PARAM(buf);
-        SG_UNREF_PARAM(length);
-
-        return true;
-
-    }
-
     bool QcomEgmParameters::BuildEgmParametersPoll(QcomJobDataPtr &job, uint8_t poll_address, QcomEGMParametersData const & data)
     {
         if (auto it = m_qcom.lock())

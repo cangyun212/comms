@@ -20,7 +20,6 @@ namespace sg {
 
     public:
         uint8_t     Id() const override;
-        bool        Parse(uint8_t buf[], int length) override;
 
     public:
         bool        BuildGameConfigChangePoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);

@@ -23,13 +23,6 @@ namespace sg
 
     public:
         uint8_t     Id() const override;
-        bool        Parse(uint8_t buf[], int length) override 
-        {
-            SG_UNREF_PARAM(buf);
-            SG_UNREF_PARAM(length);
-
-            return false;
-        }
 
     public:
         bool    BuildPollAddressPoll(QcomJobDataPtr &job);

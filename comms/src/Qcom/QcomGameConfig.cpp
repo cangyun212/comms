@@ -138,7 +138,7 @@ namespace sg
         return false;
     }
 
-    bool QcomGameConfiguration::BuildGameConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameConfigPollData const & data)
+    bool QcomGameConfiguration::BuildGameConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameConfigData const & data)
     {
         if (auto it = m_qcom.lock())
         {
@@ -203,7 +203,7 @@ namespace sg
 
 
     QcomPollPtr QcomGameConfiguration::MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, 
-        QcomGameConfigPollData const& data)
+        QcomGameConfigData const& data)
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
 

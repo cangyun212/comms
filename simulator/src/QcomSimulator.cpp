@@ -267,7 +267,7 @@ namespace sg
         {
             QcomGameConfigurationActionPtr p = std::static_pointer_cast<QcomGameConfigurationAction>(action);
 
-            QcomGameConfigPollData data;
+            QcomGameConfigData data;
 
             data.settings.pgid = p->PGID();
             data.settings.var = p->VAR();
@@ -368,6 +368,28 @@ namespace sg
             data.pnum = p->ProgChangeData(data.sup, data.prog.pinc, data.prog.ceil, data.prog.auxrtp);
             
             m_qcom->ProgressiveChange(m_curr_egm, p->GVN(), data);
+        }
+    }
+
+    void QcomSim::ExtJPInfo(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomExtJPInfoActionPtr p = std::static_pointer_cast<QcomExtJPInfoAction>(action);
+
+            QcomExtJPInfoData data;
+            data.levels = p->ExtJPData(data.epgid, data.lumf, data.lname);
+
+            data.rtp = p->ExtJPRTP();
+            data.display = p->ExtJPDisplay();
+            data.icon = p->ExtJPIcon();
+
+            m_qcom->ExtJPInfo(m_curr_egm, data);
         }
     }
 

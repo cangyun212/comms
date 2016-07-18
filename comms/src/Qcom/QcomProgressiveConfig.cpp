@@ -53,7 +53,7 @@ namespace sg
 
                     if (game < game_num)
                     {
-                        QcomGameConfigData &gc = pd->data.games[game];
+                        QcomGameData &gc = pd->data.games[game];
 
                         if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY)
                         {
@@ -186,7 +186,7 @@ namespace sg
 
                             p->data.control.game_config_state[game] |= QCOM_GAME_PC_CHANGE;
                             
-                            QcomGameConfigData &gc = p->data.games[game];
+                            QcomGameData &gc = p->data.games[game];
                             gc.prog = data.prog;
                             for (uint8_t i = 0; i < data.pnum; ++i)
                             {

@@ -37,6 +37,7 @@ namespace sg {
         void    GeneralStatus(const ActionCenter &sender, const ActionPtr &action);
         void    ProgressiveChange(const ActionCenter &sender, const ActionPtr &action);
         void    ExtJPInfo(const ActionCenter &sender, const ActionPtr &action);
+        void    ProgHashRequest(const ActionCenter &sender, const ActionPtr &action);
         void    PendingPoll(const ActionCenter &sender, const ActionPtr &action);
         void    SendPoll(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);

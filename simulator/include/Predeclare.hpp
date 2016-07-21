@@ -19,6 +19,7 @@ namespace sg {
     class QcomEGMParametersAction;
     class QcomProgressiveConfigAction;
     class QcomExtJPInfoAction;
+    class QcomProgHashRequestAction;
     class QcomTimeDateAction;
     class QcomLPCurrentAmountAction;
     class QcomGeneralPromotionalAction;
@@ -49,6 +50,7 @@ namespace sg {
     typedef std::shared_ptr<QcomEGMParametersAction> QcomEGMParametersActionPtr;
     typedef std::shared_ptr<QcomProgressiveConfigAction> QcomProgressiveConfigActionPtr;
     typedef std::shared_ptr<QcomExtJPInfoAction> QcomExtJPInfoActionPtr;
+    typedef std::shared_ptr<QcomProgHashRequestAction> QcomProgHashRequestActionPtr;
     typedef std::shared_ptr<QcomPurgeEventsAction> QcomPurgeEventsActionPtr;
     typedef std::shared_ptr<QcomTimeDateAction> QcomTimeDateActionPtr;
     typedef std::shared_ptr<QcomLPCurrentAmountAction> QcomLPCurrentAmountActionPtr;

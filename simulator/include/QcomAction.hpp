@@ -315,9 +315,31 @@ namespace sg
         static std::vector<uint16>      s_epgid;
         static std::vector<uint8>       s_umf;
         static std::vector<std::string> s_name;
-        uint16                          s_rtp;
-        uint8                           s_display;
-        uint8                           s_icon;
+        static uint16                   s_rtp;
+        static uint8                    s_display;
+        static uint8                    s_icon;
+    };
+
+    class QcomProgHashRequestAction :public Action
+    {
+    public:
+        QcomProgHashRequestAction();
+       ~QcomProgHashRequestAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        uint8_t     MEF() const { return s_mef; }
+        uint8_t     Seed(uint8_t *seed, size_t len);
+
+    private:
+        static std::vector<uint8>       s_seed;
+        static uint8                    s_mef;
+        static uint8                    s_new_seed;
     };
 
     class QcomTimeDateAction : public Action

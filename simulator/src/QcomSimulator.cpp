@@ -393,6 +393,25 @@ namespace sg
         }
     }
 
+    void QcomSim::ProgHashRequest(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomProgHashRequestActionPtr p = std::static_pointer_cast<QcomProgHashRequestAction>(action);
+
+            QcomProgHashRequestData data;
+            data.mef = p->MEF();
+            data.new_seed = p->Seed(data.seed, sizeof(data.seed));
+
+            m_qcom->ProgHashRequest(m_curr_egm, data);
+        }
+    }
+
     void QcomSim::PendingPoll(const ActionCenter & sender, const ActionPtr & action)
     {
         SG_UNREF_PARAM(sender);

@@ -961,6 +961,9 @@ namespace sg
     std::vector<uint16> QcomExtJPInfoAction::s_epgid;
     std::vector<uint8> QcomExtJPInfoAction::s_umf;
     std::vector<std::string> QcomExtJPInfoAction::s_name;
+    uint16 QcomExtJPInfoAction::s_rtp = 0;
+    uint8 QcomExtJPInfoAction::s_display = 1;
+    uint8 QcomExtJPInfoAction::s_icon = 0;
 
     QcomExtJPInfoAction::QcomExtJPInfoAction()
         : Action(AT_QCOM_EXTJP_INFO)
@@ -1051,6 +1054,92 @@ namespace sg
         }
 
         return static_cast<uint8_t>(num);
+    }
+
+    std::vector<uint8> QcomProgHashRequestAction::s_seed;
+    uint8 QcomProgHashRequestAction::s_new_seed = 1;
+    uint8 QcomProgHashRequestAction::s_mef = 1;
+
+    QcomProgHashRequestAction::QcomProgHashRequestAction()
+        : Action(AT_QCOM_PROGHASH_REQUEST)
+    {
+    }
+
+    QcomProgHashRequestAction::~QcomProgHashRequestAction()
+    {
+    }
+
+    bool QcomProgHashRequestAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (vm.count("seed"))
+            {
+                s_new_seed = 1;
+            }
+            else
+            {
+                s_new_seed = 0;
+            }
+
+            if (vm.count("mef"))
+            {
+                s_mef = 1;
+            }
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomProgHashRequestAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("seed", "hash alogrithm seed", Value<std::vector<uint8> >(&s_seed), true));
+            m_options->AddOption(ActionOption("mef", "machine enable flag"));
+        }
+    }
+
+    ActionPtr QcomProgHashRequestAction::Clone()
+    {
+        return Action::DoClone<QcomProgHashRequestAction>();
+    }
+
+    const char * QcomProgHashRequestAction::Description() const
+    {
+        static const char* des = "\tProgram Hash Request Poll:\n\t\tCommands the EGM to initiate a program hash calculation \
+                                using the given seed\n";
+        return des;
+    }
+
+    uint8_t QcomProgHashRequestAction::Seed(uint8_t * seed, size_t len)
+    {
+        std::memset(seed, 0, len);
+
+        if (s_new_seed)
+        {
+            for (size_t i = 0; i < s_seed.size(); ++i)
+            {
+                seed[i] = s_seed[i];
+            }
+        }
+
+        return s_new_seed;
     }
 
 }

@@ -19,6 +19,7 @@
 #include "Qcom/QcomEvent.hpp"
 #include "Qcom/QcomProgressiveConfig.hpp"
 #include "Qcom/QcomExtJPInfo.hpp"
+#include "Qcom/QcomProgramHashRequest.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -130,6 +131,10 @@ namespace sg
 
         p = MakeSharedPtr<QcomExtJPInfo>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomProgHashRequest>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
 
         // TODO : ...
 
@@ -662,6 +667,19 @@ namespace sg
 
         QcomExtJPInfoPtr handler = std::static_pointer_cast<QcomExtJPInfo>(m_handler[QCOM_EXTJIP_FC]);
         if (!handler->BuildExtJPInfoPoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::ProgHashRequest(uint8_t poll_address, QcomProgHashRequestData const & data)
+    {
+        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomProgHashRequestPtr handler = std::static_pointer_cast<QcomProgHashRequest>(m_handler[QCOM_PHRP_FC]);
+        if (!handler->BuildProgHashRequstPoll(job, poll_address, data))
             return;
 
         SG_QCOM_ADD_POLL_JOB(job);

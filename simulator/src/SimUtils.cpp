@@ -171,6 +171,13 @@ namespace sg
                 center.GetEvent(Action::AT_QCOM_EXTJP_INFO)->connect(
                     std::bind(&QcomSim::ExtJPInfo, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            sim->Install(Action::AT_QCOM_PROGHASH_REQUEST);
+            center.Install(Action::AT_QCOM_PROGHASH_REQUEST);
+
+            sim->GetConnection(Action::AT_QCOM_PROGHASH_REQUEST) =
+                center.GetEvent(Action::AT_QCOM_PROGHASH_REQUEST)->connect(
+                    std::bind(&QcomSim::ProgHashRequest, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             return sim;
         }
 

@@ -44,6 +44,7 @@
 #define QCOM_EGM_CONFIG_SET     0x01
 #define QCOM_EGM_CONFIG_READY   0x02
 #define QCOM_EGM_CONFIG_FSH     0x04
+#define QCOM_EGM_HASH_READY     0x08
 
 namespace sg 
 {
@@ -75,6 +76,8 @@ namespace sg
         uint8_t     last_control; // ACK/NAK bit
         uint8_t     protocol_ver; // 0x00 for Qcom1.5.x egm and 0x01 for Qcom1.6.x egm
         uint8_t     machine_eable; // if equal 1, then egm enable, otherwise egm disable
+        uint8_t     seed[QCOM_MAX_PHA_SH_LENGTH];
+        uint8_t     hash[QCOM_MAX_PHA_SH_LENGTH];
         uint8_t     game_config_state[QCOM_MAX_GAME_NUM]; // indicate egm game config state
         uint8_t     psn[Qcom_PSN_NUM];
         uint8_t     egm_config_state;
@@ -216,6 +219,13 @@ namespace sg
         uint8_t     state;
     };
 
+    struct QcomProgHashRequestData
+    {
+        uint8_t     seed[QCOM_MAX_PHA_SH_LENGTH];
+        uint8_t     new_seed;
+        uint8_t     mef;
+    };
+
     struct QcomEGMData
     {
         QcomEGMControlData              control;
@@ -319,6 +329,7 @@ namespace sg
         void    EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data);
         void    ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const& data);
         void    ExtJPInfo(uint8_t poll_address, QcomExtJPInfoData const& data);
+        void    ProgHashRequest(uint8_t poll_address, QcomProgHashRequestData const& data);
         void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
 
         void    PendingPoll(size_t poll_num = 2);

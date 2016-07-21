@@ -90,6 +90,10 @@ namespace sg
         ptr->BuildOptions();
         m_actions["extjp"] = ptr;
 
+        ptr = MakeSharedPtr<QcomProgHashRequestAction>();
+        ptr->BuildOptions();
+        m_actions["hash"] = ptr;
+
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();
         m_actions["pending"] = ptr;

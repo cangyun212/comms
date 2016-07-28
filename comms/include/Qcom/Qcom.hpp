@@ -226,6 +226,17 @@ namespace sg
         uint8_t     mef;
     };
 
+    struct QcomSysLockupRequestData
+    {
+        char        text[QCOM_SALRP_TEXT_SIZE];
+        uint8_t     len;
+        uint8_t     no_resetkey;
+        uint8_t     continue_style;
+        uint8_t     question_style;
+        uint8_t     lamp_test;
+        uint8_t     fanfare;
+    };
+
     struct QcomEGMData
     {
         QcomEGMControlData              control;
@@ -330,6 +341,7 @@ namespace sg
         void    ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const& data);
         void    ExtJPInfo(uint8_t poll_address, QcomExtJPInfoData const& data);
         void    ProgHashRequest(uint8_t poll_address, QcomProgHashRequestData const& data);
+        void    SystemLockup(uint8_t poll_address, QcomSysLockupRequestData const& data);
         void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
 
         void    PendingPoll(size_t poll_num = 2);

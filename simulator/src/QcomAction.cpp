@@ -367,7 +367,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: gconfchg [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -444,7 +444,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: egmparams [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -887,7 +887,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: progressive [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -983,7 +983,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: extjp [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -1078,7 +1078,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: hash [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -1091,7 +1091,7 @@ namespace sg
             }
             else
             {
-                s_new_seed = 0;
+                s_new_seed = 0; // TODO : change s_new_seed from static to non-static
             }
 
             if (vm.count("mef"))
@@ -1140,6 +1140,102 @@ namespace sg
         }
 
         return s_new_seed;
+    }
+
+    std::string QcomSysLockupRequestAction::s_text;
+    uint8 QcomSysLockupRequestAction::s_noreset_key = 0;
+    uint8 QcomSysLockupRequestAction::s_continue = 0;
+    uint8 QcomSysLockupRequestAction::s_question = 0;
+    uint8 QcomSysLockupRequestAction::s_lamp_test = 0;
+    uint8 QcomSysLockupRequestAction::s_fanfare = 0;
+
+    QcomSysLockupRequestAction::QcomSysLockupRequestAction()
+        : Action(AT_QCOM_SYSLOCKUP_REQUEST)
+    {
+    }
+
+    QcomSysLockupRequestAction::~QcomSysLockupRequestAction()
+    {
+    }
+
+    bool QcomSysLockupRequestAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: lockup [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (!vm.count("text"))
+            {
+                s_text = "";
+            }
+
+            if (vm.count("noreset"))
+                s_noreset_key = 1;
+            else
+                s_noreset_key = 0;
+
+            if (vm.count("continue"))
+                s_continue = 1;
+            else
+                s_continue = 0;
+
+            if (vm.count("question"))
+                s_question = 1;
+            else
+                s_question = 0;
+
+            if (vm.count("lamptest"))
+                s_lamp_test = 1;
+            else
+                s_lamp_test = 0;
+
+            if (vm.count("fanfare"))
+                s_fanfare = 1;
+            else
+                s_fanfare = 0;
+
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomSysLockupRequestAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("text", "system lockup messaage", Value<std::string>(&s_text)));
+            m_options->AddOption(ActionOption("noreset,k", "EGM disable the lockup reset key-switch's effect on the system lockup\
+                                               on the duration of the lockup if set"));
+            m_options->AddOption(ActionOption("continue", "use continue style message during lockup if set"));
+            m_options->AddOption(ActionOption("question", "use question style message during lockup if set"));
+            m_options->AddOption(ActionOption("lamptest", "EGM turn on all its lamps during lockup if set"));
+            m_options->AddOption(ActionOption("fanfare", "EGM trigger a short jackpot fanfare during lockup if set"));
+        }
+    }
+
+    ActionPtr QcomSysLockupRequestAction::Clone()
+    {
+        return Action::DoClone<QcomSysLockupRequestAction>();
+    }
+
+    const char * QcomSysLockupRequestAction::Description() const
+    {
+        static const char *des = "\tSystem Lockup Request Poll:\n\t\tThis poll is used by the SC when the system wishes award\
+                                  a system triggered prize through the EGM or lockup the EGM for some other reason.\n";
+        return des;
     }
 
 }

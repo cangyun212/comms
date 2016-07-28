@@ -27,17 +27,22 @@ namespace sg
         return this->DoReady();
     }
 
-    Simulator::Connection& Simulator::GetConnection(uint type)
+    Simulator::Connection* Simulator::GetConnection(uint type)
     {
         auto it = m_slots.find(type);
-        BOOST_ASSERT(it != m_slots.end());
-        return it->second;
+        if (it != m_slots.end())
+            return &(it->second);
+        else
+            return nullptr;
     }
 
-    void Simulator::Install(uint type)
+    Simulator::Connection* Simulator::Install(uint type)
     {
-		SG_UNREF_PARAM(type);
-        BOOST_ASSERT(m_slots.insert(std::make_pair(type, Connection())).second);
+        auto it = m_slots.insert(std::make_pair(type, Connection()));
+        if (it.second)
+            return &(it.first->second);
+        else
+            return nullptr;
     }
 
     bool Simulator::HasConnection(uint type) const

@@ -28,11 +28,13 @@ namespace sg {
         }
     }
 
-    void ActionCenter::Install(uint type)
+    ActionCenter::ActionEventPtr ActionCenter::Install(uint type)
     {
-        bool res = m_signals.insert(std::make_pair(type, MakeSharedPtr<ActionEvent>())).second;
-        BOOST_ASSERT(res);
-        SG_UNREF_PARAM(res);
+        auto it = m_signals.insert(std::make_pair(type, MakeSharedPtr<ActionEvent>()));
+        if (it.second)
+            return it.first->second;
+        else
+            return nullptr;
     }
 
     bool ActionCenter::HasEvent(uint type) const
@@ -40,11 +42,13 @@ namespace sg {
         return m_signals.find(type) != m_signals.end();
     }
 
-    ActionCenter::ActionEventPtr ActionCenter::GetEvent(uint type)
+    ActionCenter::ActionEventPtr ActionCenter::GetEvent(uint type) const
     {
         auto it = m_signals.find(type);
-        BOOST_ASSERT(it != m_signals.end());
-        return it->second;
+        if (it != m_signals.end())
+            return it->second;
+        else
+            return nullptr;
     }
 }
 

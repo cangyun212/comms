@@ -20,6 +20,7 @@
 #include "Qcom/QcomProgressiveConfig.hpp"
 #include "Qcom/QcomExtJPInfo.hpp"
 #include "Qcom/QcomProgramHashRequest.hpp"
+#include "Qcom/QcomSystemLockupRequest.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -135,6 +136,9 @@ namespace sg
         p = MakeSharedPtr<QcomProgHashRequest>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
         m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomSysLockupReq>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
 
         // TODO : ...
 
@@ -680,6 +684,19 @@ namespace sg
 
         QcomProgHashRequestPtr handler = std::static_pointer_cast<QcomProgHashRequest>(m_handler[QCOM_PHRP_FC]);
         if (!handler->BuildProgHashRequstPoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::SystemLockup(uint8_t poll_address, QcomSysLockupRequestData const & data)
+    {
+        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomSysLockupReqPtr handler = std::static_pointer_cast<QcomSysLockupReq>(m_handler[QCOM_SALRP_FC]);
+        if (!handler->BuildSysLockupReqPoll(job, poll_address, data))
             return;
 
         SG_QCOM_ADD_POLL_JOB(job);

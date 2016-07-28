@@ -25,10 +25,10 @@ namespace sg
         bool    IsReady();
 
         typedef boost::signals2::connection Connection;
-        Connection&     GetConnection(uint type);
+        Connection*     GetConnection(uint type);
         bool            HasConnection(uint type) const;
         void            ResetConnections();
-        void            Install(uint type);
+        Connection*     Install(uint type);
        
     public:
         virtual void    DoInit() { }

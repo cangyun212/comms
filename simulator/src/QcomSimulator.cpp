@@ -412,6 +412,35 @@ namespace sg
         }
     }
 
+    void QcomSim::SysLockupRequest(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomSysLockupRequestActionPtr p = std::static_pointer_cast<QcomSysLockupRequestAction>(action);
+
+            QcomSysLockupRequestData data;
+
+            std::string text = p->Text();
+            data.len = static_cast<uint8_t>(text.size());
+            data.len = data.len < QCOM_SALRP_TEXT_SIZE ? data.len : QCOM_SALRP_TEXT_SIZE;
+
+            std::memcpy(data.text, text.c_str(), data.len);
+
+            data.no_resetkey = p->NoResetKey();
+            data.continue_style = p->ContinueStyle();
+            data.question_style = p->QuestionStyle();
+            data.lamp_test = p->LampTest();
+            data.fanfare = p->Fanfare();
+
+            m_qcom->SystemLockup(m_curr_egm, data);
+        }
+    }
+
     void QcomSim::PendingPoll(const ActionCenter & sender, const ActionPtr & action)
     {
         SG_UNREF_PARAM(sender);

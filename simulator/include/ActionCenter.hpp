@@ -27,9 +27,9 @@ namespace sg {
         typedef boost::signals2::signal<void(const ActionCenter &sender, ActionPtr const& action)> ActionEvent;
         typedef std::shared_ptr<ActionEvent> ActionEventPtr;
 
-        void            Install(uint type);
+        ActionEventPtr  Install(uint type);
         bool            HasEvent(uint type) const;
-        ActionEventPtr  GetEvent(uint type);
+        ActionEventPtr  GetEvent(uint type) const;
 
     private:
         typedef std::map<uint, ActionEventPtr>      SignalType;

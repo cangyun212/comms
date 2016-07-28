@@ -320,7 +320,7 @@ namespace sg
         static uint8                    s_icon;
     };
 
-    class QcomProgHashRequestAction :public Action
+    class QcomProgHashRequestAction : public Action
     {
     public:
         QcomProgHashRequestAction();
@@ -340,6 +340,35 @@ namespace sg
         static std::vector<uint8>       s_seed;
         static uint8                    s_mef;
         static uint8                    s_new_seed;
+    };
+
+    class QcomSysLockupRequestAction : public Action
+    {
+    public:
+        QcomSysLockupRequestAction();
+       ~QcomSysLockupRequestAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        std::string Text() const { return s_text; }
+        uint8_t     NoResetKey() const { return s_noreset_key; }
+        uint8_t     ContinueStyle() const { return s_continue; }
+        uint8_t     QuestionStyle() const { return s_question; }
+        uint8_t     LampTest() const { return s_lamp_test; }
+        uint8_t     Fanfare() const { return s_fanfare; }
+
+    private:
+        static std::string          s_text;
+        static uint8                s_noreset_key;
+        static uint8                s_continue;
+        static uint8                s_question;
+        static uint8                s_lamp_test;
+        static uint8                s_fanfare;
     };
 
     class QcomTimeDateAction : public Action

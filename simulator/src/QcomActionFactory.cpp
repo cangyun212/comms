@@ -94,6 +94,10 @@ namespace sg
         ptr->BuildOptions();
         m_actions["hash"] = ptr;
 
+        ptr = MakeSharedPtr<QcomSysLockupRequestAction>();
+        ptr->BuildOptions();
+        m_actions["lockup"] = ptr;
+
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();
         m_actions["pending"] = ptr;

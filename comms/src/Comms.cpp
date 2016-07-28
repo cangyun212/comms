@@ -866,6 +866,14 @@ namespace sg
         }
     }
 
+    bool CommsPacketHandler::Parse(uint8_t buf[], int length)
+    {
+        SG_UNREF_PARAM(buf); 
+        SG_UNREF_PARAM(length); 
+        BOOST_ASSERT(false);
+        return false;
+    }
+
 }
 
 

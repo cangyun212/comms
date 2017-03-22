@@ -83,22 +83,7 @@ namespace sg
 
         SG_PARSE_OPTION(args, m_options);
 
-        if (vm.count("mef"))
-        {
-            s_mef = 1;
-        }
-
-        if (vm.count("gcr"))
-        {
-            s_gcr = 1;
-        }
-
-        if (vm.count("psn"))
-        {
-            s_psn = 1;
-        }
-
-        if (vm.count("help") || (!s_mef && !s_gcr && !s_psn))
+        if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: configreq [options]\n");
@@ -124,9 +109,9 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("mef,m", "enable egm machine"));
-            m_options->AddOption(ActionOption("gcr,g", "commands egm queue the EGM Game configuration Response"));
-            m_options->AddOption(ActionOption("psn,p", "reset all Poll Sequence Numbers"));
+            m_options->AddOption(ActionOption("mef,m", "enable egm machine", Value<uint8>(&s_mef)));
+            m_options->AddOption(ActionOption("gcr,g", "commands egm queue the EGM Game configuration Response", Value<uint8>(&s_gcr)));
+            m_options->AddOption(ActionOption("psn,p", "reset all Poll Sequence Numbers", Value<uint8>(&s_psn)));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }

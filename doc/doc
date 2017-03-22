@@ -9,3 +9,52 @@ tty --> teletypes
 
 
   
+
+If you use Alpha QLD platform:
+    When you make menuconfig and select Comms Enable:
+        Tick Use QCOM Protocol Qpv1.6.3
+        Tick Dont use Microblaze serial port for COMMS
+        Untick everything else
+
+    Goto game_proc/egm/comms
+        Modify base/comms.c, add following code into Comms Constructor:
+       
+         if (grantpt(fd) == -1 || unlockpt(fd) == -1)
+        {
+            cerr << strerror(errno) << endl;
+        }
+        else
+        {
+            const char* slave = ptsname(fd);
+            if (!slave)
+            {
+                std::cout<< "unable to retrive slave device name" << endl;
+            }
+            else
+            {
+                std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl <<
+                             slave << endl <<
+                             "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
+            }
+        }
+
+        Modify qcom/qfunctions.c, change line 39:
+            c = new CommsQcom("/dev/ptmx")
+
+        Modify qcom/qcom_lib.c line 3077:
+            #ifndef __COMMS_QCOM_USE_SERIAL__
+                qcom_ptr->comms_enabled = 1;
+            #endif
+ 
+If you use P4 platform, then you have no need to do the last change.
+
+usage:
+run game as normal
+check the game output to find the slave device opened by game, such as /dev/pts/15
+run simulation with -d option: ./simulator -d /dev/pts/15
+enter command: seek [To find available EGM]
+enter command: ls [To check the EGMs found by seek]
+enter command: pa [To config EGM poll address]
+enter command: configreq --mef 1 --gcr 1 --psn 1 [To send EGM config request]
+enter command: egmconfig --jur 1 --den 1 --tok 100 [To config EGM with marke QLD; denomination 1c; token value 100]
+enter command: gameconfig --var 89 --gameenable 1 [To enable game with variation 89]

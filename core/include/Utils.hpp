@@ -1,5 +1,5 @@
-#ifndef __CORE_UTILS_HPP__
-#define __CORE_UTILS_HPP__
+#ifndef __SG_CORE_UTILS_HPP__
+#define __SG_CORE_UTILS_HPP__
 
 #include "Core.hpp"
 

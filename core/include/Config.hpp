@@ -1,6 +1,6 @@
 
-#ifndef __CORE_CONFIG_HPP__
-#define __CORE_CONFIG_HPP__
+#ifndef __SG_CORE_CONFIG_HPP__
+#define __SG_CORE_CONFIG_HPP__
 
 #if !defined(__cplusplus)
     #error C++ compiler required.

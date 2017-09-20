@@ -315,7 +315,7 @@ namespace sg
     {
         size_t pnum = s_lp.size(); //< s_camt.size() ? s_lp.size() : s_camt.size();
 
-        BOOST_ASSERT(pnum == s_camt.size() && pnum < SG_QCOMAC_MAX_PROG_LEVEL);
+        BOOST_ASSERT(pnum == s_camt.size() && pnum < SG_QCOMAC_MAX_PROG_LEVEL); // check pnum dynamically instead of using debug assert
 
         for (size_t i = 0; i < pnum; ++i)
         {

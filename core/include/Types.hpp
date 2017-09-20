@@ -1,5 +1,5 @@
-#ifndef __CORE_TYPES_HPP__
-#define __CORE_TYPES_HPP__
+#ifndef __SG_CORE_TYPES_HPP__
+#define __SG_CORE_TYPES_HPP__
 
 #include <limits>
 #include <complex>

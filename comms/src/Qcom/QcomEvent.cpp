@@ -191,14 +191,14 @@ namespace sg
                                                  %|02X|\
                                                  %|02X|\
                                                  %|02X|") %
-                        d->EXTD.KEYID.KEYID[7] %
-                        d->EXTD.KEYID.KEYID[6] %
-                        d->EXTD.KEYID.KEYID[5] %
-                        d->EXTD.KEYID.KEYID[4] %
-                        d->EXTD.KEYID.KEYID[3] %
-                        d->EXTD.KEYID.KEYID[2] %
+                        d->EXTD.KEYID.KEYID[0] %
                         d->EXTD.KEYID.KEYID[1] %
-                        d->EXTD.KEYID.KEYID[0]).str();
+                        d->EXTD.KEYID.KEYID[2] %
+                        d->EXTD.KEYID.KEYID[3] %
+                        d->EXTD.KEYID.KEYID[4] %
+                        d->EXTD.KEYID.KEYID[5] %
+                        d->EXTD.KEYID.KEYID[6] %
+                        d->EXTD.KEYID.KEYID[7]).str();
                 }
                 else
                 {
@@ -579,14 +579,14 @@ namespace sg
                                                  %|02X|\
                                                  %|02X|\
                                                  %|02X|") %
-                        d->EXTD.KEYID.KEYID[7] %
-                        d->EXTD.KEYID.KEYID[6] %
-                        d->EXTD.KEYID.KEYID[5] %
-                        d->EXTD.KEYID.KEYID[4] %
-                        d->EXTD.KEYID.KEYID[3] %
-                        d->EXTD.KEYID.KEYID[2] %
+                        d->EXTD.KEYID.KEYID[0] %
                         d->EXTD.KEYID.KEYID[1] %
-                        d->EXTD.KEYID.KEYID[0]).str();
+                        d->EXTD.KEYID.KEYID[2] %
+                        d->EXTD.KEYID.KEYID[3] %
+                        d->EXTD.KEYID.KEYID[4] %
+                        d->EXTD.KEYID.KEYID[5] %
+                        d->EXTD.KEYID.KEYID[6] %
+                        d->EXTD.KEYID.KEYID[7]).str();
                 }
                 else
                 {
@@ -605,14 +605,14 @@ namespace sg
                                                  %|02X|\
                                                  %|02X|\
                                                  %|02X|") %
-                        d->EXTD.KEYID.KEYID[7] %
-                        d->EXTD.KEYID.KEYID[6] %
-                        d->EXTD.KEYID.KEYID[5] %
-                        d->EXTD.KEYID.KEYID[4] %
-                        d->EXTD.KEYID.KEYID[3] %
-                        d->EXTD.KEYID.KEYID[2] %
+                        d->EXTD.KEYID.KEYID[0] %
                         d->EXTD.KEYID.KEYID[1] %
-                        d->EXTD.KEYID.KEYID[0]).str();
+                        d->EXTD.KEYID.KEYID[2] %
+                        d->EXTD.KEYID.KEYID[3] %
+                        d->EXTD.KEYID.KEYID[4] %
+                        d->EXTD.KEYID.KEYID[5] %
+                        d->EXTD.KEYID.KEYID[6] %
+                        d->EXTD.KEYID.KEYID[7]).str();
                 }
                 else
                 {
@@ -623,7 +623,7 @@ namespace sg
                 ev = "EGM Ticket-In Timeout";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TIR)) 
                 {
-                    ext = (boost::format("Auth No: Ox%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|\
+                    ext = (boost::format("Auth No: 0x%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|\
                                          %|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|") %
                         d->EXTD.TIR.authno.AUTHNO[7] %
                         d->EXTD.TIR.authno.AUTHNO[6] %

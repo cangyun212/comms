@@ -1,5 +1,5 @@
-#ifndef __CORE_TIMER_HPP__
-#define __CORE_TIMER_HPP__
+#ifndef __SG_CORE_TIMER_HPP__
+#define __SG_CORE_TIMER_HPP__
 
 #include "Core.hpp"
 

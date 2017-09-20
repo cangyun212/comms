@@ -10,7 +10,7 @@ tty --> teletypes
 
   
 
-If you use Alpha QLD platform:
+If you use Alpha/DualOS QLD platform:
     When you make menuconfig and select Comms Enable:
         Tick Use QCOM Protocol Qpv1.6.3
         Tick Dont use Microblaze serial port for COMMS

@@ -50,6 +50,7 @@ set(CORE_HEADER_FILES
     ${CORE_PROJECT_DIR}/include/Console.hpp
     ${CORE_PROJECT_DIR}/include/Window.hpp
     ${CORE_PROJECT_DIR}/include/BaseConverter.hpp
+    ${CORE_PROJECT_DIR}/include/Concatenate.hpp
     )
 
 set(CORE_SOURCE_FILES
@@ -70,6 +71,7 @@ source_group("Header Files\\Console" FILES ${CORE_CONSOLE_HEADER_FILES})
 add_definitions(-DCORE_SOURCE)
 
 include(${SG_PROJECT_DIR}/cmake/configboost.cmake)
+include(${SG_PROJECT_DIR}/rapidjson/cmake/rapidjson.cmake)
 
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${CORE_PROJECT_DIR}/include)
@@ -80,9 +82,10 @@ endif()
 link_directories(${Boost_LIBRARY_DIR})
 
 add_library(${LIB_NAME} SHARED 
-	${CORE_SOURCE_FILES} ${CORE_CONSOLE_SOURCE_FILES} ${CORE_HEADER_FILES} ${CORE_CONSOLE_HEADER_FILES}
+    ${CORE_SOURCE_FILES} ${CORE_CONSOLE_SOURCE_FILES} ${CORE_HEADER_FILES} ${CORE_CONSOLE_HEADER_FILES}
 )
 
+target_include_directories(${LIB_NAME} PUBLIC ${RAPIDJSON_INCLUDE_DIR})
 
 if(SG_PLATFORM_WINDOWS)
     target_link_libraries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}

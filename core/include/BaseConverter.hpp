@@ -165,11 +165,11 @@ namespace sg
             , m_capacity(SG_BASE_MAX_DIGIT_ITERATION)
             , m_digits(MakeArraryPtr(BaseType, m_capacity))
         {
-            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max());
+            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max(), "invalid base number");
 
-            for (auto const& c : sequence | boost::adaptors::reverse(sequence))
+            for (auto const& c : boost::adaptors::reverse(sequence))
             {
-                BaseTranslateCode res = code.Translate(c);
+                BaseCode<Base, U>::BaseTranslateCode res = code.Translate(c);
                 SG_ASSERT(res.valid);
 
                 this->PushBack(res.num);
@@ -187,13 +187,13 @@ namespace sg
             , m_capacity(SG_BASE_MAX_DIGIT_ITERATION)
             , m_digits(MakeArrayPtr(BaseType, m_capacity))
         {
-            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max());
+            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max(), "invalid base number");
 
             SG_ASSERT(length > 0);
 
             for (size_t i = length; i > 0; --i)
             {
-                BaseTranslateCode res = code.Translate(pstrNum[i - 1]);
+                BaseCode<Base, T>::BaseTranslateCode res = code.Translate(pstrNum[i - 1]);
                 SG_ASSERT(res.valid);
 
                 this->PushBack(res.num);
@@ -206,58 +206,19 @@ namespace sg
             , m_capacity(0)
             , m_digits(nullptr)
         {
-            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max());
+            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max(), "invalid base number");
 
             *this = rhs;
-            // should be safe, capacity has enough space to hold all digits needed
-            //BaseType *pdigits = m_digits.get(); // C++17 support operator[]
+        }
 
-            //std::shared_ptr<BaseType> base2base(MakeArraryPtr(BaseType, m_capacity)); // we need an array to represent the source base in new base
-            //BaseType *pbase2base = base2base.get(); // should be safe
-            //std::memset(pbase2base, 0, sizeof(BaseType) * m_capacity);
-            //size_t bcount = 0;
+        BaseInteger(BaseInteger const& rhs)
+            : m_counts(0)
+            , m_capacity(0)
+            , m_digits(nullptr)
+        {
+            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max(), "invalid base number");
 
-            //pbase2base[0] = 1;
-            //bcount = 1;
-
-            //for (size_t i = 0; i < rhs.m_counts; ++i)
-            //{
-            //    // for each input digit, multi the new base representation and added into the output digit
-            //    for (size_t j = 0; j < bcount; ++j) 
-            //    {
-            //        size_t sum = pbase2base[j] * rhs.m_digits[i];
-
-            //        if (m_counts <= j)
-            //        {
-            //            this->PushBack(0, (j - m_counts + 1));
-            //            SG_ASSERT(pdigits == m_digits.get()); // no memory change due to capacity should be enough
-            //        }
-
-            //        this->AddNumAtPostion(sum, j);
-            //        SG_ASSERT(pdigits == m_digits.get());
-            //    }
-
-            //    // calculate next base representation
-            //    size_t rem = 0;
-            //    size_t level = 0;
-            //    size_t sum = pbase2base[level] * OtherBase;
-            //    do
-            //    {
-            //        rem = sum / Base;
-            //        pbase2base[level++] = static_cast<BaseType>(sum - rem * Base);
-
-            //        if (level >= bcount)
-            //        {
-            //            ++bcount;
-            //            SG_ASSERT(bcount <= m_capacity);
-            //        }
-
-            //        sum = pbase2base[level] * OtherBase;
-            //        sum += rem;
-            //        if (sum < Base)
-            //            pbase2base[level] = static_cast<BaseType>(sum);
-            //    } while (sum >= Base);
-            //}
+            *this = rhs;
         }
 
     public:
@@ -265,78 +226,77 @@ namespace sg
         template <BaseType OtherBase>
         BaseInteger& operator= (BaseInteger<OtherBase> const& rhs)
         {
+            if (m_counts)
+                std::memset(m_digits.get(), 0, sizeof(BaseType) * m_counts); // clear all digits
+
+            size_t counts = static_cast<size_t>(rhs.GetCounts() * (log(OtherBase) / log(Base))) + 1;
+            if (m_counts < counts)
+                this->IncreaseCount(counts - m_counts); // adjust the capacity
+
+            m_counts = 0;
+
+            // should be safe, capacity has enough space to hold all digits needed
+            BaseType *pdigits = m_digits.get(); // C++17 support operator[]
+
+            std::shared_ptr<BaseType> base2base(MakeArraryPtr(BaseType, counts)); // we need an array to represent the source base in new base
+            BaseType *pbase2base = base2base.get(); // should be safe
+            std::memset(pbase2base, 0, sizeof(BaseType) * counts);
+            size_t bcount = 0;
+
+            pbase2base[0] = 1;
+            bcount = 1;
+
+            for (size_t i = 0; i < rhs.GetCounts(); ++i)
+            {
+                // for each input digit, multi the new base representation and added into the output digit
+                for (size_t j = 0; j < bcount; ++j)
+                {
+                    size_t sum = pbase2base[j] * rhs.GetDigit(i);
+
+                    if (m_counts <= j)
+                    {
+                        this->PushBack(0, (j - m_counts + 1));
+                        SG_ASSERT(pdigits == m_digits.get()); // no memory change due to capacity should be enough
+                    }
+
+                    this->AddNumAtPostion(sum, j);
+                    SG_ASSERT(pdigits == m_digits.get());
+                }
+
+                // calculate next base representation
+                size_t rem = 0;
+                size_t level = 0;
+                size_t sum = pbase2base[level] * OtherBase;
+                do
+                {
+                    rem = sum / Base;
+                    pbase2base[level++] = static_cast<BaseType>(sum - rem * Base);
+
+                    if (level >= bcount)
+                    {
+                        ++bcount;
+                        SG_ASSERT(bcount <= counts);
+                    }
+
+                    sum = pbase2base[level] * OtherBase;
+                    sum += rem;
+                    if (sum < Base)
+                        pbase2base[level] = static_cast<BaseType>(sum);
+                } while (sum >= Base);
+            }
+
+            return *this;
+        }
+
+        BaseInteger& operator= (BaseInteger const& rhs)
+        {
             if (this != &rhs)
             {
-                if (OtherBase == Base)
-                {
-                    if (m_counts < rhs.m_counts)
-                        this->IncreaseCount(rhs.m_counts - m_counts);
+                if (m_counts < rhs.m_counts)
+                    this->IncreaseCount(rhs.m_counts - m_counts);
 
-                    std::memcpy(m_digits.get(), rhs.m_digits.get(), sizeof(BaseType) * rhs.m_counts);
-                    m_counts = rhs.m_counts;
-                }
-                else
-                {
-                    if (m_counts)
-                        std::memset(m_digits.get(), 0, sizeof(BaseType) * m_counts); // clear all digits
-
-                    size_t counts = static_cast<size_t>(rhs.m_counts * (log(OtherBase) / log(Base))) + 1;
-                    if (m_counts < counts)
-                        this->IncreaseCount(counts - m_counts); // adjust the capacity
-
-                    m_counts = 0;
-
-                    // should be safe, capacity has enough space to hold all digits needed
-                    BaseType *pdigits = m_digits.get(); // C++17 support operator[]
-
-                    std::shared_ptr<BaseType> base2base(MakeArraryPtr(BaseType, counts)); // we need an array to represent the source base in new base
-                    BaseType *pbase2base = base2base.get(); // should be safe
-                    std::memset(pbase2base, 0, sizeof(BaseType) * counts);
-                    size_t bcount = 0;
-
-                    pbase2base[0] = 1;
-                    bcount = 1;
-
-                    for (size_t i = 0; i < rhs.m_counts; ++i)
-                    {
-                        // for each input digit, multi the new base representation and added into the output digit
-                        for (size_t j = 0; j < bcount; ++j)
-                        {
-                            size_t sum = pbase2base[j] * rhs.m_digits[i];
-
-                            if (m_counts <= j)
-                            {
-                                this->PushBack(0, (j - m_counts + 1));
-                                SG_ASSERT(pdigits == m_digits.get()); // no memory change due to capacity should be enough
-                            }
-
-                            this->AddNumAtPostion(sum, j);
-                            SG_ASSERT(pdigits == m_digits.get());
-                        }
-
-                        // calculate next base representation
-                        size_t rem = 0;
-                        size_t level = 0;
-                        size_t sum = pbase2base[level] * OtherBase;
-                        do
-                        {
-                            rem = sum / Base;
-                            pbase2base[level++] = static_cast<BaseType>(sum - rem * Base);
-
-                            if (level >= bcount)
-                            {
-                                ++bcount;
-                                SG_ASSERT(bcount <= counts);
-                            }
-
-                            sum = pbase2base[level] * OtherBase;
-                            sum += rem;
-                            if (sum < Base)
-                                pbase2base[level] = static_cast<BaseType>(sum);
-                        } while (sum >= Base);
-                    }
-                }
-
+                std::memcpy(m_digits.get(), rhs.m_digits.get(), sizeof(BaseType) * rhs.m_counts);
+                m_counts = rhs.m_counts;
             }
 
             return *this;
@@ -497,7 +457,7 @@ namespace sg
                     break;
 
                 if (sum < Base)
-                    m_digits.get()[pos] = sum;
+                    m_digits.get()[pos] = (BaseType)sum;
             } while (sum >= Base);
             
         }

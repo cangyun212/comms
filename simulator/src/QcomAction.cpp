@@ -315,7 +315,7 @@ namespace sg
     {
         size_t pnum = s_lp.size(); //< s_camt.size() ? s_lp.size() : s_camt.size();
 
-        BOOST_ASSERT(pnum == s_camt.size() && pnum < SG_QCOMAC_MAX_PROG_LEVEL); // check pnum dynamically instead of using debug assert
+        SG_ASSERT(pnum == s_camt.size() && pnum < SG_QCOMAC_MAX_PROG_LEVEL); // check pnum dynamically instead of using debug assert
 
         for (size_t i = 0; i < pnum; ++i)
         {
@@ -930,7 +930,7 @@ namespace sg
     {
         size_t num = s_sup.size();
 
-        BOOST_ASSERT(num == s_pinc.size() && num == s_ceil.size() && num <= SG_QCOMAC_MAX_PROG_LEVEL);
+        SG_ASSERT(num == s_pinc.size() && num == s_ceil.size() && num <= SG_QCOMAC_MAX_PROG_LEVEL);
 
         for (size_t i = 0; i < num; ++i)
         {
@@ -1027,7 +1027,7 @@ namespace sg
     {
         size_t num = s_epgid.size();
 
-        BOOST_ASSERT(num == s_umf.size() && num == s_name.size() && num <= SG_QCOMAC_MAX_PROG_LEVEL);
+        SG_ASSERT(num == s_umf.size() && num == s_name.size() && num <= SG_QCOMAC_MAX_PROG_LEVEL);
 
         for (size_t i = 0; i < num; ++i)
         {

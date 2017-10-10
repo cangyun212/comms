@@ -495,7 +495,7 @@ namespace sg
                 baud = B19200;
                 break;
             default:
-                BOOST_ASSERT(false);
+                SG_ASSERT(false);
                 baud = B19200;
                 break;
             }
@@ -524,7 +524,7 @@ namespace sg
                 parity = PARENB | CMSPAR;
                 break;
             default:
-                BOOST_ASSERT(false);
+                SG_ASSERT(false);
                 parity = 0;
                 break;
             }
@@ -547,7 +547,7 @@ namespace sg
                 parity = SPACEPARITY;
                 break;
             default:
-                BOOST_ASSERT(false);
+                SG_ASSERT(false);
                 parity = NOPARITY;
                 break;
             }
@@ -579,7 +579,7 @@ namespace sg
             m_dev = new CommsSerialPort();
             break;
         default:
-            BOOST_ASSERT(false);
+            SG_ASSERT(false);
             m_dev = new CommsSerialPort();
             break;
         }
@@ -870,7 +870,7 @@ namespace sg
     {
         SG_UNREF_PARAM(buf); 
         SG_UNREF_PARAM(length); 
-        BOOST_ASSERT(false);
+        SG_ASSERT(false);
         return false;
     }
 

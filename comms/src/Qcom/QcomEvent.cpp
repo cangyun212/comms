@@ -1,5 +1,6 @@
 #include "Core.hpp"
 #include "Utils.hpp"
+#include "BaseConverter.hpp"
 
 #include "Qcom/QcomEvent.hpp"
 #include "Qcom/qogr/qogr_crc.h"
@@ -9,10 +10,40 @@ namespace sg
 {
     namespace
     {
+
+        typedef std::vector<BaseCodeType> BaseCodeSet;
+        BaseCodeSet s_hexCodeSet{ {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F} };
+        BaseCode<16, BaseCodeSet> s_hexCode(s_hexCodeSet);
+
+        std::string qcom_barcode_str(HexInteger const& authNo)
+        {
+            DecimalInteger barCode(authNo);
+
+            const size_t counts = barCode.GetCounts();
+            // ref Qcom1.6.6 section 22.3, the barcode must be an 18 digit
+            if (counts != 18)
+            {
+                return std::string();
+            }
+
+            size_t group = 4;
+            const int pow10[] = { 1, 10, 100, 1000 };
+            int nums[5];
+            for (size_t i = 0; i < counts; ++i)
+            {
+                size_t index = i / group;
+
+                nums[index] += (barCode.GetDigit(i) * pow10[i % 4]);
+            }
+
+            return (boost::format("Auth No: %|02d|-%|04d|-%|04d|-%|04d|-%|04d|") % nums[4] % nums[3] % nums[2] % nums[1] % nums[0]).str();
+        }
+
         bool qcom_log_event(qc_ertype *d, uint32_t sermid, u32 sec, u32 min, u32 hour, u32 day, u32 month, u32 year)
         {
             bool err_bcd = false;
             bool err_size = false;
+            bool err_authNo = false;
             const char * ev = nullptr;
             std::string ext;
 
@@ -623,24 +654,10 @@ namespace sg
                 ev = "EGM Ticket-In Timeout";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TIR)) 
                 {
-                    ext = (boost::format("Auth No: 0x%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|\
-                                         %|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|") %
-                        d->EXTD.TIR.authno.AUTHNO[7] %
-                        d->EXTD.TIR.authno.AUTHNO[6] %
-                        d->EXTD.TIR.authno.AUTHNO[5] %
-                        d->EXTD.TIR.authno.AUTHNO[4] %
-                        d->EXTD.TIR.authno.AUTHNO[3] %
-                        d->EXTD.TIR.authno.AUTHNO[2] %
-                        d->EXTD.TIR.authno.AUTHNO[1] %
-                        d->EXTD.TIR.authno.AUTHNO[0] %
-                        d->EXTD.TIR.authno.AUTHNO[15] %
-                        d->EXTD.TIR.authno.AUTHNO[14] %
-                        d->EXTD.TIR.authno.AUTHNO[13] %
-                        d->EXTD.TIR.authno.AUTHNO[12] %
-                        d->EXTD.TIR.authno.AUTHNO[11] %
-                        d->EXTD.TIR.authno.AUTHNO[10] %
-                        d->EXTD.TIR.authno.AUTHNO[9] %
-                        d->EXTD.TIR.authno.AUTHNO[8]).str();
+                    HexInteger authNo(d->EXTD.TIR.authno.AUTHNO, s_hexCode);
+                    ext = qcom_barcode_str(authNo);
+                    if (ext.empty())
+                        err_authNo = true;
                 }
                 else
                 {
@@ -651,24 +668,10 @@ namespace sg
                 ev = "EGM Ticket-In Timeout";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TIR)) 
                 {
-                    ext = (boost::format("Auth No: Ox%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|\
-                                         %|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|") %
-                        d->EXTD.TIR.authno.AUTHNO[7] %
-                        d->EXTD.TIR.authno.AUTHNO[6] %
-                        d->EXTD.TIR.authno.AUTHNO[5] %
-                        d->EXTD.TIR.authno.AUTHNO[4] %
-                        d->EXTD.TIR.authno.AUTHNO[3] %
-                        d->EXTD.TIR.authno.AUTHNO[2] %
-                        d->EXTD.TIR.authno.AUTHNO[1] %
-                        d->EXTD.TIR.authno.AUTHNO[0] %
-                        d->EXTD.TIR.authno.AUTHNO[15] %
-                        d->EXTD.TIR.authno.AUTHNO[14] %
-                        d->EXTD.TIR.authno.AUTHNO[13] %
-                        d->EXTD.TIR.authno.AUTHNO[12] %
-                        d->EXTD.TIR.authno.AUTHNO[11] %
-                        d->EXTD.TIR.authno.AUTHNO[10] %
-                        d->EXTD.TIR.authno.AUTHNO[9] %
-                        d->EXTD.TIR.authno.AUTHNO[8]).str();
+                    HexInteger authNo(d->EXTD.TIR.authno.AUTHNO, s_hexCode);
+                    ext = qcom_barcode_str(authNo);
+                    if (ext.empty())
+                        err_authNo = true;
                 }
                 else
                 {
@@ -800,24 +803,11 @@ namespace sg
                 ev = "EGM Cash Ticket In Request";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TIR)) 
                 {
-                    ext = (boost::format("Auth No: Ox%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|\
-                                         %|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|") %
-                        d->EXTD.TIR.authno.AUTHNO[7] %
-                        d->EXTD.TIR.authno.AUTHNO[6] %
-                        d->EXTD.TIR.authno.AUTHNO[5] %
-                        d->EXTD.TIR.authno.AUTHNO[4] %
-                        d->EXTD.TIR.authno.AUTHNO[3] %
-                        d->EXTD.TIR.authno.AUTHNO[2] %
-                        d->EXTD.TIR.authno.AUTHNO[1] %
-                        d->EXTD.TIR.authno.AUTHNO[0] %
-                        d->EXTD.TIR.authno.AUTHNO[15] %
-                        d->EXTD.TIR.authno.AUTHNO[14] %
-                        d->EXTD.TIR.authno.AUTHNO[13] %
-                        d->EXTD.TIR.authno.AUTHNO[12] %
-                        d->EXTD.TIR.authno.AUTHNO[11] %
-                        d->EXTD.TIR.authno.AUTHNO[10] %
-                        d->EXTD.TIR.authno.AUTHNO[9] %
-                        d->EXTD.TIR.authno.AUTHNO[8]).str();
+                    HexInteger authNo(d->EXTD.TIR.authno.AUTHNO, s_hexCode);
+                    ext = qcom_barcode_str(authNo);
+
+                    if (ext.empty())
+                        err_authNo = true;
                 }
                 else
                 {
@@ -835,7 +825,7 @@ namespace sg
                 break;
             }
 
-            if (!err_size && !err_bcd)
+            if (!err_size && !err_bcd && !err_authNo)
             {
                 COMMS_LOG(
                     boost::format("%|| %|02d|:%|02d|:%|02d| %|02d|-%|02d|-%|02d| %|| %|| %|| %||\n") %
@@ -852,12 +842,22 @@ namespace sg
                         static_cast<u32>(d->ESIZ.ESIZ) % ev,
                         CLL_Error);
                 }
-                else
+                else if (err_bcd)
                 {
                     COMMS_LOG(
                         boost::format("Non-BCD value of event %1% received\n") %
                         ev,
                         CLL_Error);
+                }
+                else
+                {
+                    u8 *p = d->EXTD.TIR.authno.AUTHNO;
+                    COMMS_LOG(
+                        boost::format("Invalid Tick Authorisation Number: \
+                        0x%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|)") %
+                        p[15] % p[14] % p[13] % p[12] % p[11] % p[10] % p[9] % p[8] % p[7] % p[6] % p[5] % p[4] % p[3] % p[2] % p[1] % p[0],
+                        CLL_Error
+                    );
                 }
 
                 return false;

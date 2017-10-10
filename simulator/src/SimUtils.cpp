@@ -27,161 +27,161 @@ namespace sg
             ActionCenter& center = ActionCenter::Instance();
 
             ActionCenter::ActionEventPtr evt = center.Install(Action::AT_QUIT);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
             evt->connect(std::bind(on_quit, std::placeholders::_1, std::placeholders::_2));
 
             Simulator::Connection *connection = sim->Install(Action::AT_QCOM_SEEKEGM);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_SEEKEGM);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::SeekEGM, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_EGM_POLL_ADD_CONF);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_EGM_POLL_ADD_CONF);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::EGMPollAddConf, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_TIME_DATE);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_TIME_DATE);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::TimeDate, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_LP_CURRENT_AMOUNT);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_LP_CURRENT_AMOUNT);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::LPCurrentAmount, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_GENERAL_PROMOTIONAL);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_GENERAL_PROMOTIONAL);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::GeneralPromotional, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_SITE_DETAIL);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_SITE_DETAIL);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::SiteDetail, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_LIST_EGM);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_LIST_EGM);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::ListEGM, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             // add a command test log to test log
             connection = sim->Install(Action::AT_PICK_EGM);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_PICK_EGM);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::PickEGM, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_EGM_CONF_REQ);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_EGM_CONF_REQ);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::EGMConfRequest, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_EGM_CONF);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_EGM_CONF);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::EGMConfiguration, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_GAME_CONF);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_GAME_CONF);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::GameConfiguration, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_GAME_CONF_CHANGE);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_GAME_CONF_CHANGE);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::GameConfigurationChange, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_EGM_PARAMS);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_EGM_PARAMS);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::EGMParameters, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_PURGE_EVENTS);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_PURGE_EVENTS);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::PurgeEvents, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_GENERAL_STATUS);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_GENERAL_STATUS);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::GeneralStatus, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_PENDING);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_PENDING);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::PendingPoll, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_SEND);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_SEND);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::SendPoll, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_RESET_DEV);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_RESET_DEV);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::ChangeDev, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_PROGRESSIVE_CONFIG);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_PROGRESSIVE_CONFIG);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::ProgressiveChange, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_EXTJP_INFO);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_EXTJP_INFO);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::ExtJPInfo, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_PROGHASH_REQUEST);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_PROGHASH_REQUEST);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::ProgHashRequest, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
             connection = sim->Install(Action::AT_QCOM_SYSLOCKUP_REQUEST);
-            BOOST_ASSERT(connection);
+            SG_ASSERT(connection);
             evt = center.Install(Action::AT_QCOM_SYSLOCKUP_REQUEST);
-            BOOST_ASSERT(evt);
+            SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::SysLockupRequest, sim.get(), std::placeholders::_1, std::placeholders::_2));
 

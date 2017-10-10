@@ -573,7 +573,7 @@ namespace sg
 
     void CommsQcom::EGMConfRequest(uint8_t poll_address, QcomEGMControlPollData const & data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -586,7 +586,7 @@ namespace sg
 
     void CommsQcom::EGMConfiguration(uint8_t poll_address, QcomEGMConfigPollData const & data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -599,7 +599,7 @@ namespace sg
 
     void CommsQcom::GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -612,7 +612,7 @@ namespace sg
 
     void CommsQcom::GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -626,7 +626,7 @@ namespace sg
 
     void CommsQcom::PurgeEvents(uint8_t poll_address, uint8_t evtno)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -639,7 +639,7 @@ namespace sg
 
     void CommsQcom::EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -652,7 +652,7 @@ namespace sg
 
     void CommsQcom::ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const & data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -665,7 +665,7 @@ namespace sg
 
     void CommsQcom::ExtJPInfo(uint8_t poll_address, QcomExtJPInfoData const & data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -678,7 +678,7 @@ namespace sg
 
     void CommsQcom::ProgHashRequest(uint8_t poll_address, QcomProgHashRequestData const & data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
@@ -691,7 +691,7 @@ namespace sg
 
     void CommsQcom::SystemLockup(uint8_t poll_address, QcomSysLockupRequestData const & data)
     {
-        BOOST_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 

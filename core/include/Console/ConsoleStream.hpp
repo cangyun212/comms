@@ -6,6 +6,7 @@
 #include <iostream>
 #include <mutex>
 
+#include "Utils.hpp"
 #include "Console.hpp"
 #include "Console/ConsoleWindow.hpp"
 
@@ -24,7 +25,7 @@ namespace sg
         template<typename T>
         ConsoleWindowStream& operator<< (T const& t)
         {
-            BOOST_ASSERT(m_wnd);
+            SG_ASSERT(m_wnd);
             return *this << boost::format("%1%") % t;
         }
 

@@ -290,7 +290,7 @@ namespace sg
         QcomPollPtr GetPoll(size_t index) const;
         void        AddPoll(QcomPollPtr const & poll);
         QcomPollPtr GetBroadcast() const { return m_broadcast; };
-        void        SetBroadcast(QcomPollPtr const & broadcast) { BOOST_ASSERT(!m_broadcast); m_broadcast = broadcast; };
+        void        SetBroadcast(QcomPollPtr const & broadcast) { SG_ASSERT(!m_broadcast); m_broadcast = broadcast; };
         JobType     GetType() const { return m_type; }
 
     private:

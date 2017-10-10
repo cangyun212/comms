@@ -33,7 +33,7 @@ namespace sg
         , m_rc('\0')
         , m_bs(BS_NO)
     {
-        BOOST_ASSERT((width <= static_cast<uint>(std::numeric_limits<int>::max())) &&
+        SG_ASSERT((width <= static_cast<uint>(std::numeric_limits<int>::max())) &&
             height <= static_cast<uint>(std::numeric_limits<int>::max()));
 
         m_height = height;
@@ -152,7 +152,7 @@ namespace sg
     void ConsoleWindow::ColorOn(ConsoleColorHandle const& h) const
     {
         s_color = h.i;
-        BOOST_ASSERT(s_color > 0 && s_color < static_cast<uint>(COLOR_PAIRS));
+        SG_ASSERT(s_color > 0 && s_color < static_cast<uint>(COLOR_PAIRS));
         wattron(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 
@@ -160,7 +160,7 @@ namespace sg
     {
         SG_UNREF_PARAM(h);
 
-        BOOST_ASSERT(s_color > 0 && s_color < static_cast<uint>(COLOR_PAIRS));
+        SG_ASSERT(s_color > 0 && s_color < static_cast<uint>(COLOR_PAIRS));
         wattroff(sHandle2Win(m_native), COLOR_PAIR(s_color));
     }
 

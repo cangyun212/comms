@@ -42,7 +42,7 @@ namespace sg
         template <typename Stream, typename Text>
         ConsolePrinter& SafeLog(Stream &s, Text const& t, ConsoleLogLevel level = CLL_Info)
         {
-            BOOST_ASSERT(m_init);
+            SG_ASSERT(m_init);
             
             if (level >= m_level)
             {
@@ -56,7 +56,7 @@ namespace sg
         template <typename Stream, typename Text>
         ConsolePrinter& Log(Stream &s, Text const& t, ConsoleLogLevel level = CLL_Info)
         {
-            BOOST_ASSERT(m_init);
+            SG_ASSERT(m_init);
 
             if (level >= m_level)
             {
@@ -78,7 +78,7 @@ namespace sg
                             s << m_error_color;
                             break;
                         default:
-                            BOOST_ASSERT(false);
+                            SG_ASSERT(false);
                             break;
                         }
                     }
@@ -103,7 +103,7 @@ namespace sg
         template <typename Stream, typename Text>
         ConsolePrinter& SafePrint(Stream &s, Text const& t)
         {
-            BOOST_ASSERT(m_init);
+            SG_ASSERT(m_init);
             std::lock_guard<std::mutex> lock(g_log_guard);
             return this->Print(s, t);
         }
@@ -111,7 +111,7 @@ namespace sg
         template <typename Stream, typename Text>
         ConsolePrinter& Print(Stream &s, Text const& t)
         {
-            BOOST_ASSERT(m_init);
+            SG_ASSERT(m_init);
             s << t;
             return *this;
         }
@@ -123,7 +123,7 @@ namespace sg
             std::string const & function,
             std::string const& line)
         {
-            BOOST_ASSERT(m_init);
+            SG_ASSERT(m_init);
             std::lock_guard<std::mutex> lock(g_log_guard);
             return this->Debug(s, t, file, function, line);
         }
@@ -134,7 +134,7 @@ namespace sg
             std::string const& function, 
             std::string const& line)
         {
-            BOOST_ASSERT(m_init);
+            SG_ASSERT(m_init);
             boost::filesystem::path p(file);
             s << p.filename().string() << "(" << line << "): " << function << ": " << t;
             return *this;

@@ -284,7 +284,7 @@ namespace sg
 
     void Console::ColorOn(ConsoleColorHandle const & h) const
     {
-        BOOST_ASSERT(m_has_color && m_type != CT_Custom && h.i > 0 && h.i <= m_groups.size());
+        SG_ASSERT(m_has_color && m_type != CT_Custom && h.i > 0 && h.i <= m_groups.size());
 
 #ifdef SG_PLATFORM_WINDOWS
         if (s_hstdout != INVALID_HANDLE_VALUE)
@@ -313,7 +313,7 @@ namespace sg
     {
         SG_UNREF_PARAM(h);
 
-        BOOST_ASSERT(m_has_color && m_type != CT_Custom && h.i == 0);
+        SG_ASSERT(m_has_color && m_type != CT_Custom && h.i == 0);
 
 #ifdef SG_PLATFORM_WINDOWS
         if (s_hstdout != INVALID_HANDLE_VALUE)
@@ -346,7 +346,7 @@ namespace sg
     {
         auto res = m_wnds.insert(std::make_pair(name, ConsoleWindowPtr(new ConsoleWindow(name, width, height, x, y), std::default_delete<ConsoleWindow>())));
 
-        BOOST_ASSERT(res.second);
+        SG_ASSERT(res.second);
 
         return res.first->second;
     }
@@ -355,7 +355,7 @@ namespace sg
     {
         auto res = m_wnds.insert(std::make_pair(name, ConsoleWindowPtr(new ConsoleWindow(name, extern_handle), std::default_delete<ConsoleWindow>())));
 
-        BOOST_ASSERT(res.second);
+        SG_ASSERT(res.second);
 
         return res.first->second;
     }
@@ -373,7 +373,7 @@ namespace sg
 
     void Console::SetActiveOutputWnd(ConsoleWindowPtr const& wnd)
     {
-        BOOST_ASSERT(wnd); 
+        SG_ASSERT(wnd); 
         m_active = wnd; 
 
         g_winstream = ConsoleWindowStream(m_active);
@@ -393,13 +393,13 @@ namespace sg
 
     ConsoleColorHandle Console::RegisterColorGroup(ConsoleColorGroup const & group)
     {
-        BOOST_ASSERT((COLOR_PAIRS > 0) && (m_colId < (uint)COLOR_PAIRS));
+        SG_ASSERT((COLOR_PAIRS > 0) && (m_colId < (uint)COLOR_PAIRS));
 
         m_groups.push_back(group);
         if (m_type == CT_Custom)
         {
             int pair = init_pair(static_cast<short>(m_colId), sColorCode(group.f), sColorCode(group.b));
-            BOOST_ASSERT(pair != ERR);
+            SG_ASSERT(pair != ERR);
             SG_UNREF_PARAM(pair);
         }
 

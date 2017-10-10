@@ -31,7 +31,7 @@ namespace sg
 
     void ConsoleTableStyle::SetStyleDefinition(const std::string &name, ConsoleTableStylePtr style)
     {
-        BOOST_ASSERT(style);
+        SG_ASSERT(style);
 
         initStyles();
 
@@ -109,7 +109,7 @@ namespace sg
 
     ConsoleTableCell & ConsoleTableRow::GetCell(size_t c)
     {
-        BOOST_ASSERT(c < col);
+        SG_ASSERT(c < col);
 
         return (cells.get())[c];
     }
@@ -123,12 +123,12 @@ namespace sg
     void ConsoleTable::SetStyle(const std::string &name)
     {
         m_style = ConsoleTableStyle::GetStyleDefinition(name);
-        BOOST_ASSERT(m_style);
+        SG_ASSERT(m_style);
     }
 
     void ConsoleTable::SetStyle(ConsoleTableStylePtr style)
     {
-        BOOST_ASSERT(style);
+        SG_ASSERT(style);
         m_style = style;
     }
 

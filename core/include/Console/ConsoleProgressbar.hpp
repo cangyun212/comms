@@ -8,6 +8,8 @@
 #include <atomic>
 #include <thread>
 
+#include "Utils.hpp"
+
 #define SG_CONSOLE_PB_MIN_WIDTH     7
 
 namespace sg
@@ -49,7 +51,7 @@ namespace sg
             , m_spin(nullptr)
             , m_next(0)
         {
-            BOOST_ASSERT(width >= SG_CONSOLE_PB_MIN_WIDTH && minimum < maximum && fps > 0);
+            SG_ASSERT(width >= SG_CONSOLE_PB_MIN_WIDTH && minimum < maximum && fps > 0);
         }
 
         ~ConsoleProgressBar();
@@ -57,7 +59,7 @@ namespace sg
     public:
         void    Start();
         void    Stop();
-        void    Update(uint p) { BOOST_ASSERT(p >= m_min && p <= m_max);  m_progress = p; }
+        void    Update(uint p) { SG_ASSERT(p >= m_min && p <= m_max);  m_progress = p; }
         void    Render();
 
     private:

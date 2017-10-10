@@ -49,7 +49,7 @@ set(CORE_HEADER_FILES
     ${CORE_PROJECT_DIR}/include/Timer.hpp
     ${CORE_PROJECT_DIR}/include/Console.hpp
     ${CORE_PROJECT_DIR}/include/Window.hpp
-    ${CORE_PROJECT_DIR}/include/BaseConverter.hpp
+    ${CORE_PROJECT_DIR}/include/BaseInteger.hpp
     ${CORE_PROJECT_DIR}/include/Concatenate.hpp
     )
 
@@ -58,7 +58,7 @@ set(CORE_SOURCE_FILES
     ${CORE_PROJECT_DIR}/src/Utils.cpp
     ${CORE_PROJECT_DIR}/src/Timer.cpp
     ${CORE_PROJECT_DIR}/src/Console.cpp
-    ${CORE_PROJECT_DIR}/src/BaseConverter.cpp
+    ${CORE_PROJECT_DIR}/src/BaseInteger.cpp
     )
 
 

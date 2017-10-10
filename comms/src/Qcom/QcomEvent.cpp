@@ -1,6 +1,6 @@
 #include "Core.hpp"
 #include "Utils.hpp"
-#include "BaseConverter.hpp"
+#include "BaseInteger.hpp"
 
 #include "Qcom/QcomEvent.hpp"
 #include "Qcom/qogr/qogr_crc.h"

@@ -1,0 +1,17 @@
+if(__GOOGLETEST_CMAKE__)
+    return()
+endif()
+
+set(__GOOGLETEST_CMAKE__)
+
+set(__GOOGLETEST_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+
+include(${__GOOGLETEST_DIR}/../cmake/common.cmake)
+
+set(GOOGLETEST_LIB_NAME GOOGLETEST)
+
+set(${GOOGLETEST_LIB_NAME}_INCLUDE_DIR "${__GOOGLETEST_DIR}/googletest/include" CACHE PATH "Path to include for googletest" FORCE)
+#set(${RAPIDJSON_LIB_NAME}_INCLUDE_DIRS "${${RAPIDJSON_LIB_NAME}_INCLUDE_DIR}" CACHE PATH "Path to include for rapidjson" FORCE)
+set(${GOOGLETEST_LIB_NAME}_LIBRARIES $<$<CONFIG:Debug>:gtest${SG_OUTPUT_SUFFIX}${CMAKE_DEBUG_POSTFIX}>$<$<CONFIG:Release>:gtest${SG_OUTPUT_SUFFIX}${CMAKE_RELEASE_POSTFIX}> $<$<CONFIG:Debug>:gtest_main${SG_OUTPUT_SUFFIX}${CMAKE_DEBUG_POSTFIX}>$<$<CONFIG:Release>:gtest_main${SG_OUTPUT_SUFFIX}${CMAKE_RELEASE_POSTFIX}>)
+
+

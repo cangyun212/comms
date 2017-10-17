@@ -10,6 +10,15 @@
     #define SG_DEBUG
 #endif
 
+#define SG_STRINGIFY(x)     SG_DO_STRINGIFY(x)
+#define SG_DO_STRINGIFY(x)  #x
+
+#define SG_CORE_MAJOR_VERSION       1
+#define SG_CORE_MINOR_VERSION       0
+#define SG_CORE_PATCH_VERSION       0
+#define SG_CORE_VERSION_STRING \
+    SG_STRINGIFY(SG_CORE_MAJOR_VERSION.SG_CORE_MINOR_VERSION.SG_CORE_PATCH_VERSION)
+
 // Defines supported compilers
 #if defined(__GNUC__)
     // GNU C++

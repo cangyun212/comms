@@ -258,7 +258,7 @@ namespace sg {
             m_header = MakeSharedPtr<ConsoleTableRow>();
 
             m_header->col = N;
-            m_header->cells = MakeArraryPtr(ConsoleTableCell, N);
+            m_header->cells = MakeArrayPtr(ConsoleTableCell, N);
             std::copy(*it, *it + N, m_header->cells.get());
         }
 
@@ -271,7 +271,7 @@ namespace sg {
             m_rows.push_back(r);
 
             r->col = N;
-            r->cells = MakeArraryPtr(ConsoleTableCell, N);
+            r->cells = MakeArrayPtr(ConsoleTableCell, N);
             std::copy(*it, *it+N, r->cells.get());
 
             return *this;

@@ -131,6 +131,9 @@ namespace sg
         static BaseCodeMap s_codeMap;
     };
 
+    template <BaseType Base, char... chars>
+    std::unordered_map<char, BaseType> BaseCode<Base, BaseStringCodeSet<chars...>>::s_codeMap;
+
     typedef BaseCode<16, BaseHexCodeSet>    BaseHex;
     typedef BaseCode<10, BaseDecimalCodeSet> BaseDecimal;
     typedef BaseCode<2, BaseBinaryCodeSet> BaseBinary;
@@ -144,9 +147,9 @@ namespace sg
         explicit BaseInteger(uint64_t u) 
             : m_counts(0) 
             , m_capacity(SG_BASE_MAX_DIGIT_ITERATION) // uint64_t has 64 digits max for base 2 which also max for any other base
-            , m_digits(MakeArraryPtr(BaseType, m_capacity))
+            , m_digits(MakeArrayPtr(BaseType, m_capacity))
         {
-            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max());
+            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max(), "invalid base number");
 
             *this = u;
             //do
@@ -163,7 +166,7 @@ namespace sg
         BaseInteger(T const& sequence, BaseCode<Base, U> const& code) 
             : m_counts(0)
             , m_capacity(SG_BASE_MAX_DIGIT_ITERATION)
-            , m_digits(MakeArraryPtr(BaseType, m_capacity))
+            , m_digits(MakeArrayPtr(BaseType, m_capacity))
         {
             static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max(), "invalid base number");
 
@@ -176,6 +179,28 @@ namespace sg
             }
 
             if (!m_counts) // empty sequence end up 0
+            {
+                this->PushBack(0);
+            }
+        }
+
+        template <size_t N, typename T>
+        BaseInteger(const char(&str)[N], BaseCode<Base, T> const& code)
+            : m_counts(0)
+            , m_capacity(SG_BASE_MAX_DIGIT_ITERATION)
+            , m_digits(MakeArrayPtr(BaseType, m_capacity))
+        {
+            static_assert(Base >= 2 && Base <= std::numeric_limits<BaseType>::max(), "invalid base number");
+
+            for (size_t i = N - 1; i > 0; --i)
+            {
+                BaseCode<Base, T>::BaseTranslateCode res = code.Translate(str[i - 1]);
+                SG_ASSERT(res.valid);
+
+                this->PushBack(res.num);
+            }
+
+            if (!m_counts)
             {
                 this->PushBack(0);
             }
@@ -238,7 +263,7 @@ namespace sg
             // should be safe, capacity has enough space to hold all digits needed
             BaseType *pdigits = m_digits.get(); // C++17 support operator[]
 
-            std::shared_ptr<BaseType> base2base(MakeArraryPtr(BaseType, counts)); // we need an array to represent the source base in new base
+            std::shared_ptr<BaseType> base2base(MakeArrayPtr(BaseType, counts)); // we need an array to represent the source base in new base
             BaseType *pbase2base = base2base.get(); // should be safe
             std::memset(pbase2base, 0, sizeof(BaseType) * counts);
             size_t bcount = 0;
@@ -317,7 +342,7 @@ namespace sg
             } while (u >= Base);
 
             if (u)
-                this->PushBack(u);
+                this->PushBack(static_cast<BaseType>(u));
 
             return *this;
         }
@@ -412,7 +437,7 @@ namespace sg
                 if (i >= n.m_counts)
                     n.IncreaseCount(i - n.m_counts + 1);
 
-                n.m_digits.get()[i++] = mul - rem * Base;
+                n.m_digits.get()[i++] = static_cast<BaseType>(mul - rem * Base);
             }
 
             if (rem)
@@ -475,7 +500,7 @@ namespace sg
                     m_capacity *= 2; // double memory each time
                 }
 
-                std::shared_ptr<BaseType> p(MakeArraryPtr(BaseType, m_capacity));
+                std::shared_ptr<BaseType> p(MakeArrayPtr(BaseType, m_capacity));
                 if (m_counts > counts)
                     std::memcpy(p.get(), m_digits.get(), sizeof(BaseType) * (m_counts - counts));
 

@@ -11,12 +11,12 @@
 #define SG_SAFE_DELETE_ARRAY(p) if (p) { delete[] p; p = nullptr; }
 #define SG_SAFE_RELEASE(p) if(p) { (p)->release(); (p) = nullptr; }
 
-#define SG_ARRY_SIZE(x)     (sizeof((x)) / sizeof((x)[0]))
+#define SG_ARRAY_SIZE(x)     (sizeof((x)) / sizeof((x)[0]))
 
 #define SG_ASSERT(expr) BOOST_ASSERT(expr)
 #define SG_ASSERT_MSG(expr, msg) BOOST_ASSERT_MSG(expr, msg)
 
-#define MakeArraryPtr(T, N) std::shared_ptr<T>(new T[N], [](T *p){ SG_SAFE_DELETE_ARRAY(p); })
+#define MakeArrayPtr(T, N) std::shared_ptr<T>(new T[N], [](T *p){ SG_SAFE_DELETE_ARRAY(p); })
 
 namespace sg
 {

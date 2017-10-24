@@ -279,7 +279,7 @@ TEST(BaseInteger, BaseConvertion)
         EXPECT_EQ(hexA[hex.GetCounts() - i - 1], hex.GetDigit(i));
     }
 
-    DecimalInteger dec3("576460752353423488", decCode);
+    DecimalInteger dec3("576460752303423488", decCode);
     HexInteger hec2(dec3);
     ASSERT_EQ(15, hec2.GetCounts());
     EXPECT_EQ(0x8, hec2.GetDigit(14));
@@ -419,10 +419,10 @@ TEST(BaseInteger, OperatorMulEqual)
     HexInteger hex1(0x0), hex2(0xFF);
     hex1 *= hex2;
     ASSERT_EQ(1, hex1.GetCounts());
-    EXPECT_EQ(1, hex1.GetDigit(0));
+    EXPECT_EQ(0, hex1.GetDigit(0));
 
     BaseHex hexCode;
-    HexInteger hex3("0xCD", hexCode);
+    HexInteger hex3("CD", hexCode);
     HexInteger hex4(0x15);
     hex3 *= hex4;
     BaseType hexA[] = { 1, 0, 0xD, 1 };
@@ -438,7 +438,7 @@ TEST(BaseInteger, OperatorMulEqual)
     ASSERT_EQ(SG_ARRAY_SIZE(hexB), hex5.GetCounts());
     for (size_t i = 0; i < SG_ARRAY_SIZE(hexB); ++i)
     {
-        EXPECT_EQ(hexB[SG_ARRAY_SIZE(hexB) - i - 1], hex3.GetDigit(i));
+        EXPECT_EQ(hexB[SG_ARRAY_SIZE(hexB) - i - 1], hex5.GetDigit(i));
     }
 }
 

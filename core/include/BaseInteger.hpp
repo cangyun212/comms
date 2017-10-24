@@ -289,25 +289,28 @@ namespace sg
                 }
 
                 // calculate next base representation
-                size_t rem = 0;
-                size_t level = 0;
-                size_t sum = pbase2base[level] * OtherBase;
-                do
+                if ((i + 1) < rhs.GetCounts())
                 {
-                    rem = sum / Base;
-                    pbase2base[level++] = static_cast<BaseType>(sum - rem * Base);
-
-                    if (level >= bcount)
+                    size_t rem = 0;
+                    size_t level = 0;
+                    size_t sum = pbase2base[level] * OtherBase;
+                    do
                     {
-                        ++bcount;
-                        SG_ASSERT(bcount <= counts);
-                    }
+                        rem = sum / Base;
+                        pbase2base[level++] = static_cast<BaseType>(sum - rem * Base);
 
-                    sum = pbase2base[level] * OtherBase;
-                    sum += rem;
-                    if (sum < Base)
-                        pbase2base[level] = static_cast<BaseType>(sum);
-                } while (sum >= Base);
+                        if (level >= bcount)
+                        {
+                            ++bcount;
+                            SG_ASSERT(bcount <= counts);
+                        }
+
+                        sum = pbase2base[level] * OtherBase;
+                        sum += rem;
+                        if (sum < Base && (level + 1) == bcount)
+                            pbase2base[level] = static_cast<BaseType>(sum);
+                    } while (sum >= Base || (level + 1) < bcount);
+                }
             }
 
             return *this;

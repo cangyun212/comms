@@ -1,5 +1,5 @@
-#ifndef __SG_CORE_BASE_CONVERTER_HPP__
-#define __SG_CORE_BASE_CONVERTER_HPP__
+#ifndef __SG_CORE_BASE_INTEGER_HPP__
+#define __SG_CORE_BASE_INTEGER_HPP__
 
 #include "Core.hpp"
 
@@ -525,6 +525,6 @@ namespace sg
     typedef BaseInteger<2>      BinaryInteger;
 }
 
-#endif // !__SG_CORE_BASE_CONVERTER_HPP__
+#endif // !__SG_CORE_BASE_INTEGER_HPP__
 
 

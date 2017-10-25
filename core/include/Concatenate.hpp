@@ -49,10 +49,11 @@
 
 namespace sg
 {
+    int CORE_API GetConcatenateFloatPrecision();
+    void CORE_API SetConcatenateFloatPrecision(int precision);
+
     namespace utils
     {
-        extern int g_floatPrecision;
-
         inline char* itoa(uint32_t value, char *buffer)
         {
             return rapidjson::internal::u32toa(value, buffer);
@@ -206,8 +207,8 @@ namespace sg
             concatenate_traits(T t)
                 : _buf{ 0 }, _ref(t), _siz(0)
             {
-                SG_ASSERT(g_floatPrecision <= (SG_MAX_FLOAT_BUF_SIZE - 3));
-                char *buf = rapidjson::internal::dtoa(t, _buf, g_floatPrecision);
+                SG_ASSERT(GetConcatenateFloatPrecision() <= (SG_MAX_FLOAT_BUF_SIZE - 3));
+                char *buf = rapidjson::internal::dtoa(t, _buf, GetConcatenateFloatPrecision());
                 *buf = 0;
                 _siz = string_size(_buf);
             }

@@ -15,6 +15,7 @@ set(CORETEST_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(SG_PROJECT_DIR "${CORETEST_PROJECT_DIR}/..")
 set(GOOGLETEST_PROJECT_DIR "${SG_PROJECT_DIR}/googletest")
 set(CORE_PROJECT_DIR "${SG_PROJECT_DIR}/core")
+set(RAPIDJSON_PROJECT_DIR "${SG_PROJECT_DIR}/rapidjson")
 
 include(${SG_PROJECT_DIR}/cmake/common.cmake)
 include(${SG_PROJECT_DIR}/cmake/compiler.cmake)
@@ -33,6 +34,7 @@ set(CORETEST_HEADER_FILES
 set(CORETEST_SOURCE_FILES
     ${CORETEST_PROJECT_DIR}/src/coretest.cpp
     ${CORETEST_PROJECT_DIR}/src/BaseIntegerTest.cpp
+    ${CORETEST_PROJECT_DIR}/src/ConcatenateTest.cpp
     )
 
 source_group("Source Files" FILES ${CORETEST_SOURCE_FILES})
@@ -43,6 +45,7 @@ include(${SG_PROJECT_DIR}/googletest/cmake/googletest.cmake)
 
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${GOOGLETEST_INCLUDE_DIR})
+include_directories(${RAPIDJSON_PROJECT_DIR}/include)
 include_directories(${CORE_PROJECT_DIR}/include)
 include_directories(${CORETEST_PROJECT_DIR}/include)
 

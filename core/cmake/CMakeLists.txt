@@ -59,6 +59,7 @@ set(CORE_SOURCE_FILES
     ${CORE_PROJECT_DIR}/src/Timer.cpp
     ${CORE_PROJECT_DIR}/src/Console.cpp
     ${CORE_PROJECT_DIR}/src/BaseInteger.cpp
+    ${CORE_PROJECT_DIR}/src/Concatenate.cpp
     )
 
 

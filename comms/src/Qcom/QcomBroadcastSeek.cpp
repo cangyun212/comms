@@ -34,8 +34,6 @@ namespace sg
                 {
                     QcomDataPtr pd = it->AddNewEgm();
 
-                    std::memset(&pd->data, 0, sizeof(QcomEGMData));
-
                     pd->data.control.serialMidBCD= p->Data.segmbr.SN.SER;
                     pd->data.control.last_control |= (QCOM_ACK_MASK | QCOM_LAMAPOLL_MASK);
                 }

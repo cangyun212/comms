@@ -39,8 +39,14 @@
 #define SG_QCOM_ADD_POLL_JOB(job)   if (!m_pending) {\
                                         QcomBroadcastPtr broadcast_handler =\
                                             std::static_pointer_cast<QcomBroadcast>(m_handler[QCOM_BROADCAST_POLL_FC]);\
-                                        if (!broadcast_handler->BuildTimeDateBroadcast(job))\
-                                            return;\
+                                        if (!m_lpbroadcast) {\
+                                            if (!broadcast_handler->BuildTimeDateBroadcast(job))\
+                                                return;\
+                                        } else {\
+                                            QcomLinkedProgressiveData data = this->GetLPConfigData();\
+                                            if (!broadcast_handler->BuildLinkProgressiveCurrentAmountBroadcast(job, data))\
+                                                return;\
+                                        }\
                                         this->AddJob(job);\
                                     }
 
@@ -77,6 +83,7 @@ namespace sg
         , m_tpc(this->Now())
         , m_skip(true)
         , m_pending(false)
+        , m_lpbroadcast(false)
     {
         m_egms.reserve(SG_QCOM_MAX_EGM_NUM);
     }
@@ -381,6 +388,17 @@ namespace sg
         QcomDataPtr p = MakeSharedPtr<QcomData>();
         std::memset(&p->data, 0, sizeof(QcomEGMData));
 
+        // ref Qcom1.6-8.1.13 defaults value for EGM configuration after NVRAM clear
+        p->data.custom.maxden = 0;
+        p->data.custom.minrtp = 0;
+        p->data.custom.maxrtp = 9999;
+        p->data.custom.maxsd = 65535;
+        p->data.custom.maxlines = 65535;
+        p->data.custom.maxbet = 4294967295;
+        p->data.custom.maxnpwin = 4294967295;
+        p->data.custom.maxpwin = 4294967295;
+        p->data.custom.maxect = 1000000;
+
         std::unique_lock<std::mutex> lock(m_egms_guard);
         m_egms.push_back(p);
         return p;
@@ -597,17 +615,46 @@ namespace sg
         SG_QCOM_ADD_POLL_JOB(job);
     }
 
+    bool CommsQcom::AddLPConfigData(uint16_t pgid, const QcomProgressiveConfigData &data)
+    {
+        std::unique_lock<std::mutex> lock(m_lp_guard);
+        auto res = m_lp_group.insert(std::make_pair(pgid, MakeSharedPtr<QcomProgressiveConfigDataPtr>(data)));
+    }
+
     void CommsQcom::GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data)
     {
         SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
-        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+        //SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+        if (m_pending)
+        {
+            COMMS_LOG("Can't use pending job when configure game\n", CLL_Error);
+            return;
+        }
 
         QcomGameConfigurationPtr handler = std::static_pointer_cast<QcomGameConfiguration>(m_handler[QCOM_EGMGCP_FC]);
-        if (!handler->BuildGameConfigPoll(job, poll_address, gvn, data))
+        //if (!handler->BuildGameConfigPoll(job, poll_address, gvn, data))
+        //    return;
+        std::vector<QcomJobDataPtr> jobs;
+        if (!handler->BuildGameConfigJobs(jobs, poll_address, gvn, data))
             return;
 
-        SG_QCOM_ADD_POLL_JOB(job);
+        for (uint8_t i = 0; i < data.progressive_config.pnum; ++i)
+        {
+            if (data.progressive_config.flag_p[i])
+            {
+                // from now, sim should keep sending link broadcast instead date and time only
+                m_lpbroadcast = true;
+                break;
+            }
+        }
+
+        for (size_t i = 0; i < jobs.size(); ++i)
+        {
+            SG_QCOM_ADD_POLL_JOB(jobs[i]);
+        }
+
+        //SG_QCOM_ADD_POLL_JOB(job);
     }
 
     void CommsQcom::GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data)

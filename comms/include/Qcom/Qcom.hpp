@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <vector>
 #include <list>
-#include <map>
+#include <unordered_map>
 
 #include "CommsPredeclare.hpp"
 #include "Comms.hpp"
@@ -43,8 +43,7 @@
 #define QCOM_EGM_NOT_CONFIG     0x00
 #define QCOM_EGM_CONFIG_SET     0x01
 #define QCOM_EGM_CONFIG_READY   0x02
-#define QCOM_EGM_CONFIG_FSH     0x04
-#define QCOM_EGM_HASH_READY     0x08
+#define QCOM_EGM_HASH_READY     0x04
 
 namespace sg 
 {
@@ -401,12 +400,15 @@ namespace sg
     private:
         void    StartJobThread();
         void    StopJobThread();
+        bool    AddLPConfigData(uint16_t pgid, QcomProgressiveConfigData const& data);
+        void    UpdateLPConfigData();
+        QcomLinkedProgressiveData GetLPConfigData();
 
     private:
         void    HandleResponse(uint8_t buf[], int length);
 
     private:
-        typedef std::map<uint8_t, CommsPacketHandlerPtr>    HandlerType;
+        typedef std::unordered_map<uint8_t, CommsPacketHandlerPtr>    HandlerType;
         HandlerType     m_handler;
         HandlerType     m_resp_handler;
 
@@ -424,6 +426,13 @@ namespace sg
 
         bool            m_pending;
         QcomJobDataPtr  m_pending_job;
+
+        bool            m_lpbroadcast;
+        std::mutex      m_lp_guard;
+        typedef std::shared_ptr<QcomProgressiveConfigData> QcomProgressiveConfigDataPtr;
+        typedef std::unordered_map<uint8_t, QcomProgressiveConfigDataPtr> LPMap;
+        LPMap           m_lps;
+
 
         typedef std::list<QcomJobDataPtr>   JobQueue;
         JobQueue        m_jobs;

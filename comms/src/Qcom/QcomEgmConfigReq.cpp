@@ -57,6 +57,7 @@ namespace sg
                         // once reported by the egm in the first egm configuration response
                         // except NUMG, DEN, TOK & CRC
 
+                        pd->data.config.games_num = p->Data.egmcr2.NUMG;
                         if (!(pd->data.control.egm_config_state & QCOM_EGM_CONFIG_READY))
                         {
                             pd->data.control.protocol_ver = p->Data.egmcr2.NPRV;
@@ -65,20 +66,10 @@ namespace sg
                             pd->data.config.bsvn = p->Data.egmcr2.BGVN;
                             pd->data.config.last_gvn = p->Data.egmcr2.LGVN;
                             pd->data.config.last_var = p->Data.egmcr2.LVAR;
+                            pd->data.config.flag_s = p->Data.egmcr2.FLGSH.FLGSH;
+                            pd->data.config.games_num_enable = p->Data.egmcr2.NUME;
 
                             pd->data.control.egm_config_state |= QCOM_EGM_CONFIG_READY;
-                        }
-
-                        if (pd->data.control.egm_config_state & QCOM_EGM_CONFIG_SET)
-                        {
-                            if (!(pd->data.control.egm_config_state & QCOM_EGM_CONFIG_FSH))
-                            {
-                                pd->data.config.flag_s = p->Data.egmcr2.FLGSH.FLGSH;
-                                pd->data.control.egm_config_state |= QCOM_EGM_CONFIG_FSH;
-                            }
-
-                            pd->data.config.games_num = p->Data.egmcr2.NUMG;
-                            pd->data.config.games_num_enable = p->Data.egmcr2.NUME;
 
                             // The following fields are set via the EGM Configuration Poll and
                             // reported back here for verification
@@ -117,8 +108,6 @@ namespace sg
 
                             if (flag)
                                 data = pd->data.custom;
-                            else
-                                return true;
                         }
                     }
                     else
@@ -132,6 +121,8 @@ namespace sg
                 {
                     COMMS_LOG(boost::format("Invalid serial MID value %1% is returned for EGM at poll address %2%\n") %
                         p->Data.egmcr2.SN.SER % static_cast<uint32_t>(p->DLL.PollAddress), CLL_Error);
+
+                    return false;
                 }
 
                 if (flag)
@@ -184,9 +175,11 @@ namespace sg
 
                     COMMS_END_LOG_BLOCK();
 
-                    return true;
+                    return false;
                 }
 
+                COMMS_LOG("EGM Configuration Response received\n", CLL_Info);
+                return true;
             }
         }
 

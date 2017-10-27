@@ -130,14 +130,14 @@ namespace sg
     uint8     QcomEGMConfAction::s_jur = 0;
     uint32    QcomEGMConfAction::s_den = 1;
     uint32    QcomEGMConfAction::s_tok = 100;
-    uint32    QcomEGMConfAction::s_maxden = 100;
-    uint16    QcomEGMConfAction::s_minrtp = 8500;
-    uint16    QcomEGMConfAction::s_maxrtp = 10000;
-    uint16    QcomEGMConfAction::s_maxsd = 15;
-    uint16    QcomEGMConfAction::s_maxlines = 1024;
-    uint32    QcomEGMConfAction::s_maxbet = 5000;
-    uint32    QcomEGMConfAction::s_maxnpwin = 100000;
-    uint32    QcomEGMConfAction::s_maxpwin = 2500000;
+    uint32    QcomEGMConfAction::s_maxden = 1000;
+    uint16    QcomEGMConfAction::s_minrtp = 5000;
+    uint16    QcomEGMConfAction::s_maxrtp = 9999;
+    uint16    QcomEGMConfAction::s_maxsd = 65535;
+    uint16    QcomEGMConfAction::s_maxlines = 65535;
+    uint32    QcomEGMConfAction::s_maxbet = 4294967295;
+    uint32    QcomEGMConfAction::s_maxnpwin = 4294967295;
+    uint32    QcomEGMConfAction::s_maxpwin = 4294967295;
     uint32    QcomEGMConfAction::s_maxect = 1000000;
 
     QcomEGMConfAction::QcomEGMConfAction()

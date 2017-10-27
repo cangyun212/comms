@@ -3,6 +3,8 @@
 
 #include "Core.hpp"
 
+#include <vector>
+
 #include "CommsPredeclare.hpp"
 #include "Qcom/Qcom.hpp"
 
@@ -26,10 +28,12 @@ namespace sg
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        bool        BuildGameConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data);
+        //bool        BuildGameConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data);
+        bool        BuildGameConfigJobs(std::vector<QcomJobDataPtr> &jobs, uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data);
 
     private:
         QcomPollPtr MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, QcomGameConfigData const& data);
+        bool        BuildGameConfigPollForGame(QcomJobDataPtr &job, QcomDataPtr &p, uint8_t poll_address, uint8_t game, QcomGameConfigData const& data);
 
 
     private:

@@ -35,6 +35,8 @@ namespace sg
                 uint8_t game_num = QCOM_MAX_GAME_NUM;
                 uint8_t game = game_num;
                 uint8_t flag = 0;
+                uint8_t gvn_status_num = 0;
+                uint8_t gvn_status[QCOM_MAX_GAME_NUM];
                 uint8_t ivn = 0;
                 uint8_t ivs[QCOM_REMAX_EGMGCR];
 
@@ -49,39 +51,49 @@ namespace sg
 
                     for (game = 0; game < game_num; ++game)
                     {
-                        if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ)
+                        if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET)
+                        {
+                            if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN)
+                            {
+                                if (pd->data.games[game].gvn == p->Data.egmgcr.GVN)
+                                {
+                                    pd->data.games[game].lp_only = p->Data.egmgcr.FLG.bits.LPonly;
+                                    pd->data.games[game].var_hot_switching = p->Data.egmgcr.FLG.bits.hotswitching;
+                                    pd->data.games[game].plbm = p->Data.egmgcr.PLBM;
+                                    pd->data.games[game].variations.vnum = p->Data.egmgcr.NUM;
+
+                                    u32 variation = 0;
+                                    for (uint8_t v = 0; v < p->Data.egmgcr.NUM; ++v)
+                                    {
+                                        qc_egmgcrretype *var = (qc_egmgcrretype*)((uint8_t*)(p->Data.egmgcr.re) +
+                                                                                  v * p->Data.egmgcr.SIZ);
+
+                                        if (_QComGetBCD(&variation, &(var->VAR), sizeof(var->VAR)))
+                                        {
+                                            pd->data.games[game].variations.var[v] = static_cast<uint8_t>(variation);
+                                            pd->data.games[game].variations.pret[v] = var->PRET;
+                                        }
+                                        else
+                                        {
+                                            ivs[ivn++] = v;
+                                        }
+                                    }
+                                    pd->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_READY;
+                                    flag = pd->data.control.game_config_state[game];
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                gvn_status[gvn_status_num++] = game;
+                            }
+                        }
+                        else if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ)
                         {
                             if (!(pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN))
                             {
                                 pd->data.games[game].gvn = p->Data.egmgcr.GVN;
                                 pd->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_GVN;
-                            }
-
-                            if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET)
-                            {
-                                pd->data.games[game].lp_only = p->Data.egmgcr.FLG.bits.LPonly;
-                                pd->data.games[game].var_hot_switching = p->Data.egmgcr.FLG.bits.hotswitching;
-                                pd->data.games[game].plbm = p->Data.egmgcr.PLBM;
-                                pd->data.games[game].variations.vnum = p->Data.egmgcr.NUM;
-
-                                u32 variation = 0;
-                                for (uint8_t v = 0; v < p->Data.egmgcr.NUM; ++v)
-                                {
-                                    qc_egmgcrretype *var = (qc_egmgcrretype*)((uint8_t*)(p->Data.egmgcr.re) +
-                                        v * p->Data.egmgcr.SIZ);
-
-                                    if (_QComGetBCD(&variation, &(var->VAR), sizeof(var->VAR)))
-                                    {
-                                        pd->data.games[game].variations.var[v] = static_cast<uint8_t>(variation);
-                                        pd->data.games[game].variations.pret[v] = var->PRET;
-                                    }
-                                    else
-                                    {
-                                        ivs[ivn++] = v;
-                                    }
-                                }
-
-                                pd->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_READY;
                             }
 
                             pd->data.control.game_config_state[game] &= ~QCOM_GAME_CONFIG_REQ;
@@ -114,15 +126,28 @@ namespace sg
                         return false;
                     }
 
+                    if (gvn_status_num)
+                    {
+                        COMMS_START_LOG_BLOCK();
+
+                        for (uint8_t i = 0; i < gvn_status_num; ++i)
+                        {
+                            COMMS_LOG_BLOCK(boost::format("Game %1% is set but no available GVN received\n") %
+                                            static_cast<uint32_t>(gvn_status[i]), CLL_Error);
+                        }
+
+                        COMMS_END_LOG_BLOCK();
+                    }
+
                     if (flag & QCOM_GAME_CONFIG_READY)
                     {
-                        COMMS_LOG(boost::format("[%1%%%] game configuration ready\n") %
-                            static_cast<uint32_t>((game + 1) * 100 / game_num), CLL_Info);
+                        COMMS_LOG(boost::format("Game configuration of Game %1% (Game Number: %2%) is ready\n") %
+                            static_cast<uint32_t>(game) % static_cast<uint32_t>(game_num), CLL_Info);
                     }
                     else
                     {
-                        COMMS_LOG(boost::format("[%1%%%] game configuration GVN ready\n") %
-                            static_cast<uint32_t>((game + 1) * 100 / game_num), CLL_Info);
+                        COMMS_LOG(boost::format("Game configuration GVN of Game %1% (Game Number: %2%) is ready\n") %
+                            static_cast<uint32_t>(game) % static_cast<uint32_t>(game_num), CLL_Info);
                     }
 
                     return true;
@@ -138,12 +163,20 @@ namespace sg
         return false;
     }
 
-    bool QcomGameConfiguration::BuildGameConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameConfigData const & data)
+    bool QcomGameConfiguration::BuildGameConfigPollForGame(QcomJobDataPtr &job, QcomDataPtr &p, uint8_t poll_address, uint8_t game, const QcomGameConfigData &data)
+    {
+        job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, p->data.games[game].gvn, data));
+
+        p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
+        p->data.games[game].config = data;
+
+        return true;
+    }
+
+    bool QcomGameConfiguration::BuildGameConfigJobs(std::vector<QcomJobDataPtr> &jobs, uint8_t poll_address, uint16_t gvn, const QcomGameConfigData &data)
     {
         if (auto it = m_qcom.lock())
         {
-            bool invalid_gvn = false;
-
             QcomDataPtr p = it->GetEgmData(poll_address);
 
             if (p)
@@ -152,15 +185,19 @@ namespace sg
 
                 uint8_t game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
                 uint8_t game = 0;
+
+                jobs.clear();
                 if (!gvn)
                 {
+
                     for (; game < game_num; ++game)
                     {
                         if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN) &&
                             !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY))
                         {
-                            gvn = p->data.games[game].gvn;
-                            break;
+                            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+                            this->BuildGameConfigPollForGame(job, p, poll_address, game, data);
+                            jobs.push_back(job);
                         }
                     }
                 }
@@ -169,38 +206,94 @@ namespace sg
                     for (; game < game_num; ++game)
                     {
                         if (p->data.games[game].gvn == gvn)
-                            break;
+                        {
+                            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
+                            this->BuildGameConfigPollForGame(job, p, poll_address, game, data);
+                            jobs.push_back(job);
+                        }
                     }
-                }
-
-                if (game != game_num)
-                {
-                    job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, gvn, data));
-
-                    p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
-                    p->data.games[game].config = data;
-                    p->data.games[game].gvn = gvn;
-
-                    return true;
-                }
-                else
-                {
-                    invalid_gvn = true;
                 }
             }
 
-            if (invalid_gvn)
+            if (!jobs.empty())
             {
-                COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : %1%\n") %
-                    gvn, CLL_Error);
+                return true;
+            }
+            else
+            {
+                if (!gvn)
+                {
+                    COMMS_LOG("Can't set game configuration, please configure EGM first.", CLL_Error);
+                }
+                else
+                {
+                    COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : %1%.") %
+                              gvn, CLL_Error);
+                }
             }
         }
 
         return false;
     }
 
+    //bool QcomGameConfiguration::BuildGameConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameConfigData const & data)
+    //{
+    //    if (auto it = m_qcom.lock())
+    //    {
+    //        QcomDataPtr p = it->GetEgmData(poll_address);
 
+    //        if (p)
+    //        {
+    //            std::unique_lock<std::mutex> lock(p->locker);
 
+    //            uint8_t game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
+    //            uint8_t game = 0;
+    //            if (!gvn)
+    //            {
+    //                for (; game < game_num; ++game)
+    //                {
+    //                    if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN) &&
+    //                        !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY))
+    //                    {
+    //                        break;
+    //                    }
+    //                }
+    //            }
+    //            else
+    //            {
+    //                for (; game < game_num; ++game)
+    //                {
+    //                    if (p->data.games[game].gvn == gvn)
+    //                    {
+    //                        break;
+    //                    }
+    //                }
+    //            }
+
+    //            if (game < game_num)
+    //            {
+    //                job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, p->data.games[game].gvn, data));
+
+    //                p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
+    //                p->data.games[game].config = data;
+
+    //                return true;
+    //            }
+    //        }
+
+    //        if (!gvn)
+    //        {
+    //            COMMS_LOG("Can't set game configuration, please configure EGM first.", CLL_Error);
+    //        }
+    //        else
+    //        {
+    //            COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : %1%.") %
+    //                      gvn, CLL_Error);
+    //        }
+    //    }
+
+    //    return false;
+    //}
 
     QcomPollPtr QcomGameConfiguration::MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, 
         QcomGameConfigData const& data)

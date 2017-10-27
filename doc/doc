@@ -58,3 +58,27 @@ enter command: pa [To config EGM poll address]
 enter command: configreq --mef 1 --gcr 1 --psn 1 [To send EGM config request]
 enter command: egmconfig --jur 1 --den 1 --tok 100 [To config EGM with marke QLD; denomination 1c; token value 100]
 enter command: gameconfig --var 89 --gameenable 1 [To enable game with variation 89]
+
+Polling Cycle and Responose
+
+Start Poll Cycle
+SC --> Poll --> EGM A
+SC <-- Response <-- EGM A
+SC --> Poll --> EGM B
+SC <-- Response <-- EGM B
+... ...
+SC --> Broadcast Messages --> All EGM
+End Poll Cycle
+
+--> EGM Configuration Request Poll
+<-- EGM Configuratioon Response
+
+--> EGM Configuration Poll
+<-- Game Configuration Response for GVN 1
+<-- Game Configuration Response for GVN 2
+... ...
+<-- Game Configuration Response for GVN N
+
+--> Game Configuration Poll for GVN 1
+<-- Game Configuration Response for GVN 1
+

@@ -172,7 +172,7 @@ namespace sg
 
             for (auto const& c : boost::adaptors::reverse(sequence))
             {
-                BaseCode<Base, U>::BaseTranslateCode res = code.Translate(c);
+                typename BaseCode<Base, U>::BaseTranslateCode res = code.Translate(c);
                 SG_ASSERT(res.valid);
 
                 this->PushBack(res.num);
@@ -194,7 +194,7 @@ namespace sg
 
             for (size_t i = N - 1; i > 0; --i)
             {
-                BaseCode<Base, T>::BaseTranslateCode res = code.Translate(str[i - 1]);
+                typename BaseCode<Base, T>::BaseTranslateCode res = code.Translate(str[i - 1]);
                 SG_ASSERT(res.valid);
 
                 this->PushBack(res.num);
@@ -218,7 +218,7 @@ namespace sg
 
             for (size_t i = length; i > 0; --i)
             {
-                BaseCode<Base, T>::BaseTranslateCode res = code.Translate(pstrNum[i - 1]);
+                typename BaseCode<Base, T>::BaseTranslateCode res = code.Translate(pstrNum[i - 1]);
                 SG_ASSERT(res.valid);
 
                 this->PushBack(res.num);

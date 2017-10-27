@@ -2,6 +2,8 @@
 #include "coretest.hpp"
 
 #include <limits>
+#include <list>
+#include <vector>
 
 #include "BaseInteger.hpp"
 

@@ -32,8 +32,6 @@ namespace sg
         poll->poll.Data.Broadcast.extd.EXTD.egmpac.ESIZ = esiz;
         poll->poll.Data.Broadcast.extd.EXTD.egmpac.NUM = num;
 
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
         poll->poll.Data.Broadcast.ESIZ = static_cast<u8>(sizeof(qc_egmpactype)) - resiz + esiz * num;
 
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + static_cast<u8>(sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype)) +
@@ -136,6 +134,10 @@ namespace sg
 
     void QcomBroadcast::MakeTimeDate(QcomPollPtr &poll)
     {
+
+        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
+        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
+
         time_t now_time = time(NULL);
         struct tm cTime;
 
@@ -161,8 +163,6 @@ namespace sg
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype);
         poll->poll.DLL.ControlByte.CNTL = QCOM_CNTL_POLL_BIT;
         poll->poll.DLL.FunctionCode = QCOM_BROADCAST_POLL_FC;
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
 
         poll->poll.Data.Broadcast.ESIZ = 0;
 
@@ -204,8 +204,6 @@ namespace sg
         u8 resiz = static_cast<u8>(sizeof(poll->poll.Data.Broadcast.extd.EXTD.lpca.re));
         u8 esiz = static_cast<u8>(sizeof(qc_lpcaretype));
 
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
         poll->poll.Data.Broadcast.ESIZ = static_cast<u8>(sizeof(qc_lpcatype)) - resiz + esiz * data.pnum;
 
         for(size_t i = 0; i < data.pnum; ++i)
@@ -265,8 +263,6 @@ namespace sg
 
         u8 tsiz = sizeof(poll->poll.Data.Broadcast.extd.EXTD.gpm.TEXT);
 
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
         poll->poll.Data.Broadcast.ESIZ = sizeof(qc_gpmtype) - tsiz + poll->poll.Data.Broadcast.extd.EXTD.gpm.LEN;
 
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype) +
@@ -312,8 +308,6 @@ namespace sg
 
         u8 tsiz = sizeof(poll->poll.Data.Broadcast.extd.EXTD.sd.TEXT);
 
-        poll->poll.Data.Broadcast.FLG.bits.SEF = 1;
-        poll->poll.Data.Broadcast.FLG.bits.clock = 1;
         poll->poll.Data.Broadcast.ESIZ = sizeof(qc_sdtype) - tsiz + slen + llen;
 
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_broadcastpolltype) - sizeof(qc_broadcastextdtype) +

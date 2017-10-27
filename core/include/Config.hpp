@@ -62,6 +62,7 @@
                                         _Pragma( SG_WARN_EXPAND(GCC diagnostic pop) )
 
     #define SG_WARN_CONVERSION          "-Wconversion"
+    #define SG_WARN_SIGN_COMPARE        "-Wsign-compare"
 
 #elif defined(_MSC_VER)
 

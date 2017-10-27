@@ -50,10 +50,16 @@ include_directories(${CORE_PROJECT_DIR}/include)
 include_directories(${CORETEST_PROJECT_DIR}/include)
 
 link_directories(${Boost_LIBRARY_DIR})
+if (SG_PLATFORM_LINUX)
+    link_directories(${SG_LIB_DIR})
+endif()
 
 add_executable(coretest ${CORETEST_SOURCE_FILES} ${CORETEST_HEADER_FILES})
 target_link_libraries(coretest debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX}
     ${GOOGLETEST_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+if (SG_PLATFORM_LINUX)
+    target_link_libraries(coretest pthread)
+endif()
 
 #if(SG_PLATFORM_LINUX)
 #    include(${PDCURSES_PROJECT_DIR}/pdcurses/x11/pdcurses.cmake)

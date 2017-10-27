@@ -8,7 +8,7 @@ from build_util import *
 def build_pdcurses(build_info):
     for compiler_info in build_info.compilers:
         if build_info.target_platform == "linux":
-            pdcurses_cmake = "pdcurses/x11/pdcurses.cmake"
+            pdcurses_cmake = "pdcurses/pdcurses/x11/pdcurses.cmake"
             pdcurses_configh = "pdcurses/pdcurses/x11/config.h"
             if not os.path.exists(pdcurses_cmake) or not os.path.exists(pdcurses_configh):
                 cur_dir = os.path.abspath(os.curdir)

@@ -775,6 +775,7 @@ namespace sg
             if (data.progressive_config.flag_p[i])
             {
                 // from now, sim should keep sending link broadcast instead date and time only
+                this->AddLPConfigData(data.settings.pgid, data.progressive_config);
                 m_lpbroadcast = true;
                 break;
             }

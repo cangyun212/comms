@@ -7,6 +7,7 @@
 #include <vector>
 #include <list>
 #include <unordered_map>
+#include <map>
 
 #include "CommsPredeclare.hpp"
 #include "Comms.hpp"
@@ -401,8 +402,7 @@ namespace sg
         void    StartJobThread();
         void    StopJobThread();
         bool    AddLPConfigData(uint16_t pgid, QcomProgressiveConfigData const& data);
-        void    UpdateLPConfigData();
-        QcomLinkedProgressiveData GetLPConfigData();
+        bool    GetLPConfigData(QcomLinkedProgressiveData &data);
 
     private:
         void    HandleResponse(uint8_t buf[], int length);
@@ -430,8 +430,11 @@ namespace sg
         bool            m_lpbroadcast;
         std::mutex      m_lp_guard;
         typedef std::shared_ptr<QcomProgressiveConfigData> QcomProgressiveConfigDataPtr;
-        typedef std::unordered_map<uint8_t, QcomProgressiveConfigDataPtr> LPMap;
+        typedef std::map<uint16_t, QcomProgressiveConfigDataPtr> LPMap;
         LPMap           m_lps;
+        typedef LPMap::const_iterator   LPMapHandle;
+        LPMapHandle     m_curr_lp;
+
 
 
         typedef std::list<QcomJobDataPtr>   JobQueue;

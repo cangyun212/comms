@@ -58,6 +58,8 @@ enter command: pa [To config EGM poll address]
 enter command: configreq --mef 1 --gcr 1 --psn 1 [To send EGM config request]
 enter command: egmconfig --jur 1 --den 1 --tok 100 [To config EGM with marke QLD; denomination 1c; token value 100]
 enter command: gameconfig --var 89 --gameenable 1 [To enable game with variation 89]
+or
+enter command: gameconfig --var 90 --gameenable 1 --pgid 1234 --jptype 1 1 --amount 1000000 500000 [To config game with 2 level lp which intial amount are 1000000 and 50000]
 
 Polling Cycle and Responose
 

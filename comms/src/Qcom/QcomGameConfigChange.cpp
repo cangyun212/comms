@@ -79,8 +79,8 @@ namespace sg {
         poll->poll.Data.egmvcp.GFLG.bits.GEF = data.game_enable;
         poll->poll.Data.egmvcp.PGID = data.pgid;
 
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
+        //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        //poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
     }

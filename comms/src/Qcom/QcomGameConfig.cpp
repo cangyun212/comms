@@ -210,6 +210,7 @@ namespace sg
                             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
                             this->BuildGameConfigPollForGame(job, p, poll_address, game, data);
                             jobs.push_back(job);
+                            break;
                         }
                     }
                 }
@@ -327,8 +328,8 @@ namespace sg
             poll->poll.Data.egmgcp.re[i].CAMT = data.progressive_config.camt[i];
         }
 
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
+        //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        //poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
     }

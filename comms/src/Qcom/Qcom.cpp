@@ -241,6 +241,7 @@ namespace sg
                 for (size_t i = 0; i < num; ++i)
                 {
                     QcomPollPtr poll = job->GetPoll(i);
+                    this->DecoratePoll(poll);
 
                     m_resp_time = 0;
                     this->SendPacket(poll->data, poll->length);
@@ -340,9 +341,9 @@ namespace sg
 
     bool CommsQcom::IsCRCValid(uint8_t buf[], int length)
     {
-        return QSIM_CheckCRC(buf, static_cast<u16>(length)) &&
-                ( m_resp_handler.find(((QCOM_RespMsgType*)buf)->DLL.FunctionCode) !=
-                m_resp_handler.end());
+        return QSIM_CheckCRC(buf, static_cast<u16>(length)) != 0;// &&
+               // ( m_resp_handler.find(((QCOM_RespMsgType*)buf)->DLL.FunctionCode) !=
+               // m_resp_handler.end());
     }
 
     void CommsQcom::HandlePacket(uint8_t buf[], int length)
@@ -355,10 +356,12 @@ namespace sg
         QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
 
         //CORE_AUTO(it, m_resp_handler.find(p->DLL.FunctionCode));
-        //if (it != m_resp_handler.end())
-        //{
+        auto it = m_resp_handler.find(p->DLL.FunctionCode);
+        if (it != m_resp_handler.end())
+        {
             // we already check if handler exist in CRC check, so we can sure to get the handler
-            CommsPacketHandlerPtr handler = m_resp_handler[p->DLL.FunctionCode];
+            // fix : delay check function code here to show error message
+            CommsPacketHandlerPtr handler = it->second; //m_resp_handler[p->DLL.FunctionCode];
 
             if (handler->Parse(buf, length))
             {
@@ -368,7 +371,11 @@ namespace sg
                 }
 
             }
-        //}
+        }
+        else
+        {
+            COMMS_LOG(boost::format("Receive unrecognized response. Code:0x%|02X|\n") % p->DLL.FunctionCode, CLL_Error);
+        }
     }
 
     QcomDataPtr CommsQcom::GetEgmData(uint8_t poll_address)
@@ -748,6 +755,33 @@ namespace sg
         {
             return false;
         }
+
+        return true;
+    }
+
+    bool CommsQcom::DecoratePoll(QcomPollPtr &p)
+    {
+        if (p)
+        {
+            QcomDataPtr pd = this->GetEgmData(p->poll.DLL.PollAddress);
+            if (pd)
+            {
+                // reset last control here to refresh the latest status of last control
+                // seems we've no need to lock data because at this time, no one can change last control?
+                //std::unique_lock<std::mutex> lock(pd->locker);
+                p->poll.DLL.ControlByte.CNTL = pd->data.control.last_control;
+            }
+            else
+            {
+                // this shouldn't happen
+                SG_ASSERT(false);
+                return false;
+            }
+        }
+
+        // calculate CRC here to avoid duplicate computing
+        PutCRC_LSBfirst(p->data, p->poll.DLL.Length);
+        p->length = p->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return true;
     }

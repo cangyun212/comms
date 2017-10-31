@@ -64,9 +64,8 @@ namespace sg
 
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + sizeof(qc_salrptype) - sizeof(poll->poll.Data.salrp.TEXT) + data.len;
 
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
+        //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        //poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
     }

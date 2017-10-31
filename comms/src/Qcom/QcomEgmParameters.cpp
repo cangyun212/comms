@@ -59,8 +59,8 @@ namespace sg {
         poll->poll.Data.egmpp2.NPWINP = data.npwinp;
         poll->poll.Data.egmpp2.SAPWINP = data.sapwinp;
 
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
+        //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        //poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
     }

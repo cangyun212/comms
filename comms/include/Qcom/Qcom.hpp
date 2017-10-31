@@ -403,6 +403,7 @@ namespace sg
         void    StopJobThread();
         bool    AddLPConfigData(uint16_t pgid, QcomProgressiveConfigData const& data);
         bool    GetLPConfigData(QcomLinkedProgressiveData &data);
+        bool    DecoratePoll(QcomPollPtr &p);
 
     private:
         void    HandleResponse(uint8_t buf[], int length);

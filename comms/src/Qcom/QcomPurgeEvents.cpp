@@ -92,8 +92,8 @@ namespace sg
         poll->poll.Data.pep.FLG = (uint8_t)0;
         poll->poll.Data.pep.EVTNO = evtno;
 
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
+        //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        //poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
     }

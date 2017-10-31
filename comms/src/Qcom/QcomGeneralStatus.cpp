@@ -60,8 +60,8 @@ namespace sg
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE;
         poll->poll.DLL.ControlByte.CNTL = last_control;
         poll->poll.DLL.FunctionCode = QCOM_GSP_FC;
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
+        //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        //poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
 

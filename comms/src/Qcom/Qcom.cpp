@@ -374,7 +374,8 @@ namespace sg
         }
         else
         {
-            COMMS_LOG(boost::format("Receive unrecognized response. Code:0x%|02X|\n") % p->DLL.FunctionCode, CLL_Error);
+            COMMS_LOG(boost::format("Receive unrecognized response. Code:0x%|02X|\n") 
+                % static_cast<uint32_t>(p->DLL.FunctionCode), CLL_Error);
         }
     }
 

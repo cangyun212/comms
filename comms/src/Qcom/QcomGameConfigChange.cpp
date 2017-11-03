@@ -26,11 +26,23 @@ namespace sg {
                 uint8_t game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
                 uint8_t game = 0;
 
-                for (; game < game_num; ++game)
+                // different with GameConfigPoll, we only need to find one available game
+                if (!gvn)
                 {
-                    if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY) &&
-                        !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ))
-                        break;
+                    for (; game < game_num; ++game)
+                    {
+                        if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY) &&
+                            !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ))
+                            break;
+                    }
+                }
+                else
+                {
+                    for (; game < game_num; ++game)
+                    {
+                        if (p->data.games[game].gvn == gvn)
+                            break;
+                    }
                 }
 
                 if (game != game_num)
@@ -38,9 +50,36 @@ namespace sg {
                     job->AddPoll(this->MakeGameConfigChangePoll(poll_address, p->data.control.last_control, gvn, data));
 
                     uint8_t var_lock = p->data.games[game].config.settings.var_lock;
+                    if (!p->data.games[game].config.settings.var_lock)
+                    {
+                        p->data.games[game].config.settings.var = data.var;
+                    }
 
-                    p->data.games[game].config.settings = data;
-                    p->data.games[game].config.settings.var_lock = var_lock;
+                    p->data.games[game].config.settings.game_enable = data.game_enable;
+
+                    if (!gvn)
+                    {
+                        for (uint8_t i = 0; i < game_num; ++i)
+                        {
+                            if ((p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_READY) &&
+                                p->data.games[i].config.settings.pgid == p->data.games[game].config.settings.pgid)
+                            {
+                                p->data.games[i].config.settings.pgid = data.pgid;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        p->data.games[game].config.settings.pgid = data.pgid;
+                    }
+
+                    // TODO : according Qcom1.6.15.4.4, the EGM will ignore this poll's entire message data are if either
+                    // VAR, GVN or PGID field is incorrect or not applicable to the game or EGM. so we may need to check
+                    // the data correctiness before we change egm data since there no response for this poll to tell us
+                    // if the change was applied.
+
+                    //p->data.games[game].config.settings = data;
+                    //p->data.games[game].config.settings.var_lock = var_lock;
 
                     return true;
 

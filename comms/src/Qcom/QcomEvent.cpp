@@ -5,7 +5,6 @@
 #include "Qcom/QcomEvent.hpp"
 #include "Qcom/qogr/qogr_crc.h"
 
-
 namespace sg
 {
     namespace
@@ -37,6 +36,46 @@ namespace sg
             }
 
             return (boost::format("Auth No: %|02d|-%|04d|-%|04d|-%|04d|-%|04d|") % nums[4] % nums[3] % nums[2] % nums[1] % nums[0]).str();
+        }
+
+        template<size_t N>
+        u8* qcom_lsb2msb_dbytes(u8(&lsb)[N], u8(&msb)[2*N])
+        {
+            const u8 lowMask = 0x0F;
+
+            for (size_t i = N; i > 0; --i)
+            {
+                msb[(N - i) * 2] = lsb[i - 1] >> 4;
+                msb[(N - i) * 2 + 1] = lsb[i - 1] & lowMask;
+            }
+
+            return msb;
+        }
+
+        size_t qcom_msb_find_first_nonzero(u8 *p, size_t len)
+        {
+            for (size_t i = 0; i < len; ++i)
+            {
+                if (p[i] != 0)
+                    return i;
+            }
+
+            return len;
+        }
+
+        template <size_t N>
+        const char* qcom_msb2seq(u8(&msb)[N], size_t pos, size_t &len)
+        {
+            if (pos < N)
+            {
+                len = N - pos;
+                return reinterpret_cast<const char*>(msb + pos);
+            }
+            else
+            {
+                len = 1;
+                return reinterpret_cast<const char*>(msb);
+            }
         }
 
         bool qcom_log_event(qc_ertype *d, uint32_t sermid, u32 sec, u32 min, u32 hour, u32 day, u32 month, u32 year)
@@ -654,7 +693,12 @@ namespace sg
                 ev = "EGM Ticket-In Timeout";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TIR)) 
                 {
-                    HexInteger authNo(d->EXTD.TIR.authno.AUTHNO, s_hexCode);
+                    u8 authno[32] = { 0 };
+                    size_t pos = qcom_msb_find_first_nonzero(qcom_lsb2msb_dbytes(d->EXTD.TIR.authno.AUTHNO, authno), 32);
+                    size_t len = 0;
+                    const char *p = qcom_msb2seq(authno, pos, len);
+
+                    HexInteger authNo(p, len, s_hexCode);
                     ext = qcom_barcode_str(authNo);
                     if (ext.empty())
                         err_authNo = true;
@@ -668,7 +712,12 @@ namespace sg
                 ev = "EGM Ticket-In Timeout";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TIR)) 
                 {
-                    HexInteger authNo(d->EXTD.TIR.authno.AUTHNO, s_hexCode);
+                    u8 authno[32] = { 0 };
+                    size_t pos = qcom_msb_find_first_nonzero(qcom_lsb2msb_dbytes(d->EXTD.TIR.authno.AUTHNO, authno), 32);
+                    size_t len = 0;
+                    const char *p = qcom_msb2seq(authno, pos, len);
+
+                    HexInteger authNo(p, len, s_hexCode);
                     ext = qcom_barcode_str(authNo);
                     if (ext.empty())
                         err_authNo = true;
@@ -803,7 +852,12 @@ namespace sg
                 ev = "EGM Cash Ticket In Request";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.TIR)) 
                 {
-                    HexInteger authNo(d->EXTD.TIR.authno.AUTHNO, s_hexCode);
+                    u8 authno[32] = { 0 };
+                    size_t pos = qcom_msb_find_first_nonzero(qcom_lsb2msb_dbytes(d->EXTD.TIR.authno.AUTHNO, authno), 32);
+                    size_t len = 0;
+                    const char *p = qcom_msb2seq(authno, pos, len);
+
+                    HexInteger authNo(p, len, s_hexCode);
                     ext = qcom_barcode_str(authNo);
 
                     if (ext.empty())

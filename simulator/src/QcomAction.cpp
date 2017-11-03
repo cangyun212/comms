@@ -90,15 +90,11 @@ namespace sg
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
-
-            res = false;
         }
         else
         {
             res = true;
         }
-
-
 
         return res;
     }
@@ -503,7 +499,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: purgeevents [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -792,7 +788,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: sd [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: pending [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -1008,6 +1004,7 @@ namespace sg
                 ActionOption("display", "display flag", Value<uint8>(&s_display)));
             m_options->AddOption(
                 ActionOption("icon", "icon display ID", Value<uint8>(&s_icon)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
 
@@ -1083,6 +1080,10 @@ namespace sg
             {
                 s_mef = 1;
             }
+            else
+            {
+                s_mef = 0;
+            }
 
             res = true;
         }
@@ -1097,6 +1098,7 @@ namespace sg
             m_options = MakeSharedPtr<ActionOptions>();
             m_options->AddOption(ActionOption("seed", "hash alogrithm seed", Value<std::vector<uint8> >(&s_seed), true));
             m_options->AddOption(ActionOption("mef", "machine enable flag"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
 
@@ -1208,6 +1210,7 @@ namespace sg
             m_options->AddOption(ActionOption("question", "use question style message during lockup if set"));
             m_options->AddOption(ActionOption("lamptest", "EGM turn on all its lamps during lockup if set"));
             m_options->AddOption(ActionOption("fanfare", "EGM trigger a short jackpot fanfare during lockup if set"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
 
@@ -1223,6 +1226,88 @@ namespace sg
         return des;
     }
 
+    std::string QcomCashTicketOutAckAction::s_certification;
+    std::string QcomCashTicketOutAckAction::s_authno("999999999999999999");
+    uint32 QcomCashTicketOutAckAction::s_amount = 0;
+    uint16 QcomCashTicketOutAckAction::s_serial = 0;
+    uint8 QcomCashTicketOutAckAction::s_approved = 0;
+    uint8 QcomCashTicketOutAckAction::s_canceled = 0;
+
+    QcomCashTicketOutAckAction::QcomCashTicketOutAckAction()
+        : Action(AT_QCOM_CASH_TICKET_OUT_ACK)
+    {
+
+    }
+
+    QcomCashTicketOutAckAction::~QcomCashTicketOutAckAction()
+    {
+
+    }
+
+    bool QcomCashTicketOutAckAction::Parse(ActionArgs const& args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: torack [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (vm.count("approve"))
+                s_approved = 1;
+            else
+                s_approved = 0;
+
+            if (vm.count("cancel"))
+                s_canceled = 1;
+            else
+                s_canceled = 0;
+
+            if (s_approved && s_canceled)
+            {
+                COMMS_LOG("torack can't use approve and cancel option at the same time.\n", CLL_Error);
+                res = false;
+            }
+
+        }
+
+        return res;
+    }
+
+    void QcomCashTicketOutAckAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("msg,m", "certification message", Value<std::string>(&s_certification)));
+            m_options->AddOption(ActionOption("authno", "ticket authorisation number displayed on the ticket, barcode number only", Value<std::string>(&s_authno)));
+            m_options->AddOption(ActionOption("amount", "ticket out amount in cents displayed as decimal currency of up to 11 characters", Value<uint32>(&s_amount)));
+            m_options->AddOption(ActionOption("serial", "ticket serial number", Value<uint16>(&s_serial)));
+            m_options->AddOption(ActionOption("approve", "approve cash ticket request if set, otherwise deny it. can't be used with cancel option together"));
+            m_options->AddOption(ActionOption("cancel", "cancel the cash request if set, egm will enter Cancel Credit Lockup. can't be used with approve option together"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomCashTicketOutAckAction::Clone()
+    {
+        return Action::DoClone<QcomCashTicketOutAckAction>();
+    }
+
+    const char* QcomCashTicketOutAckAction::Description() const
+    {
+        static const char * des = "\tCash Ticket Out Acknowledgement Poll:\n\t\tA SC will send this poll in response\
+                                    to each new valid Cash Ticket Out Request Event received from the EGM.\n";
+
+        return des;
+    }
 }
 
 

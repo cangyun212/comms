@@ -50,6 +50,7 @@ set(COMMS_QCOM_HEADER_FILES
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomExtJPInfo.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomProgramHashRequest.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomSystemLockupRequest.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomCashTickOutRequestAck.hpp
     )
 
 set(COMMS_QCOM_SOURCE_FILES
@@ -68,6 +69,7 @@ set(COMMS_QCOM_SOURCE_FILES
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomExtJPInfo.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomProgramHashRequest.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomSystemLockupRequest.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomCashTickOutRequest.cpp
     )
 
 set(COMMS_QCOM_QOGR_HEADER_FILES

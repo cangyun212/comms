@@ -98,6 +98,10 @@ namespace sg
         ptr->BuildOptions();
         m_actions["lockup"] = ptr;
 
+        ptr = MakeSharedPtr<QcomCashTicketOutAckAction>();
+        ptr->BuildOptions();
+        m_actions["torack"] = ptr;
+
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();
         m_actions["pending"] = ptr;

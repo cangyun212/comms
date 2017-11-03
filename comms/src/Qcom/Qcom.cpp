@@ -21,6 +21,7 @@
 #include "Qcom/QcomExtJPInfo.hpp"
 #include "Qcom/QcomProgramHashRequest.hpp"
 #include "Qcom/QcomSystemLockupRequest.hpp"
+#include "Qcom/QcomCashTicketOutRequestAck.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -151,6 +152,9 @@ namespace sg
         m_resp_handler.insert(std::make_pair(p->RespId(), p));
 
         p = MakeSharedPtr<QcomSysLockupReq>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomCashTicketOutRequestAck>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
 
         // TODO : ...
@@ -911,6 +915,19 @@ namespace sg
 
         QcomSysLockupReqPtr handler = std::static_pointer_cast<QcomSysLockupReq>(m_handler[QCOM_SALRP_FC]);
         if (!handler->BuildSysLockupReqPoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::CashTicketOutAck(uint8_t poll_address, QcomCashTicketOutRequestAckPollData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomCashTicketOutRequestAckPtr handler = std::static_pointer_cast<QcomCashTicketOutRequestAck>(m_handler[QCOM_TORACKP_FC]);
+        if (!handler->BuildCashTicketOutRequestAckPoll(job, poll_address, data))
             return;
 
         SG_QCOM_ADD_POLL_JOB(job);

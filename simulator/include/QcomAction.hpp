@@ -371,6 +371,35 @@ namespace sg
         static uint8                s_fanfare;
     };
 
+    class QcomCashTicketOutAckAction : public Action
+    {
+    public:
+        QcomCashTicketOutAckAction();
+       ~QcomCashTicketOutAckAction();
+
+    public:
+        bool        Parse(ActionArgs const& args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        std::string CertificationMessage() const { return s_certification; }
+        std::string AuthorisationNumber() const { return s_authno; }
+        uint32_t    Amount() const { return s_amount; }
+        uint16_t    Serial() const { return s_serial; }
+        uint8_t     Approved() const { return s_approved; }
+        uint8_t     Canceled() const { return s_canceled; }
+
+    private:
+        static std::string          s_certification;
+        static std::string          s_authno;
+        static uint32               s_amount;
+        static uint16               s_serial;
+        static uint8                s_approved;
+        static uint8                s_canceled;
+    };
+
     class QcomTimeDateAction : public Action
     {
     public:

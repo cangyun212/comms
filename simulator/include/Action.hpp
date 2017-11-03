@@ -50,6 +50,7 @@ namespace sg
             AT_QCOM_EXTJP_INFO,
             AT_QCOM_PROGHASH_REQUEST,
             AT_QCOM_SYSLOCKUP_REQUEST,
+            AT_QCOM_CASH_TICKET_OUT_ACK,
             AT_QCOM_PENDING,
             AT_QCOM_SEND,
  

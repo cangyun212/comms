@@ -29,6 +29,7 @@ namespace sg
                 uint8_t game_num = QCOM_MAX_GAME_NUM;
                 uint8_t game = 0;
 
+                uint8_t ivar = 0;
                 uint8_t ipnum = 0;
                 uint8_t inum = 0;
                 uint8_t ipnums[QCOM_REMAX_PCP];
@@ -55,8 +56,10 @@ namespace sg
                     {
                         QcomGameData &gc = pd->data.games[game];
 
-                        if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY)
+                        if (gc.config.settings.var == p->Data.pcr.VAR)
                         {
+                            gc.customSAP = p->Data.pcr.NUM.bits.customSAP;
+
                             if (gc.config.progressive_config.pnum != p->Data.pcr.NUM.bits.num)
                             {
                                 ipnum = gc.config.progressive_config.pnum;
@@ -99,22 +102,28 @@ namespace sg
                         }
                         else
                         {
-                            gc.customSAP = p->Data.pcr.NUM.bits.customSAP;
+                            ivar = p->Data.pcr.VAR;
+                            //gc.customSAP = p->Data.pcr.NUM.bits.customSAP;
                         }
 
-                        if (!ipnum && !inum)
+                        if (!ipnum && !inum && !ivar)
                             return true;
                     }
                 }
 
                 if (game == game_num)
                 {
-                    COMMS_LOG(boost::format("Can't find game(GVN: %|04X|) for the progressive config change\n") % 
+                    COMMS_LOG(boost::format("Can't find game(GVN: 0x%|04X|) for the progressive config change\n") % 
                         p->Data.pcr.GVN, CLL_Error);
+                }
+                else if (ivar)
+                {
+                    COMMS_LOG(boost::format("Invalid variation %|02d| of game(GVN: 0x%|04X|) received for progressive config change\n") %
+                        static_cast<uint32_t>(ivar) % p->Data.pcr.GVN, CLL_Error);
                 }
                 else if (ipnum)
                 {
-                    COMMS_LOG(boost::format("EGM report game(GVN: %|04X|) has %|| progressive levels instead of\
+                    COMMS_LOG(boost::format("EGM report game(GVN: 0x%|04X|) has %|| progressive levels instead of\
                         %|| levels which reported by local data\n") % 
                         p->Data.pcr.GVN % (unsigned int)p->Data.pcr.NUM.bits.num % (unsigned int)ipnum
                         , CLL_Error);
@@ -151,7 +160,6 @@ namespace sg
         {
             uint8_t ipnum = 0;
             bool igvn = false;
-            bool igame_state = false;
 
             QcomDataPtr p = it->GetEgmData(poll_address);
             if (p)
@@ -162,10 +170,12 @@ namespace sg
                 uint8_t game = 0;
                 if (!gvn)
                 {
-                    if (game_num != 1)
-                        game = game_num;
-                    else
-                        gvn = p->data.games[game].gvn;
+                    for (; game < game_num; ++game)
+                    {
+                        if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY) &&
+                            !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ))
+                            break;
+                    }
                 }
                 else
                 {
@@ -178,31 +188,24 @@ namespace sg
 
                 if (game != game_num)
                 {
-                    if (p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY)
+                    if (p->data.games[game].config.progressive_config.pnum == data.pnum)
                     {
-                        if (p->data.games[game].config.progressive_config.pnum == data.pnum)
-                        {
-                            job->AddPoll(this->MakeProgConfigPoll(poll_address, p->data.control.last_control, gvn, data));
+                        job->AddPoll(this->MakeProgConfigPoll(poll_address, p->data.control.last_control, gvn, data));
 
-                            p->data.control.game_config_state[game] |= QCOM_GAME_PC_CHANGE;
-                            
-                            QcomGameData &gc = p->data.games[game];
-                            gc.prog = data.prog;
-                            for (uint8_t i = 0; i < data.pnum; ++i)
-                            {
-                                gc.config.progressive_config.camt[i] = data.sup[i];
-                            }
+                        p->data.control.game_config_state[game] |= QCOM_GAME_PC_CHANGE;
 
-                            return true;
-                        }
-                        else
+                        QcomGameData &gc = p->data.games[game];
+                        gc.prog = data.prog;
+                        for (uint8_t i = 0; i < data.pnum; ++i)
                         {
-                            ipnum = p->data.games[game].config.progressive_config.pnum;
+                            gc.config.progressive_config.camt[i] = data.sup[i];
                         }
+
+                        return true;
                     }
                     else
                     {
-                        igame_state = true;
+                        ipnum = p->data.games[game].config.progressive_config.pnum;
                     }
                 }
                 else
@@ -214,10 +217,6 @@ namespace sg
             if (igvn)
             {
                 COMMS_LOG(boost::format("Can't change progressive config due to invalid GVN number: %|04X|\n") % gvn, CLL_Error);
-            }
-            else if (igame_state)
-            {
-                COMMS_LOG("Can't change progressive config before game is configed.\n", CLL_Error);
             }
             else if (ipnum)
             {

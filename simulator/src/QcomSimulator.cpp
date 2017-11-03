@@ -4,6 +4,7 @@
 
 #include "Utils.hpp"
 #include "Console/ConsoleTable.hpp"
+#include "BaseInteger.hpp"
 #include "Qcom/Qcom.hpp"
 #include "CmdParser.hpp"
 #include "Action.hpp"
@@ -427,8 +428,7 @@ namespace sg
 
             std::string text = p->Text();
             data.len = static_cast<uint8_t>(text.size());
-            data.len = data.len < QCOM_SALRP_TEXT_SIZE ? data.len : QCOM_SALRP_TEXT_SIZE;
-
+            data.len = data.len <= QCOM_SALRP_TEXT_SIZE ? data.len : QCOM_SALRP_TEXT_SIZE;
             std::memcpy(data.text, text.c_str(), data.len);
 
             data.no_resetkey = p->NoResetKey();
@@ -438,6 +438,67 @@ namespace sg
             data.fanfare = p->Fanfare();
 
             m_qcom->SystemLockup(m_curr_egm, data);
+        }
+    }
+
+    void QcomSim::CashTicketOutAck(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomCashTicketOutAckActionPtr p = std::static_pointer_cast<QcomCashTicketOutAckAction>(action);
+
+            QcomCashTicketOutRequestAckPollData data;
+
+            std::string certification = p->CertificationMessage();
+            data.clen = static_cast<uint8_t>(certification.size());
+            data.clen = data.clen <= QCOM_TORAP_MAX_CTEXT ? data.clen : QCOM_TORAP_MAX_CTEXT;
+            std::memcpy(data.certification, certification.c_str(), data.clen);
+
+            data.amount = p->Amount();
+            data.serial = p->Serial();
+
+            data.flag = 0;
+            if (p->Approved())
+                data.flag &= QCOM_CTO_APPROVE;
+            if (p->Canceled())
+                data.flag &= QCOM_CTO_CANCEL;
+
+            BaseDecimal dec;
+            DecimalInteger authno(p->AuthorisationNumber(), dec);
+            HexInteger hex(authno);
+
+            uint8_t digit = 0;
+            size_t i = 0;
+            for (; i < hex.GetCounts() && ((i / 2) < QCOM_AUTHO_BYTE_NUM); ++i)
+            {
+                if (i % 2) // high bit
+                {
+                    digit &= (hex.GetDigit(i) << 4);
+                    data.authno[i / 2] = digit;
+                    digit = 0;
+                }
+                else
+                {
+                    digit = hex.GetDigit(i);
+                }
+            }
+
+            if (i % 2 && ((i / 2) < QCOM_AUTHO_BYTE_NUM)) // hex counts is odd
+            {
+                data.authno[i / 2] = digit;
+            }
+
+            for (size_t j = (i / 2); j < QCOM_AUTHO_BYTE_NUM; ++j)
+            {
+                data.authno[j] = 0;
+            }
+
+            m_qcom->CashTicketOutAck(m_curr_egm, data);
         }
     }
 

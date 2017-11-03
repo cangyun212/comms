@@ -46,6 +46,12 @@
 #define QCOM_EGM_CONFIG_READY   0x02
 #define QCOM_EGM_HASH_READY     0x04
 
+#define QCOM_CTO_FAIL           0x00
+#define QCOM_CTO_CANCEL         0x01
+#define QCOM_CTO_APPROVE        0x02
+
+#define QCOM_AUTHO_BYTE_NUM     16
+
 namespace sg 
 {
     inline uint8_t  QcomNextPSN(uint8_t psn)
@@ -237,6 +243,16 @@ namespace sg
         uint8_t     fanfare;
     };
 
+    struct QcomCashTicketOutRequestAckPollData
+    {
+        char        certification[QCOM_TORAP_MAX_CTEXT];
+        uint8_t     authno[QCOM_AUTHO_BYTE_NUM];
+        uint32_t    amount;
+        uint16_t    serial;
+        uint8_t     flag;
+        uint8_t     clen;
+    };
+
     struct QcomEGMData
     {
         QcomEGMControlData              control;
@@ -343,6 +359,7 @@ namespace sg
         void    ProgHashRequest(uint8_t poll_address, QcomProgHashRequestData const& data);
         void    SystemLockup(uint8_t poll_address, QcomSysLockupRequestData const& data);
         void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
+        void    CashTicketOutAck(uint8_t poll_address, QcomCashTicketOutRequestAckPollData const& data);
 
         void    PendingPoll(size_t poll_num = 2);
         void    SendPoll();

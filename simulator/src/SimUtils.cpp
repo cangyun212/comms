@@ -185,6 +185,13 @@ namespace sg
 
             *connection = evt->connect(std::bind(&QcomSim::SysLockupRequest, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            connection = sim->Install(Action::AT_QCOM_CASH_TICKET_OUT_ACK);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_CASH_TICKET_OUT_ACK);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::CashTicketOutAck, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             return sim;
         }
 

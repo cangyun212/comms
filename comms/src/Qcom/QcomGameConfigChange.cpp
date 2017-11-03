@@ -49,7 +49,7 @@ namespace sg {
                 {
                     job->AddPoll(this->MakeGameConfigChangePoll(poll_address, p->data.control.last_control, gvn, data));
 
-                    uint8_t var_lock = p->data.games[game].config.settings.var_lock;
+                    //uint8_t var_lock = p->data.games[game].config.settings.var_lock;
                     if (!p->data.games[game].config.settings.var_lock)
                     {
                         p->data.games[game].config.settings.var = data.var;

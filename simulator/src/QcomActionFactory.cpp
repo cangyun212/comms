@@ -49,46 +49,47 @@ namespace sg
 
         ptr = MakeSharedPtr<QcomEGMConfRequestAction>();
         ptr->BuildOptions();
-        m_actions["configreq"] = ptr;
-        m_actions["cfrq"] = ptr;
+        m_actions["configrequest"] = ptr;
+        m_actions["cr"] = ptr;
 
         ptr = MakeSharedPtr<QcomEGMConfAction>();
         ptr->BuildOptions();
         m_actions["egmconfig"] = ptr;
-        m_actions["egmcf"] = ptr;
+        m_actions["cf"] = ptr;
 
         ptr = MakeSharedPtr<QcomGameConfigurationAction>();
         ptr->BuildOptions();
         m_actions["gameconfig"] = ptr;
-        m_actions["gconf"] = ptr;
+        m_actions["gc"] = ptr;
 
         ptr = MakeSharedPtr<QcomGameConfigurationChangeAction>();
         ptr->BuildOptions();
         m_actions["gameconfigchange"] = ptr;
-        m_actions["gconfchg"] = ptr;
+        m_actions["cc"] = ptr;
 
         ptr = MakeSharedPtr<QcomEGMParametersAction>();
         ptr->BuildOptions();
-        m_actions["egmparameters"] = ptr;
         m_actions["egmparams"] = ptr;
+        m_actions["pp"] = ptr;
 
         ptr = MakeSharedPtr<QcomPurgeEventsAction>();
         ptr->BuildOptions();
         m_actions["purgeevents"] = ptr;
-        m_actions["pevents"] = ptr;
+        m_actions["pe"] = ptr;
 
         ptr = MakeSharedPtr<QcomEGMGeneralStatusAction>();
-        m_actions["genstatus"] = ptr;
-        m_actions["gss"] = ptr;
+        m_actions["generalstatus"] = ptr;
+        m_actions["gs"] = ptr;
 
         ptr = MakeSharedPtr<QcomProgressiveConfigAction>();
         ptr->BuildOptions();
         m_actions["progressive"] = ptr;
-        m_actions["prog"] = ptr;
+        m_actions["pc"] = ptr;
 
         ptr = MakeSharedPtr<QcomExtJPInfoAction>();
         ptr->BuildOptions();
-        m_actions["extjp"] = ptr;
+        m_actions["extjackpotinfo"] = ptr;
+        m_actions["extjpi"] = ptr;
 
         ptr = MakeSharedPtr<QcomProgHashRequestAction>();
         ptr->BuildOptions();

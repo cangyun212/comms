@@ -86,7 +86,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: configreq [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: configrequest [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -119,7 +119,7 @@ namespace sg
 
     const char* QcomEGMConfRequestAction::Description() const
     {
-        const char* des = "\tEGM configuration request :\n\t\tcfrq,configreq\n";
+        const char* des = "\tEGM configuration request :\n\t\tcr,configrequest\n";
         return des;
     }
 
@@ -218,7 +218,7 @@ namespace sg
 
     const char* QcomEGMConfAction::Description() const
     {
-        static const char* des = "\tEGM configuration :\n\t\tegmcf,egmconfig\n";
+        static const char* des = "\tEGM configuration :\n\t\tcf,egmconfig\n";
         return des;
     }
 
@@ -303,7 +303,7 @@ namespace sg
 
     const char* QcomGameConfigurationAction::Description() const
     {
-        static const char* des = "\tGame configuration :\n\t\tgconf,gameconfig\n";
+        static const char* des = "\tGame configuration :\n\t\tgc,gameconfig\n";
         return des;
     }
 
@@ -348,7 +348,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gconfchg [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: gameconfigchange [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -384,7 +384,7 @@ namespace sg
 
     const char *QcomGameConfigurationChangeAction::Description() const
     {
-        static const char* des = "\tGame configuration change:\n\t\tgconfchg,gameconfigchange\n";
+        static const char* des = "\tGame configuration change:\n\t\tcc,gameconfigchange\n";
         return des;
     }
 
@@ -471,7 +471,7 @@ namespace sg
 
     const char *QcomEGMParametersAction::Description() const
     {
-        static const char* des = "\tEGM Parameters:\n\t\tegmparams,egmparameters\n";
+        static const char* des = "\tEGM Parameters:\n\t\tpp,egmparams\n";
         return des;
     }
 
@@ -533,7 +533,7 @@ namespace sg
 
     const char *QcomPurgeEventsAction::Description() const
     {
-        static const char* des = "\tPurge Events:\n\t\tpevents,purgeevents\n";
+        static const char* des = "\tPurge Events:\n\t\tpe,purgeevents\n";
         return des;
     }
 
@@ -964,7 +964,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: extjp [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: extjackpotinfo [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();

@@ -192,6 +192,62 @@ namespace sg
 
             *connection = evt->connect(std::bind(&QcomSim::CashTicketOutAck, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            connection = sim->Install(Action::AT_QCOM_CASH_TICKET_IN_ACK);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_CASH_TICKET_IN_ACK);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::CashTicketInAck, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_CASH_TICKET_OUT_REQ);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_CASH_TICKET_OUT_REQ);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::CashTicketOutRequest, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_EGM_GENERAL_MAINTENANCE);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_EGM_GENERAL_MAINTENANCE);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::EGMGeneralMaintenance, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_REQ_ALL_LOGGED_EVENTS);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_REQ_ALL_LOGGED_EVENTS);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::RequestAllLoggedEvents, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_NOTE_ACCEPTOR_MAINTENANCE);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_NOTE_ACCEPTOR_MAINTENANCE);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::NoteAcceptorMaintenance, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_HOPPPER_TICKET_PRINTER);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_HOPPPER_TICKET_PRINTER);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::HopperTicketPrinterMaintenance, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_LP_AWARD_ACK);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_LP_AWARD_ACK);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::LPAwardAck, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_GENERAL_RESET);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_GENERAL_RESET);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::GeneralReset, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             return sim;
         }
 

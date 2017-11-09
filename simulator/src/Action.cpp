@@ -166,6 +166,10 @@ namespace sg
             {
                 s_list_all = true;
             }
+            else
+            {
+                s_list_all = false;
+            }
 
             res = true;
         }
@@ -202,6 +206,11 @@ namespace sg
 
     }
 
+    void PickEGMAction::ResetArgOptions()
+    {
+        s_egm = 0;
+    }
+
     ActionPtr PickEGMAction::Clone()
     {
         return DoClone<PickEGMAction>();
@@ -213,7 +222,7 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("egm", "", Value<uint8>(&s_egm), 1));
+            m_options->AddOption(ActionOption("egm", "", Value<uint8>(&s_egm), false, 1));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -221,6 +230,8 @@ namespace sg
     bool PickEGMAction::Parse(const ActionArgs &args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
@@ -273,11 +284,19 @@ namespace sg
 
     std::string ResetDevAction::s_dev;
 
-    ResetDevAction::ResetDevAction() : Action(Action::AT_RESET_DEV)
+    ResetDevAction::ResetDevAction() 
+        : Action(Action::AT_RESET_DEV)
     {
     }
 
-    ResetDevAction::~ResetDevAction() {}
+    ResetDevAction::~ResetDevAction() 
+    {
+    }
+
+    void ResetDevAction::ResetArgOptions()
+    {
+        s_dev.clear();
+    }
 
     ActionPtr ResetDevAction::Clone()
     {
@@ -288,14 +307,16 @@ namespace sg
     {
         bool res = false;
 
+        this->ResetArgOptions();
+
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help") || !vm.count("dev"))
         {
             COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: resetdev/dev <dev_path>\n");
-            COMMS_PRINT(vis_desc);
-            COMMS_PRINT("\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
 
             res = false;
@@ -316,7 +337,7 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("dev", "", Value<std::string>(&s_dev), 1));
+            m_options->AddOption(ActionOption("dev", "", Value<std::string>(&s_dev), false, 1));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }

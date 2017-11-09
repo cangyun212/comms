@@ -51,6 +51,14 @@ set(COMMS_QCOM_HEADER_FILES
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomProgramHashRequest.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomSystemLockupRequest.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomCashTicketOutRequestAck.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomCashTicketInRequestAck.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomCashOutRequest.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomEgmGeneralMaintenance.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomRequestAllLoggedEvents.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomNoteAcceptorMaintenance.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomHTPMaintenance.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomLPAwardAck.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomGeneralReset.hpp
     )
 
 set(COMMS_QCOM_SOURCE_FILES
@@ -70,6 +78,14 @@ set(COMMS_QCOM_SOURCE_FILES
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomProgramHashRequest.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomSystemLockupRequest.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomCashTicketOutRequestAck.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomCashTicketInRequestAck.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomCashOutRequest.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmGeneralMaintance.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomRequestAllLoggedEvents.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomNoteAcceptorMaintenance.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomHTPMaintenance.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomLPAwardAck.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomGeneralReset.cpp
     )
 
 set(COMMS_QCOM_QOGR_HEADER_FILES

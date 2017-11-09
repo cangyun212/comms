@@ -228,7 +228,7 @@ namespace sg
                 }
                 else
                 {
-                    COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : %1%.") %
+                    COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : 0x%|04X|.") %
                               gvn, CLL_Error);
                 }
             }

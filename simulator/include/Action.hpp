@@ -51,6 +51,14 @@ namespace sg
             AT_QCOM_PROGHASH_REQUEST,
             AT_QCOM_SYSLOCKUP_REQUEST,
             AT_QCOM_CASH_TICKET_OUT_ACK,
+            AT_QCOM_CASH_TICKET_IN_ACK,
+            AT_QCOM_CASH_TICKET_OUT_REQ,
+            AT_QCOM_EGM_GENERAL_MAINTENANCE,
+            AT_QCOM_REQ_ALL_LOGGED_EVENTS,
+            AT_QCOM_NOTE_ACCEPTOR_MAINTENANCE,
+            AT_QCOM_HOPPPER_TICKET_PRINTER,
+            AT_QCOM_LP_AWARD_ACK,
+            AT_QCOM_GENERAL_RESET,
             AT_QCOM_PENDING,
             AT_QCOM_SEND,
  
@@ -83,6 +91,8 @@ namespace sg
 
             return ptr;
         }
+
+        virtual void ResetArgOptions() {}
 
     protected:
         ActionType          m_type;
@@ -131,6 +141,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         uint8_t     Target() const { return s_egm; }
 
@@ -161,7 +174,12 @@ namespace sg
         void        BuildOptions() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
         const std::string  & GetDev() { return s_dev; }
+
     private:
         static std::string s_dev;
     };

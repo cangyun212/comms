@@ -23,6 +23,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         size_t      PollNum() const { return s_pollnum; }
 
@@ -39,9 +42,6 @@ namespace sg
     public:
         ActionPtr   Clone() override;
         const char* Description() const override;
-
-    private:
-
     };
 
     class QcomSeekEGMAction : public Action
@@ -119,6 +119,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         uint8_t     JUR() const { return s_jur; }
         uint32_t    DEN() const { return s_den; }
@@ -160,6 +163,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         uint16_t    GVN() const { return s_gvn; }
         uint16_t    PGID() const { return s_pgid; }
@@ -192,6 +198,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         uint16_t    GVN() const { return s_gvn; }
         uint16_t    PGID() const { return s_pgid; }
@@ -216,6 +225,9 @@ namespace sg
         void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
 
     public:
         uint8_t  Reserve() const { return s_reserve; }
@@ -262,11 +274,14 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
-        uint8_t     EVTNO() const { return m_evtno; }
+        uint8_t     EVTNO() const { return s_evtno; }
 
     private:
-        static uint8  m_evtno;
+        static uint8  s_evtno;
     };
 
     class QcomProgressiveConfigAction : public Action
@@ -280,6 +295,9 @@ namespace sg
         void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
 
     public:
         uint8_t     ProgChangeData(uint32_t *sup, uint32_t *pinc, uint32_t *ceil, uint32_t *auxrtp) const;
@@ -304,6 +322,9 @@ namespace sg
         void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
 
     public:
         uint8_t     ExtJPData(uint16_t *epgid, uint8_t *lumf, char (*lname)[16]) const;
@@ -332,6 +353,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         uint8_t     MEF() const { return s_mef; }
         uint8_t     Seed(uint8_t *seed, size_t len);
@@ -353,6 +377,9 @@ namespace sg
         void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
 
     public:
         std::string Text() const { return s_text; }
@@ -383,6 +410,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         std::string CertificationMessage() const { return s_certification; }
         std::string AuthorisationNumber() const { return s_authno; }
@@ -398,6 +428,188 @@ namespace sg
         static uint16               s_serial;
         static uint8                s_approved;
         static uint8                s_canceled;
+    };
+
+    class QcomCashTicketInAckAction : public Action
+    {
+    public:
+        QcomCashTicketInAckAction();
+        ~QcomCashTicketInAckAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        std::string AuthorisationNumber() const { return s_authno; }
+        uint32_t    Amount() const { return s_amount; }
+        uint8_t     FCode() const { return s_fcode; }
+
+    private:
+        static std::string      s_authno;
+        static uint8            s_fcode;
+        static uint32           s_amount;
+    };
+
+    class QcomCashTicketOutRequestAction : public Action
+    {
+    public:
+        QcomCashTicketOutRequestAction();
+       ~QcomCashTicketOutRequestAction();
+
+    public:
+
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+    };
+
+    class QcomEGMGeneralMaintenanceAction: public Action
+    {
+    public:
+        QcomEGMGeneralMaintenanceAction();
+       ~QcomEGMGeneralMaintenanceAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        uint8_t     MetersGroupFlag(uint8_t index) const;
+        uint16_t    GVN() const { return s_gvn; }
+        uint8_t     Qnasr() const { return s_nasr; }
+        uint8_t     MEF() const { return s_mef; }
+        uint8_t     VAR() const { return s_var; }
+        uint8_t     Qpcmr() const { return s_pcmr; }
+        uint8_t     Qbmr() const { return s_bmr; }
+        uint8_t     Qgmecfg() const { return s_gmecfg; }
+        uint8_t     Qprogcfg() const { return s_progcfg; }
+        uint8_t     Qprogmeters() const { return s_progmeters; }
+        uint8_t     Qmultigame() const { return s_multigame; }
+        uint8_t     GEF() const { return s_gef; }
+
+    private:
+        static std::vector<uint8>   s_meters;
+        static uint16   s_gvn;
+        static uint8    s_nasr;
+        static uint8    s_mef;
+        static uint8    s_var;
+        static uint8    s_pcmr;
+        static uint8    s_bmr;
+        static uint8    s_gmecfg;
+        static uint8    s_progcfg;
+        static uint8    s_progmeters;
+        static uint8    s_multigame;
+        static uint8    s_gef;
+    };
+
+    class QcomRequestAllLoggedEventsAction : public Action
+    {
+    public:
+        QcomRequestAllLoggedEventsAction();
+       ~QcomRequestAllLoggedEventsAction();
+
+    public:
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+    };
+
+    class QcomNoteAcceptorMaintenanceAction : public Action
+    {
+    public:
+        QcomNoteAcceptorMaintenanceAction();
+       ~QcomNoteAcceptorMaintenanceAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        uint8_t     GetDenomFlag(uint8_t denom) const;
+
+    private:
+        static std::vector<uint8> s_denoms;
+    };
+
+    class QcomHopperTicketPrinterMaintenanceAction : public Action
+    {
+    public:
+        QcomHopperTicketPrinterMaintenanceAction();
+       ~QcomHopperTicketPrinterMaintenanceAction();
+
+     public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        uint8_t     Test() const { return s_test; }
+        uint32_t    Refill() const { return s_refill; }
+        uint32_t    Ticket() const { return s_ticket; }
+        uint32_t    COLLIM() const { return s_collim; }
+        uint32_t    DoRefill() const { return s_dorefill; }
+
+    private:
+       static  uint8       s_test;
+       static  uint32      s_refill;
+       static  uint32      s_collim;
+       static  uint32      s_ticket;
+       static  uint32      s_dorefill;
+    };
+
+    class QcomLPAwardAckAction : public Action
+    {
+    public:
+        QcomLPAwardAckAction();
+        ~QcomLPAwardAckAction();
+
+    public:
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+    };
+
+    class QcomGeneralResetAction : public Action
+    {
+    public:
+        QcomGeneralResetAction();
+       ~QcomGeneralResetAction();
+
+     public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        uint8_t     Fault() const { return s_fault; }
+        uint8_t     Lockup() const { return s_lockup; }
+        uint8_t     State() const { return s_state; }
+
+    private:
+        static uint8      s_fault;
+        static uint8      s_lockup;
+        static uint8      s_state;
     };
 
     class QcomTimeDateAction : public Action
@@ -424,6 +636,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         uint8_t     LPData(uint32_t *lpamt, uint16_t *pgid, uint8_t *plvl);
 
@@ -444,6 +659,9 @@ namespace sg
         ActionPtr   Clone() override;
         const char* Description() const override;
 
+    protected:
+        void        ResetArgOptions() override;
+
     public:
         std::string Text() const { return s_text; }
 
@@ -462,6 +680,9 @@ namespace sg
         void        BuildOptions() override;
         ActionPtr   Clone() override;
         const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
 
     public:
         std::string SText() const { return s_stext; }

@@ -50,7 +50,7 @@
 #define QCOM_CTO_CANCEL         0x01
 #define QCOM_CTO_APPROVE        0x02
 
-#define QCOM_AUTHO_BYTE_NUM     16
+#define QCOM_AUTHNO_BYTE_NUM     16
 
 namespace sg 
 {
@@ -246,11 +246,67 @@ namespace sg
     struct QcomCashTicketOutRequestAckPollData
     {
         char        certification[QCOM_TORAP_MAX_CTEXT];
-        uint8_t     authno[QCOM_AUTHO_BYTE_NUM];
+        uint8_t     authno[QCOM_AUTHNO_BYTE_NUM];
         uint32_t    amount;
         uint16_t    serial;
         uint8_t     flag;
         uint8_t     clen;
+    };
+
+    struct QcomCashTicketInRequestAckPollData
+    {
+        uint8_t     authno[QCOM_AUTHNO_BYTE_NUM];
+        uint32_t    amount;
+        uint8_t     fcode;
+    };
+
+    struct QcomEGMGeneralMaintenancePollData
+    {
+        uint8_t     meter_group_0;
+        uint8_t     meter_group_1;
+        uint8_t     meter_group_2;
+        uint8_t     note_acceptor_status;
+        uint8_t     mef;
+        uint8_t     var;
+        uint8_t     player_choice_meter;
+        uint8_t     bet_meters;
+        uint8_t     progconfig;
+        uint8_t     gameconfig;
+        uint8_t     progmeters;
+        uint8_t     multigame;
+        uint8_t     gef;
+    };
+
+    struct QcomNoteAcceptorMaintenanceData
+    {
+        uint8_t     five;
+        uint8_t     ten;
+        uint8_t     twenty;
+        uint8_t     fifty;
+        uint8_t     hundred;
+    };
+
+    struct QcomNoteAcceptorStatusData
+    {
+        QcomNoteAcceptorMaintenanceData nam;
+        char        nads[QCOM_NASR_NADS_SIZE];
+        uint8_t     full;
+
+    };
+
+    struct QcomHopperTicketPrinterData
+    {
+        uint32_t    refill;
+        uint32_t    collim;
+        uint32_t    ticket;
+        uint32_t    dorefill;
+    };
+
+    struct QcomGeneralResetPollData
+    {
+        uint8_t     fault;
+        uint8_t     lockup;
+        uint8_t     state;
     };
 
     struct QcomEGMData
@@ -261,6 +317,8 @@ namespace sg
         QcomEGMParametersData           param;
         QcomEGMStatusData               status;
         QcomExtJPInfoData               extjpinfo;
+        QcomNoteAcceptorStatusData      nasr;
+        QcomHopperTicketPrinterData     htp;
         QcomGameData                    games[QCOM_MAX_GAME_NUM];
     };
 
@@ -360,7 +418,14 @@ namespace sg
         void    SystemLockup(uint8_t poll_address, QcomSysLockupRequestData const& data);
         void    PurgeEvents(uint8_t poll_address, uint8_t evtno);
         void    CashTicketOutAck(uint8_t poll_address, QcomCashTicketOutRequestAckPollData const& data);
-
+        void    CashTicketInAck(uint8_t poll_address, QcomCashTicketInRequestAckPollData const& data);
+        void    CashTicketOutReqeust(uint8_t poll_address);
+        void    EGMGeneralMaintenance(uint8_t poll_address, uint16_t gvn, QcomEGMGeneralMaintenancePollData const& data);
+        void    RequestAllLoggedEvents(uint8_t poll_address);
+        void    NoteAcceptorMaintenance(uint8_t poll_address, QcomNoteAcceptorMaintenanceData const& data);
+        void    HopperTicketPrinterMaintenance(uint8_t poll_address, uint8_t test, QcomHopperTicketPrinterData const& data);
+        void    LPAwardAck(uint8_t poll_address);
+        void    GeneralReset(uint8_t poll_address, QcomGeneralResetPollData const& data);
         void    PendingPoll(size_t poll_num = 2);
         void    SendPoll();
 

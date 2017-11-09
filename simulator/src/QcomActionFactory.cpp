@@ -103,6 +103,37 @@ namespace sg
         ptr->BuildOptions();
         m_actions["torack"] = ptr;
 
+        ptr = MakeSharedPtr<QcomCashTicketInAckAction>();
+        ptr->BuildOptions();
+        m_actions["tirack"] = ptr;
+
+        ptr = MakeSharedPtr<QcomCashTicketOutRequestAction>();
+        m_actions["reqto"] = ptr;
+
+        ptr = MakeSharedPtr<QcomEGMGeneralMaintenanceAction>();
+        m_actions["generalmainten"] = ptr;
+        m_actions["gm"] = ptr;
+
+        ptr = MakeSharedPtr<QcomRequestAllLoggedEventsAction>();
+        m_actions["reqevents"] = ptr;
+
+        ptr = MakeSharedPtr<QcomNoteAcceptorMaintenanceAction>();
+        ptr->BuildOptions();
+        m_actions["nam"] = ptr;
+
+        ptr = MakeSharedPtr<QcomHopperTicketPrinterMaintenanceAction>();
+        ptr->BuildOptions();
+        m_actions["htpm"] = ptr;
+
+        ptr = MakeSharedPtr<QcomLPAwardAckAction>();
+        ptr->BuildOptions();
+        m_actions["lpack"] = ptr;
+        m_actions["la"] = ptr;
+
+        ptr = MakeSharedPtr<QcomGeneralResetAction>();
+        ptr->BuildOptions();
+        m_actions["reset"] = ptr;
+
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();
         m_actions["pending"] = ptr;

@@ -474,7 +474,7 @@ namespace sg
 
             uint8_t digit = 0;
             size_t i = 0;
-            for (; i < hex.GetCounts() && ((i / 2) < QCOM_AUTHO_BYTE_NUM); ++i)
+            for (; i < hex.GetCounts() && ((i / 2) < QCOM_AUTHNO_BYTE_NUM); ++i)
             {
                 if (i % 2) // high bit
                 {
@@ -488,17 +488,203 @@ namespace sg
                 }
             }
 
-            if (i % 2 && ((i / 2) < QCOM_AUTHO_BYTE_NUM)) // hex counts is odd
+            if (i % 2 && ((i / 2) < QCOM_AUTHNO_BYTE_NUM)) // hex counts is odd
             {
                 data.authno[i / 2] = digit;
             }
 
-            for (size_t j = (i / 2); j < QCOM_AUTHO_BYTE_NUM; ++j)
+            for (size_t j = (i / 2); j < QCOM_AUTHNO_BYTE_NUM; ++j)
             {
                 data.authno[j] = 0;
             }
 
             m_qcom->CashTicketOutAck(m_curr_egm, data);
+        }
+    }
+
+    void QcomSim::CashTicketInAck(const ActionCenter &sender, const ActionPtr &action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomCashTicketInAckActionPtr p = std::static_pointer_cast<QcomCashTicketInAckAction>(action);
+
+            QcomCashTicketInRequestAckPollData data;
+
+            data.amount = p->Amount();
+            data.fcode = p->FCode();
+
+            BaseDecimal dec;
+            DecimalInteger authno(p->AuthorisationNumber(), dec);
+            HexInteger hex(authno);
+
+            uint8_t digit = 0;
+            size_t i = 0;
+            for (; i < hex.GetCounts() && ((i / 2) < QCOM_AUTHNO_BYTE_NUM); ++i)
+            {
+                if (i % 2) // high bit
+                {
+                    digit &= (hex.GetDigit(i) << 4);
+                    data.authno[i / 2] = digit;
+                    digit = 0;
+                }
+                else
+                {
+                    digit = hex.GetDigit(i);
+                }
+            }
+
+            if (i % 2 && ((i / 2) < QCOM_AUTHNO_BYTE_NUM)) // hex counts is odd
+            {
+                data.authno[i / 2] = digit;
+            }
+
+            for (size_t j = (i / 2); j < QCOM_AUTHNO_BYTE_NUM; ++j)
+            {
+                data.authno[j] = 0;
+            }
+
+            m_qcom->CashTicketInAck(m_curr_egm, data);
+        }
+    }
+
+    void QcomSim::CashTicketOutRequest(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            m_qcom->CashTicketOutReqeust(m_curr_egm);
+        }
+    }
+
+    void QcomSim::EGMGeneralMaintenance(const ActionCenter & sender, const ActionPtr & action)
+    {
+
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomEGMGeneralMaintenanceActionPtr p = std::static_pointer_cast<QcomEGMGeneralMaintenanceAction>(action);
+
+            QcomEGMGeneralMaintenancePollData data;
+
+            data.meter_group_0 = p->MetersGroupFlag(0);
+            data.meter_group_1 = p->MetersGroupFlag(1);
+            data.meter_group_2 = p->MetersGroupFlag(2);
+            data.note_acceptor_status = p->Qnasr();
+            data.mef = p->MEF();
+            data.var = p->VAR();
+            data.player_choice_meter = p->Qpcmr();
+            data.bet_meters = p->Qbmr();
+            data.progconfig = p->Qprogcfg();
+            data.gameconfig = p->Qgmecfg();
+            data.progmeters = p->Qprogmeters();
+            data.multigame = p->Qmultigame();
+            data.gef = p->GEF();
+
+            m_qcom->EGMGeneralMaintenance(m_curr_egm, p->GVN(), data);
+        }
+    }
+
+    void QcomSim::RequestAllLoggedEvents(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            m_qcom->RequestAllLoggedEvents(m_curr_egm);
+        }
+    }
+
+    void QcomSim::NoteAcceptorMaintenance(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomNoteAcceptorMaintenanceActionPtr p = std::static_pointer_cast<QcomNoteAcceptorMaintenanceAction>(action);
+
+            QcomNoteAcceptorMaintenanceData data;
+            data.five = p->GetDenomFlag(5);
+            data.ten = p->GetDenomFlag(10);
+            data.twenty = p->GetDenomFlag(20);
+            data.fifty = p->GetDenomFlag(50);
+            data.hundred = p->GetDenomFlag(100);
+
+            m_qcom->NoteAcceptorMaintenance(m_curr_egm, data);
+        }
+    }
+
+    void QcomSim::HopperTicketPrinterMaintenance(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomHopperTicketPrinterMaintenanceActionPtr p = std::static_pointer_cast<QcomHopperTicketPrinterMaintenanceAction>(action);
+
+            QcomHopperTicketPrinterData data;
+            data.refill = p->Refill();
+            data.collim = p->COLLIM();
+            data.ticket = p->Ticket();
+            data.dorefill = p->DoRefill();
+
+            m_qcom->HopperTicketPrinterMaintenance(m_curr_egm, p->Test(), data);
+        }
+    }
+
+    void QcomSim::LPAwardAck(const ActionCenter &sender, const ActionPtr &action)
+    {
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            m_qcom->LPAwardAck(m_curr_egm);
+        }
+    }
+
+    void QcomSim::GeneralReset(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomGeneralResetActionPtr p = std::static_pointer_cast<QcomGeneralResetAction>(action);
+
+            QcomGeneralResetPollData data;
+            data.fault = p->Fault();
+            data.lockup = p->Lockup();
+            data.state = p->State();
+
+            m_qcom->GeneralReset(m_curr_egm, data);
         }
     }
 

@@ -82,6 +82,8 @@ namespace sg
         std::vector<ActionOption>   m_options;
     };
 
+#define SG_SET_FLAG_OPTION(option, value) if (vm.count(option)) value = 1; else value = 0;
+
 #define SG_FILL_DESC(desc, vis_desc, pos_desc) [&](ActionOption const& option) {\
                                                     if (option.value) {\
                                                         desc.add_options()(option.name.c_str(), option.value->value(option.multitoken), "");\

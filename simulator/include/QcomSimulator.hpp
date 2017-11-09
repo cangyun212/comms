@@ -40,6 +40,14 @@ namespace sg {
         void    ProgHashRequest(const ActionCenter &sender, const ActionPtr &action);
         void    SysLockupRequest(const ActionCenter &sender, const ActionPtr &action);
         void    CashTicketOutAck(const ActionCenter &sender, const ActionPtr &action);
+        void    CashTicketInAck(const ActionCenter &sender, const ActionPtr &action);
+        void    CashTicketOutRequest(const ActionCenter &sender, const ActionPtr &action);
+        void    EGMGeneralMaintenance(const ActionCenter &sender, const ActionPtr &action);
+        void    RequestAllLoggedEvents(const ActionCenter &sender, const ActionPtr &action);
+        void    NoteAcceptorMaintenance(const ActionCenter &sender, const ActionPtr &action);
+        void    HopperTicketPrinterMaintenance(const ActionCenter &sender, const ActionPtr &action);
+        void    LPAwardAck(const ActionCenter &sender, const ActionPtr &action);
+        void    GeneralReset(const ActionCenter &sender, const ActionPtr &action);
         void    PendingPoll(const ActionCenter &sender, const ActionPtr &action);
         void    SendPoll(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);

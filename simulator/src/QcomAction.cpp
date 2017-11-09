@@ -63,9 +63,9 @@ namespace sg
         return des;
     }
 
-    uint8 QcomEGMConfRequestAction::s_mef = 1;
-    uint8 QcomEGMConfRequestAction::s_gcr = 1;
-    uint8 QcomEGMConfRequestAction::s_psn = 1;
+    uint8 QcomEGMConfRequestAction::s_mef = 0;
+    uint8 QcomEGMConfRequestAction::s_gcr = 0;
+    uint8 QcomEGMConfRequestAction::s_psn = 0;
 
     QcomEGMConfRequestAction::QcomEGMConfRequestAction()
         : Action(Action::AT_QCOM_EGM_CONF_REQ)
@@ -86,13 +86,17 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: configrequest [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: configrequest/cr [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
         }
         else
         {
+            SG_SET_FLAG_OPTION("mef", s_mef);
+            SG_SET_FLAG_OPTION("gcr", s_gcr);
+            SG_SET_FLAG_OPTION("psn", s_psn);
+
             res = true;
         }
 
@@ -105,9 +109,9 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("mef,m", "enable egm machine", Value<uint8>(&s_mef)));
-            m_options->AddOption(ActionOption("gcr,g", "commands egm queue the EGM Game configuration Response", Value<uint8>(&s_gcr)));
-            m_options->AddOption(ActionOption("psn,p", "reset all Poll Sequence Numbers", Value<uint8>(&s_psn)));
+            m_options->AddOption(ActionOption("mef,m", "enable egm machine if set, otherwise disable it"));
+            m_options->AddOption(ActionOption("gcr,g", "commands egm queue the EGM Game configuration Response if set"));
+            m_options->AddOption(ActionOption("psn,p", "reset all Poll Sequence Numbers if set"));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -137,7 +141,7 @@ namespace sg
     uint32    QcomEGMConfAction::s_maxect = 1000000;
 
     QcomEGMConfAction::QcomEGMConfAction()
-                    : Action(Action::AT_QCOM_EGM_CONF)
+        : Action(Action::AT_QCOM_EGM_CONF)
     {
     }
 
@@ -146,16 +150,34 @@ namespace sg
 
     }
 
+    void QcomEGMConfAction::ResetArgOptions()
+    {
+        s_jur = 0;
+        s_den = 1;
+        s_tok = 100;
+        s_maxden = 1000;
+        s_minrtp = 5000;
+        s_maxrtp = 9999;
+        s_maxsd = 65535;
+        s_maxlines = 65535;
+        s_maxbet = 4294967295;
+        s_maxnpwin = 4294967295;
+        s_maxpwin = 4294967295;
+        s_maxect = 1000000;
+    }
+
     bool QcomEGMConfAction::Parse(const Action::ActionArgs &args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: egmconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: egmconfig/cf [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -177,7 +199,7 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("jur","jurisdictions", Value<uint8>(&s_jur)));
+            m_options->AddOption(ActionOption("jur", "jurisdictions", Value<uint8>(&s_jur)));
             m_options->AddOption(ActionOption("den", "credit denomination", Value<uint32>(&s_den)));
             m_options->AddOption(ActionOption("tok", "coin/token denomination", Value<uint32>(&s_tok)));
             m_options->AddOption(ActionOption("maxden", "EGM credit meter max denomination", Value<uint32>(&s_maxden)));
@@ -186,24 +208,24 @@ namespace sg
 
             m_options->AddOption(ActionOption(
                 "maxsd",
-                "regulatory maximum EGM game theoretical standard deviation", 
+                "regulatory maximum EGM game theoretical standard deviation",
                 Value<uint16>(&s_maxsd)));
 
             m_options->AddOption(ActionOption(
-                "maxlines", 
-                "regulatory maximum number of playlines in any game in the EGM", 
+                "maxlines",
+                "regulatory maximum number of playlines in any game in the EGM",
                 Value<uint16>(&s_maxlines)));
 
             m_options->AddOption(ActionOption("maxbet", "maximum bet per play", Value<uint32>(&s_maxbet)));
 
             m_options->AddOption(ActionOption(
-                "maxnpwin", 
-                "regulatory maximum non-progressive EGM win permitted uint32 any game element", 
+                "maxnpwin",
+                "regulatory maximum non-progressive EGM win permitted uint32 any game element",
                 Value<uint32>(&s_maxnpwin)));
 
             m_options->AddOption(ActionOption(
-                "maxpwin", 
-                "regulatory maximum SAP progressive EGM win permitted per SAP hit", 
+                "maxpwin",
+                "regulatory maximum SAP progressive EGM win permitted per SAP hit",
                 Value<uint32>(&s_maxpwin)));
 
             m_options->AddOption(ActionOption("maxect", "regulatory maximum allowable ECT to/from the EGM", Value<uint32>(&s_maxect)));
@@ -240,16 +262,27 @@ namespace sg
 
     }
 
+    void QcomGameConfigurationAction::ResetArgOptions()
+    {
+        s_gvn = 0;
+        s_pgid = 0xFFFF;
+        s_var = 0;
+        s_lp.clear();
+        s_camt.clear();
+    }
+
     bool QcomGameConfigurationAction::Parse(const Action::ActionArgs &args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfig [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: gameconfig/gc [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -263,7 +296,11 @@ namespace sg
                 COMMS_LOG(
                     boost::format("Entry number of 'jptype' and 'amount' option must be equal and less then %||\n") %
                     SG_QCOMAC_MAX_PROG_LEVEL, CLL_Error);
+                return res;
             }
+
+            SG_SET_FLAG_OPTION("varlock", s_var_lock);
+            SG_SET_FLAG_OPTION("gameenable", s_game_enable);
         }
 
         return res;
@@ -282,15 +319,15 @@ namespace sg
             m_options->AddOption(
                 ActionOption("var", "game variation number, indicates to the EGM what variation to use", Value<uint8>(&s_var)));
             m_options->AddOption(
-                ActionOption("varlock", "variation lock, if set, the EGM must lock the variation and \
-                             not allow the variation to be changed", Value<uint8>(&s_var_lock)));
+                ActionOption("varlock",
+                    "variation lock, if set, the EGM must lock the variation and not allow the variation to be changed, otherwise variation hot-switch is enabled"));
             m_options->AddOption(
-                ActionOption("gameenable", "game enable flag, if set, enable game denoted by GVN", Value<uint8>(&s_game_enable)));
+                ActionOption("gameenable", "game enable flag, if set, enable game denoted by GVN, otherwise disable the game"));
             m_options->AddOption(
-                ActionOption("jptype", "progressive level type, if set, denotes the level is to be set as LP", 
+                ActionOption("jptype", "progressive level type, if set to 0, denotes the level is to be set as SAP, otherwise level is LP",
                     Value< std::vector<uint8> >(&s_lp), true));
             m_options->AddOption(
-                ActionOption("amount", "initial jackpot contribution/current amount for progressive level", 
+                ActionOption("amount", "initial jackpot contribution/current amount for progressive level",
                     Value< std::vector<uint32> >(&s_camt), true));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
@@ -315,7 +352,7 @@ namespace sg
 
         for (size_t i = 0; i < pnum; ++i)
         {
-            lp[i] = s_lp[i];
+            lp[i] = s_lp[i] ? 1 : 0;
             camt[i] = s_camt[i];
         }
 
@@ -339,16 +376,26 @@ namespace sg
     {
 
     }
+
+    void QcomGameConfigurationChangeAction::ResetArgOptions()
+    {
+        s_gvn = 0;
+        s_pgid = 0xFFFF;
+        s_var = 0;
+    }
+
     bool QcomGameConfigurationChangeAction::Parse(const Action::ActionArgs &args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfigchange [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: gameconfigchange/cc [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -357,6 +404,8 @@ namespace sg
         }
         else
         {
+            SG_SET_FLAG_OPTION("gameenable", s_game_enable);
+
             res = true;
         }
 
@@ -369,10 +418,10 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("gvn", "TODO", Value<uint16>(&s_gvn)));
-            m_options->AddOption(ActionOption("pgid", "TODO", Value<uint16>(&s_pgid)));
-            m_options->AddOption(ActionOption("var", "TODO", Value<uint8>(&s_var)));
-            m_options->AddOption(ActionOption("gameenable", "TODO", Value<uint8>(&s_game_enable)));
+            m_options->AddOption(ActionOption("gvn", "game version number, identifies the game being re-configured", Value<uint16>(&s_gvn)));
+            m_options->AddOption(ActionOption("pgid", "new linked progressive group ID", Value<uint16>(&s_pgid)));
+            m_options->AddOption(ActionOption("var", "game version number, indicates tot the EGM what new variation to use", Value<uint8>(&s_var)));
+            m_options->AddOption(ActionOption("gameenable", "enable game if set, otherwise disable it", Value<uint8>(&s_game_enable)));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -389,20 +438,20 @@ namespace sg
     }
 
 
-     uint8   QcomEGMParametersAction::s_reserve = 1;
-     uint8   QcomEGMParametersAction::s_autoplay = 0;
-     uint8   QcomEGMParametersAction::s_crlimitmode = 0;
-     uint8   QcomEGMParametersAction::s_opr = 0;
-     uint32  QcomEGMParametersAction::s_lwin = 1000000;
-     uint32  QcomEGMParametersAction::s_crlimit = 1000000;
-     uint8   QcomEGMParametersAction::s_dumax = 5;
-     uint32  QcomEGMParametersAction::s_dulimit = 1000000;
-     int16   QcomEGMParametersAction::s_tzadj = 0;
-     uint32  QcomEGMParametersAction::s_pwrtime = 900;
-     uint8   QcomEGMParametersAction::s_pid = 0;
-     uint16  QcomEGMParametersAction::s_eodt = 180;
-     uint32  QcomEGMParametersAction::s_npwinp = 1000000;
-     uint32  QcomEGMParametersAction::s_sapwinp = 1000000;
+    uint8   QcomEGMParametersAction::s_reserve = 0;
+    uint8   QcomEGMParametersAction::s_autoplay = 0;
+    uint8   QcomEGMParametersAction::s_crlimitmode = 0;
+    uint8   QcomEGMParametersAction::s_opr = 0;
+    uint32  QcomEGMParametersAction::s_lwin = 1000000;
+    uint32  QcomEGMParametersAction::s_crlimit = 1000000;
+    uint8   QcomEGMParametersAction::s_dumax = 5;
+    uint32  QcomEGMParametersAction::s_dulimit = 1000000;
+    int16   QcomEGMParametersAction::s_tzadj = 0;
+    uint32  QcomEGMParametersAction::s_pwrtime = 900;
+    uint8   QcomEGMParametersAction::s_pid = 0;
+    uint16  QcomEGMParametersAction::s_eodt = 180;
+    uint32  QcomEGMParametersAction::s_npwinp = 1000000;
+    uint32  QcomEGMParametersAction::s_sapwinp = 1000000;
 
     QcomEGMParametersAction::QcomEGMParametersAction()
         :Action(Action::AT_QCOM_EGM_PARAMS)
@@ -416,16 +465,33 @@ namespace sg
 
     }
 
+    void QcomEGMParametersAction::ResetArgOptions()
+    {
+        s_opr = 0;
+        s_lwin = 1000000;
+        s_crlimit = 1000000;
+        s_dumax = 5;
+        s_dulimit = 1000000;
+        s_tzadj = 0;
+        s_pwrtime = 900;
+        s_pid = 0x00;
+        s_eodt = 180;
+        s_npwinp = 1000000;
+        s_sapwinp = 1000000;
+    }
+
     bool QcomEGMParametersAction::Parse(const Action::ActionArgs &args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: egmparams [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: egmparams/pp [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -434,6 +500,10 @@ namespace sg
         }
         else
         {
+            SG_SET_FLAG_OPTION("reserve", s_reserve);
+            SG_SET_FLAG_OPTION("autoplay", s_autoplay);
+            SG_SET_FLAG_OPTION("crlimitmode", s_crlimitmode);
+
             res = true;
         }
 
@@ -446,9 +516,10 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("reserve", "Enable or Disable RESERV", Value<uint8>(&s_reserve)));
-            m_options->AddOption(ActionOption("autoplay", "Enable or Disable autoplay", Value<uint8>(&s_autoplay)));
-            m_options->AddOption(ActionOption("crlimitmode", "credit limit", Value<uint8>(&s_crlimitmode)));
+            m_options->AddOption(ActionOption("reserve",
+                "EGM may offer a player instigated machine reserve feature at its discretion if set, otherwise no reserver feature offered"));
+            m_options->AddOption(ActionOption("autoplay", "autoplay is enabled if set, otherwise autoplay is disabled"));
+            m_options->AddOption(ActionOption("crlimitmode", "both CRLIMIT mode are supported if set, otherwise only coin/token is rejected"));
             m_options->AddOption(ActionOption("opr", "Monitoring system operator ID", Value<uint8>(&s_opr)));
             m_options->AddOption(ActionOption("lwin", "Large win lockup threshold", Value<uint32>(&s_lwin)));
             m_options->AddOption(ActionOption("crlimit", "Credit-in lockout value", Value<uint32>(&s_crlimit)));
@@ -476,7 +547,7 @@ namespace sg
     }
 
 
-    uint8  QcomPurgeEventsAction::m_evtno = 255;
+    uint8  QcomPurgeEventsAction::s_evtno = 255;
 
     QcomPurgeEventsAction::QcomPurgeEventsAction()
         :Action(Action::AT_QCOM_PURGE_EVENTS)
@@ -490,16 +561,23 @@ namespace sg
 
     }
 
+    void QcomPurgeEventsAction::ResetArgOptions()
+    {
+        s_evtno = 255;
+    }
+
     bool QcomPurgeEventsAction::Parse(const ActionArgs &args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: purgeevents [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: purgeevents/pe <event number>\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -519,9 +597,7 @@ namespace sg
         if (!m_options)
         {
             m_options = MakeSharedPtr<ActionOptions>();
-
-            m_options->AddOption(ActionOption("evnto", "Event sequence number", Value<uint8>(&m_evtno)));
-
+            m_options->AddOption(ActionOption("evnto", "", Value<uint8>(&s_evtno), false, 1));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -569,16 +645,24 @@ namespace sg
     {
     }
 
+    void QcomLPCurrentAmountAction::ResetArgOptions()
+    {
+        s_lpamt.clear();
+        s_pgid.clear();
+    }
+
     bool QcomLPCurrentAmountAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: lp [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: lpcamt/lp [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -643,16 +727,23 @@ namespace sg
     {
     }
 
+    void QcomGeneralPromotionalAction::ResetArgOptions()
+    {
+        s_text.clear();
+    }
+
     bool QcomGeneralPromotionalAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gp [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: generalpromt/gp [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -702,16 +793,24 @@ namespace sg
     {
     }
 
+    void QcomSiteDetailAction::ResetArgOptions()
+    {
+        s_stext.clear();
+        s_ltext.clear();
+    }
+
     bool QcomSiteDetailAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: sd [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: sitedetail/sd [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -779,9 +878,16 @@ namespace sg
     {
     }
 
+    void QcomPendingAction::ResetArgOptions()
+    {
+        s_pollnum = 2;
+    }
+
     bool QcomPendingAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
@@ -833,6 +939,35 @@ namespace sg
     {
     }
 
+    //bool QcomSendAction::Parse(const ActionArgs & args)
+    //{
+    //    bool res = true;
+
+    //    SG_PARSE_OPTION(args, m_options);
+
+    //    if (vm.count("help"))
+    //    {
+    //        COMMS_START_PRINT_BLOCK();
+    //        COMMS_PRINT_BLOCK("\nUsage: send [options]\n");
+    //        COMMS_PRINT_BLOCK(vis_desc);
+    //        COMMS_PRINT_BLOCK("\n");
+    //        COMMS_END_PRINT_BLOCK();
+
+    //        res = false;
+    //    }
+
+    //    return res;
+    //}
+
+    //void QcomSendAction::BuildOptions()
+    //{
+    //    if (!m_options)
+    //    {
+    //        m_options = MakeSharedPtr<ActionOptions>();
+    //        m_options->AddOption(ActionOption("help,h", "help message"));
+    //    }
+    //}
+
     ActionPtr QcomSendAction::Clone()
     {
         return Action::DoClone<QcomSendAction>();
@@ -859,16 +994,27 @@ namespace sg
     {
     }
 
+    void QcomProgressiveConfigAction::ResetArgOptions()
+    {
+        s_sup.clear();
+        s_pinc.clear();
+        s_ceil.clear();
+        s_auxrtp.clear();
+        s_gvn = 0;
+    }
+
     bool QcomProgressiveConfigAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: progressive [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: progressive/pc [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -943,7 +1089,7 @@ namespace sg
     std::vector<uint8> QcomExtJPInfoAction::s_umf;
     std::vector<std::string> QcomExtJPInfoAction::s_name;
     uint16 QcomExtJPInfoAction::s_rtp = 0;
-    uint8 QcomExtJPInfoAction::s_display = 1;
+    uint8 QcomExtJPInfoAction::s_display = 0;
     uint8 QcomExtJPInfoAction::s_icon = 0;
 
     QcomExtJPInfoAction::QcomExtJPInfoAction()
@@ -955,16 +1101,26 @@ namespace sg
     {
     }
 
+    void QcomExtJPInfoAction::ResetArgOptions()
+    {
+        s_epgid.clear();
+        s_umf.clear();
+        s_name.clear();
+        s_rtp = 0;
+    }
+
     bool QcomExtJPInfoAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: extjackpotinfo [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: extjackpotinfo/extjpi [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -981,7 +1137,12 @@ namespace sg
             {
                 COMMS_LOG(boost::format("Entry number of 'epgid', 'umf' and 'name' must be equal and less than %||\n") %
                     SG_QCOMAC_MAX_PROG_LEVEL, CLL_Error);
+
+                return res;
             }
+
+            SG_SET_FLAG_OPTION("display", s_display);
+
         }
         
         return res;
@@ -995,15 +1156,15 @@ namespace sg
             m_options->AddOption(
                 ActionOption("epgid", "external jackpot progressive group ID", Value<std::vector<uint16> >(&s_epgid), true));
             m_options->AddOption(
-                ActionOption("umf", "unit modifier flag", Value<std::vector<uint8> >(&s_umf), true));
+                ActionOption("umf", "unit modifier flag, display of EXTJIP data in unit-less if set", Value<std::vector<uint8> >(&s_umf), true));
             m_options->AddOption(
                 ActionOption("name", "name of the external jackpot group level", Value<std::vector<std::string> >(&s_name), true));
             m_options->AddOption(
                 ActionOption("rtp", "total percentage RTP of the external jackpots on this EGM", Value<uint16>(&s_rtp)));
             m_options->AddOption(
-                ActionOption("display", "display flag", Value<uint8>(&s_display)));
+                ActionOption("display", "commands EGM display the last received current amounts via LP broadcasts if set"));
             m_options->AddOption(
-                ActionOption("icon", "icon display ID", Value<uint8>(&s_icon)));
+                ActionOption("icon", "icon display ID, disable icon display set to 0", Value<uint8>(&s_icon)));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -1039,8 +1200,8 @@ namespace sg
     }
 
     std::vector<uint8> QcomProgHashRequestAction::s_seed;
-    uint8 QcomProgHashRequestAction::s_new_seed = 1;
-    uint8 QcomProgHashRequestAction::s_mef = 1;
+    uint8 QcomProgHashRequestAction::s_new_seed = 0;
+    uint8 QcomProgHashRequestAction::s_mef = 0;
 
     QcomProgHashRequestAction::QcomProgHashRequestAction()
         : Action(AT_QCOM_PROGHASH_REQUEST)
@@ -1051,9 +1212,16 @@ namespace sg
     {
     }
 
+    void QcomProgHashRequestAction::ResetArgOptions()
+    {
+        s_seed.clear();
+    }
+
     bool QcomProgHashRequestAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
@@ -1067,23 +1235,8 @@ namespace sg
         }
         else
         {
-            if (vm.count("seed"))
-            {
-                s_new_seed = 1;
-            }
-            else
-            {
-                s_new_seed = 0; // TODO : change s_new_seed from static to non-static
-            }
-
-            if (vm.count("mef"))
-            {
-                s_mef = 1;
-            }
-            else
-            {
-                s_mef = 0;
-            }
+            SG_SET_FLAG_OPTION("seed", s_new_seed);
+            SG_SET_FLAG_OPTION("mef", s_mef);
 
             res = true;
         }
@@ -1097,7 +1250,7 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
             m_options->AddOption(ActionOption("seed", "hash alogrithm seed", Value<std::vector<uint8> >(&s_seed), true));
-            m_options->AddOption(ActionOption("mef", "machine enable flag"));
+            m_options->AddOption(ActionOption("mef", "enable machine if set, otherwise disable it"));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
@@ -1145,9 +1298,16 @@ namespace sg
     {
     }
 
+    void QcomSysLockupRequestAction::ResetArgOptions()
+    {
+        s_text.clear();
+    }
+
     bool QcomSysLockupRequestAction::Parse(const ActionArgs & args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
@@ -1161,36 +1321,11 @@ namespace sg
         }
         else
         {
-            if (!vm.count("text"))
-            {
-                s_text = "";
-            }
-
-            if (vm.count("noreset"))
-                s_noreset_key = 1;
-            else
-                s_noreset_key = 0;
-
-            if (vm.count("continue"))
-                s_continue = 1;
-            else
-                s_continue = 0;
-
-            if (vm.count("question"))
-                s_question = 1;
-            else
-                s_question = 0;
-
-            if (vm.count("lamptest"))
-                s_lamp_test = 1;
-            else
-                s_lamp_test = 0;
-
-            if (vm.count("fanfare"))
-                s_fanfare = 1;
-            else
-                s_fanfare = 0;
-
+            SG_SET_FLAG_OPTION("noreset", s_noreset_key);
+            SG_SET_FLAG_OPTION("continue", s_continue);
+            SG_SET_FLAG_OPTION("question", s_question);
+            SG_SET_FLAG_OPTION("lamptest", s_lamp_test);
+            SG_SET_FLAG_OPTION("fanfare", s_fanfare);
 
             res = true;
         }
@@ -1204,8 +1339,8 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
             m_options->AddOption(ActionOption("text", "system lockup messaage", Value<std::string>(&s_text)));
-            m_options->AddOption(ActionOption("noreset,k", "EGM disable the lockup reset key-switch's effect on the system lockup\
-                                               on the duration of the lockup if set"));
+            m_options->AddOption(ActionOption("noreset,k", 
+                "EGM disable the lockup reset key-switch's effect on the system lockup on the duration of the lockup if set"));
             m_options->AddOption(ActionOption("continue", "use continue style message during lockup if set"));
             m_options->AddOption(ActionOption("question", "use question style message during lockup if set"));
             m_options->AddOption(ActionOption("lamptest", "EGM turn on all its lamps during lockup if set"));
@@ -1244,9 +1379,19 @@ namespace sg
 
     }
 
+    void QcomCashTicketOutAckAction::ResetArgOptions()
+    {
+        s_certification.clear();
+        s_authno = std::string("999999999999999999");
+        s_amount = 0;
+        s_serial = 0;
+    }
+
     bool QcomCashTicketOutAckAction::Parse(ActionArgs const& args)
     {
         bool res = false;
+
+        this->ResetArgOptions();
 
         SG_PARSE_OPTION(args, m_options);
 
@@ -1260,22 +1405,17 @@ namespace sg
         }
         else
         {
-            if (vm.count("approve"))
-                s_approved = 1;
-            else
-                s_approved = 0;
 
-            if (vm.count("cancel"))
-                s_canceled = 1;
-            else
-                s_canceled = 0;
+            SG_SET_FLAG_OPTION("approve", s_approved);
+            SG_SET_FLAG_OPTION("cancel", s_canceled);
 
             if (s_approved && s_canceled)
             {
                 COMMS_LOG("torack can't use approve and cancel option at the same time.\n", CLL_Error);
-                res = false;
+                return false;
             }
 
+            res = true;
         }
 
         return res;
@@ -1305,6 +1445,539 @@ namespace sg
     {
         static const char * des = "\tCash Ticket Out Acknowledgement Poll:\n\t\tA SC will send this poll in response\
                                     to each new valid Cash Ticket Out Request Event received from the EGM.\n";
+
+        return des;
+    }
+
+    std::string QcomCashTicketInAckAction::s_authno("999999999999999999");
+    uint32 QcomCashTicketInAckAction::s_amount = 0;
+    uint8 QcomCashTicketInAckAction::s_fcode = 0;
+
+    QcomCashTicketInAckAction::QcomCashTicketInAckAction()
+        : Action(AT_QCOM_CASH_TICKET_IN_ACK)
+    {
+
+    }
+
+    QcomCashTicketInAckAction::~QcomCashTicketInAckAction()
+    {
+
+    }
+
+    void QcomCashTicketInAckAction::ResetArgOptions()
+    {
+        s_authno = std::string("999999999999999999");
+        s_amount = 0;
+        s_fcode = 0;
+    }
+
+    bool QcomCashTicketInAckAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        this->ResetArgOptions();
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: tirack [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomCashTicketInAckAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("authno", "ticket authorisation number from the last Ticket-In Request Event echoed back", Value<std::string>(&s_authno)));
+            m_options->AddOption(ActionOption("amount", "ticket in amount in cents, display as decimal currency of up to 11 characters", Value<uint32>(&s_amount)));
+            m_options->AddOption(ActionOption("fcode", "accept last cash ticket in request if not set, otherwise the value indicate reason for the failure", Value<uint8>(&s_fcode)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomCashTicketInAckAction::Clone()
+    {
+        return Action::DoClone<QcomCashTicketInAckAction>();
+    }
+
+    const char* QcomCashTicketInAckAction::Description() const
+    {
+        static const char * des = "\tCash Ticket In Acknowledgement Poll:\n\t\tA SC will send this poll in response to each Cash Ticket In Request Event received\
+from the EGM.\n";
+
+        return des;
+    }
+
+    QcomCashTicketOutRequestAction::QcomCashTicketOutRequestAction()
+        : Action(AT_QCOM_CASH_TICKET_OUT_REQ)
+    {
+
+    }
+
+    QcomCashTicketOutRequestAction::~QcomCashTicketOutRequestAction()
+    {
+
+    }
+
+    ActionPtr QcomCashTicketOutRequestAction::Clone()
+    {
+        return Action::DoClone<QcomCashTicketOutRequestAction>();
+    }
+
+    const char* QcomCashTicketOutRequestAction::Description() const
+    {
+        static const char * des = "\tCash Ticket Out Request Poll:\n\t\tThis poll simply queue a 'collect'(as if the collect button was pressed)\
+upon next return to idle mode if the credit meter is not zero at that time\n";
+        return des;
+    }
+    
+    std::vector<uint8>   QcomEGMGeneralMaintenanceAction::s_meters;
+    uint16  QcomEGMGeneralMaintenanceAction::s_gvn = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_nasr = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_mef = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_var = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_pcmr = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_bmr = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_gmecfg = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_progcfg = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_progmeters = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_multigame = 0;
+    uint8   QcomEGMGeneralMaintenanceAction::s_gef = 0;
+
+    QcomEGMGeneralMaintenanceAction::QcomEGMGeneralMaintenanceAction()
+        : Action(AT_QCOM_EGM_GENERAL_MAINTENANCE)
+    {
+
+    }
+
+    QcomEGMGeneralMaintenanceAction::~QcomEGMGeneralMaintenanceAction()
+    {
+
+    }
+
+    void QcomEGMGeneralMaintenanceAction::ResetArgOptions()
+    {
+        s_meters.clear();
+        s_var = 0;
+        s_gvn = 0;
+    }
+
+    bool QcomEGMGeneralMaintenanceAction::Parse(const ActionArgs &args)
+    {
+        bool res = false;
+
+        this->ResetArgOptions();
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: generalmainten/gm [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (s_meters.size() > 3)
+            {
+                COMMS_LOG("Too many arguments for meters option\n", CLL_Error);
+                return false;
+            }
+ 
+            SG_SET_FLAG_OPTION("qnasr", s_nasr);
+            SG_SET_FLAG_OPTION("mef", s_mef);
+            SG_SET_FLAG_OPTION("pcmr", s_pcmr);
+            SG_SET_FLAG_OPTION("bmr", s_bmr);
+            SG_SET_FLAG_OPTION("gamecfg", s_gmecfg);
+            SG_SET_FLAG_OPTION("progcfg", s_progcfg);
+            SG_SET_FLAG_OPTION("progmeters", s_progmeters);
+            SG_SET_FLAG_OPTION("multigame", s_multigame);
+            SG_SET_FLAG_OPTION("gef", s_gef);
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomEGMGeneralMaintenanceAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(
+                ActionOption(
+                    "meters", 
+                    "set which meter group(s) to report via the EGM Meter Group/Contribution Response", 
+                    Value<std::vector<uint8> >(&s_meters),
+                    true));
+            m_options->AddOption(
+                ActionOption(
+                    "var",
+                    "game variation number",
+                    Value<uint8>(&s_var)));
+            m_options->AddOption(
+                ActionOption(
+                    "gvn", 
+                    "game version number", 
+                    Value<uint16>(&s_gvn)));
+            m_options->AddOption(
+                ActionOption(
+                    "qnasr",
+                    "commands the EGM to queue the Note Acceptor Status Response if set"));
+            m_options->AddOption(
+                ActionOption(
+                    "mef",
+                    "enable machine if set, otherwise disable it"));
+            m_options->AddOption(
+                ActionOption(
+                    "pcmr",
+                    "commands the EGM to queue a Player Choice Meter Response"));
+            m_options->AddOption(
+                ActionOption(
+                    "bmr",
+                    "commands the EGM to queue a Bet Meters Response"));
+            m_options->AddOption(
+                ActionOption(
+                    "gamecfg",
+                    "commads the EGM to queue a Game Configuration Response"));
+            m_options->AddOption(
+                ActionOption(
+                    "progcfg",
+                    "commands the EGM to queue a Progressive Configuration Response"));
+            m_options->AddOption(
+                ActionOption(
+                    "progmeters",
+                    "commands the EGM to queue a Progressive Meters Response"));
+            m_options->AddOption(
+                ActionOption(
+                    "multigame",
+                    "commands the EGM to queue a Multi-Game/Variation Meters Response"));
+            m_options->AddOption(
+                ActionOption(
+                    "gef",
+                    "set to enable game, otherwise disable it"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    uint8_t QcomEGMGeneralMaintenanceAction::MetersGroupFlag(uint8_t index) const
+    {
+        SG_ASSERT(index < 3);
+
+        for (uint8_t i = 0; i < s_meters.size(); ++i)
+        {
+            if (s_meters[i] == index)
+                return 1;
+        }
+
+        return 0;
+    }
+
+    ActionPtr QcomEGMGeneralMaintenanceAction::Clone()
+    {
+        return Action::DoClone<QcomEGMGeneralMaintenanceAction>();
+    }
+
+    const char* QcomEGMGeneralMaintenanceAction::Description() const
+    {
+        static const char* des = "\tEGM General Maintenance Poll:\n\t\tThis is a multi-purpose poll\n";
+        return des;
+    }
+
+    QcomRequestAllLoggedEventsAction::QcomRequestAllLoggedEventsAction()
+        : Action(AT_QCOM_REQ_ALL_LOGGED_EVENTS)
+    {
+
+    }
+
+    QcomRequestAllLoggedEventsAction::~QcomRequestAllLoggedEventsAction()
+    {
+
+    }
+
+    ActionPtr QcomRequestAllLoggedEventsAction::Clone()
+    {
+        return Action::DoClone<QcomRequestAllLoggedEventsAction>();
+    }
+
+    const char* QcomRequestAllLoggedEventsAction::Description() const
+    {
+        static const char * des = "\tRequest All Logged Events Poll:\n\t\t\
+This poll commands EGM re-queue for transmission all currently logged events.\n";
+
+        return des;
+    }
+
+    std::vector<uint8> QcomNoteAcceptorMaintenanceAction::s_denoms;
+
+    QcomNoteAcceptorMaintenanceAction::QcomNoteAcceptorMaintenanceAction()
+        : Action(AT_QCOM_NOTE_ACCEPTOR_MAINTENANCE)
+    {
+
+    }
+
+    QcomNoteAcceptorMaintenanceAction::~QcomNoteAcceptorMaintenanceAction()
+    {
+
+    }
+
+    void QcomNoteAcceptorMaintenanceAction::ResetArgOptions()
+    {
+        s_denoms.clear();
+    }
+
+    bool QcomNoteAcceptorMaintenanceAction::Parse(const ActionArgs & args)
+    {
+       bool res = false;
+
+        this->ResetArgOptions();
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: nam [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (s_denoms.size() > 5)
+            {
+                COMMS_LOG("too many arguments for denoms option\n", CLL_Error);
+                return false;
+            }
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    uint8_t QcomNoteAcceptorMaintenanceAction::GetDenomFlag(uint8_t denom) const
+    {
+        SG_ASSERT(denom == 5 || denom == 10 || denom == 20 || denom == 50 || denom == 100);
+
+        for (size_t i = 0; i < s_denoms.size(); ++i)
+        {
+            if (s_denoms[i] == denom)
+                return 1;
+        }
+
+        return 0;
+    }
+
+    void QcomNoteAcceptorMaintenanceAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(
+                ActionOption(
+                    "denoms",
+                    "set to enable the specified denomination banknot for acceptance by the banknote acceptor, otherwise disable acceptance",
+                    Value<std::vector<uint8> >(&s_denoms), 
+                    true));
+
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomNoteAcceptorMaintenanceAction::Clone()
+    {
+        return Action::DoClone<QcomNoteAcceptorMaintenanceAction>();
+    }
+
+    const char* QcomNoteAcceptorMaintenanceAction::Description() const
+    {
+        static const char * des = "\tNote Acceptor Maintenance Poll:\n\t\tChange note acceptor settings if EGM support\n";
+
+        return des;
+    }
+
+    uint8 QcomHopperTicketPrinterMaintenanceAction::s_test = 0;
+    uint32 QcomHopperTicketPrinterMaintenanceAction::s_refill = 0;
+    uint32 QcomHopperTicketPrinterMaintenanceAction::s_collim = 0;
+    uint32 QcomHopperTicketPrinterMaintenanceAction::s_ticket = 0;
+    uint32 QcomHopperTicketPrinterMaintenanceAction::s_dorefill = 0;
+
+    QcomHopperTicketPrinterMaintenanceAction::QcomHopperTicketPrinterMaintenanceAction()
+        : Action(AT_QCOM_HOPPPER_TICKET_PRINTER)
+    {
+
+    }
+
+    QcomHopperTicketPrinterMaintenanceAction::~QcomHopperTicketPrinterMaintenanceAction()
+    {
+
+    }
+
+    void QcomHopperTicketPrinterMaintenanceAction::ResetArgOptions()
+    {
+        s_refill = 0;
+        s_collim = 0;
+        s_ticket = 0;
+        s_dorefill = 0;
+    }
+
+    bool QcomHopperTicketPrinterMaintenanceAction::Parse(const ActionArgs & args)
+    {
+       bool res = false;
+
+        this->ResetArgOptions();
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: htpm [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            SG_SET_FLAG_OPTION("test", s_test);
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomHopperTicketPrinterMaintenanceAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("test", "if set, commands the EGM to print out a test ticket"));
+            m_options->AddOption(ActionOption("refille", "set default hopper refill amount", Value<uint32>(&s_refill)));
+            m_options->AddOption(ActionOption("collim", "set hopper collect limit", Value<uint32>(&s_collim)));
+            m_options->AddOption(ActionOption("ticket", "set ticket out limit", Value<uint32>(&s_ticket)));
+            m_options->AddOption(ActionOption("dorefill", "extra refill amount", Value<uint32>(&s_dorefill)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomHopperTicketPrinterMaintenanceAction::Clone()
+    {
+        return Action::DoClone<QcomHopperTicketPrinterMaintenanceAction>();
+    }
+
+    const char* QcomHopperTicketPrinterMaintenanceAction::Description() const
+    {
+        static const char * des = "\tHopper Ticket Printer Maintenance Poll:\n\t\tThis poll can change hopper and ticket printer parameters\n";
+        return des;
+    }
+
+    QcomLPAwardAckAction::QcomLPAwardAckAction()
+        : Action(AT_QCOM_LP_AWARD_ACK)
+    {
+
+    }
+
+    QcomLPAwardAckAction::~QcomLPAwardAckAction()
+    {
+
+    }
+
+    ActionPtr QcomLPAwardAckAction::Clone()
+    {
+        return Action::DoClone<QcomLPAwardAckAction>();
+    }
+
+    const char* QcomLPAwardAckAction::Description() const
+    {
+        static const char * des = "\tLink Progressive Award Acknowledged Poll:\n\t\tThis poll denotes taht the current linked progressive\
+ award on the EGM has been verified by the system\n";
+        return des;
+    }
+
+    uint8 QcomGeneralResetAction::s_fault = 0;
+    uint8 QcomGeneralResetAction::s_lockup = 0;
+    uint8 QcomGeneralResetAction::s_state = 0;
+
+    QcomGeneralResetAction::QcomGeneralResetAction()
+        : Action(AT_QCOM_GENERAL_RESET)
+    {
+
+    }
+
+    QcomGeneralResetAction::~QcomGeneralResetAction()
+    {
+
+    }
+
+    void QcomGeneralResetAction::ResetArgOptions()
+    {
+        s_state = 0;
+    }
+
+    bool QcomGeneralResetAction::Parse(const ActionArgs &args)
+    {
+       bool res = false;
+
+        this->ResetArgOptions();
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: reset [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            SG_SET_FLAG_OPTION("fault", s_fault);
+            SG_SET_FLAG_OPTION("lockup", s_lockup);
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomGeneralResetAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("fault", "reset fault condition if set"));
+            m_options->AddOption(ActionOption("lockup", "reset fault condition if set"));
+            m_options->AddOption(ActionOption("state", "lockup condition state code", Value<uint8>(&s_state)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomGeneralResetAction::Clone()
+    {
+        return Action::DoClone<QcomGeneralResetAction>();
+    }
+
+    const char* QcomGeneralResetAction::Description() const
+    {
+        static const char* des = "\tGeneral Reset Poll:\n\t\tThis poll commands EGM attempt to clear the current lock-up or fault condifition";
 
         return des;
     }

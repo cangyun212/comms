@@ -22,6 +22,14 @@
 #include "Qcom/QcomProgramHashRequest.hpp"
 #include "Qcom/QcomSystemLockupRequest.hpp"
 #include "Qcom/QcomCashTicketOutRequestAck.hpp"
+#include "Qcom/QcomCashTicketInRequestAck.hpp"
+#include "Qcom/QcomCashOutRequest.hpp"
+#include "Qcom/QcomEgmGeneralMaintenance.hpp"
+#include "Qcom/QcomRequestAllLoggedEvents.hpp"
+#include "Qcom/QcomNoteAcceptorMaintenance.hpp"
+#include "Qcom/QcomHTPMaintenance.hpp"
+#include "Qcom/QcomLPAwardAck.hpp"
+#include "Qcom/QcomGeneralReset.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -155,6 +163,31 @@ namespace sg
         m_handler.insert(std::make_pair(p->Id(), p));
 
         p = MakeSharedPtr<QcomCashTicketOutRequestAck>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomCashTicketInRequestAck>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomCashTicketOutRequest>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomEgmGeneralMaintenance>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomRequestAllLoggedEvents>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomNoteAcceptorMaintenance>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomHTPMaintenance>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomLPAwardAck>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomGeneralReset>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
 
         // TODO : ...
@@ -928,6 +961,110 @@ namespace sg
 
         QcomCashTicketOutRequestAckPtr handler = std::static_pointer_cast<QcomCashTicketOutRequestAck>(m_handler[QCOM_TORACKP_FC]);
         if (!handler->BuildCashTicketOutRequestAckPoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::CashTicketInAck(uint8_t poll_address, QcomCashTicketInRequestAckPollData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomCashTicketInRequestAckPtr handler = std::static_pointer_cast<QcomCashTicketInRequestAck>(m_handler[QCOM_TIRACKP_FC]);
+        if (!handler->BuildCashTicketInRequestAckPoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::CashTicketOutReqeust(uint8_t poll_address)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomCashTicketOutRequestPtr handler = std::static_pointer_cast<QcomCashTicketOutRequest>(m_handler[QCOM_CCLRP_FC]);
+        if (!handler->BuildCashTicketOutRequestPoll(job, poll_address))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::EGMGeneralMaintenance(uint8_t poll_address, uint16_t gvn, QcomEGMGeneralMaintenancePollData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomEgmGeneralMaintenancePtr handler = std::static_pointer_cast<QcomEgmGeneralMaintenance>(m_handler[QCOM_EGMGMP_FC]);
+        if (!handler->BuildEgmGeneralMaintenancePoll(job, poll_address, gvn, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::RequestAllLoggedEvents(uint8_t poll_address)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomRequestAllLoggedEventsPtr handler = std::static_pointer_cast<QcomRequestAllLoggedEvents>(m_handler[QCOM_RALEP_FC]);
+        if (!handler->BuildRequestAllLoggedEventsPoll(job, poll_address))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::NoteAcceptorMaintenance(uint8_t poll_address, QcomNoteAcceptorMaintenanceData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomNoteAcceptorMaintenancePtr handler = std::static_pointer_cast<QcomNoteAcceptorMaintenance>(m_handler[QCOM_NAMP_FC]);
+        if (!handler->BuildNoteAcceptorMaintenancePoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::HopperTicketPrinterMaintenance(uint8_t poll_address, uint8_t test, QcomHopperTicketPrinterData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomHTPMaintenancePtr handler = std::static_pointer_cast<QcomHTPMaintenance>(m_handler[QCOM_HTPMP_FC]);
+        if (!handler->BuildHTPMaintenancePoll(job, poll_address, test, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::LPAwardAck(uint8_t poll_address)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomLPAwardAckPtr handler = std::static_pointer_cast<QcomLPAwardAck>(m_handler[QCOM_LPAAP_FC]);
+        if (!handler->BuildLPAwardAckPoll(job, poll_address))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::GeneralReset(uint8_t poll_address, QcomGeneralResetPollData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomGeneralResetPtr handler = std::static_pointer_cast<QcomGeneralReset>(m_handler[QCOM_EGMGRP_FC]);
+        if (!handler->BuildGeneralResetPoll(job, poll_address, data))
             return;
 
         SG_QCOM_ADD_POLL_JOB(job);

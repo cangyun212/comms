@@ -60,8 +60,8 @@ namespace sg
         poll->poll.Data.egmcp2.MAXNPWIN = data.maxnpwin;
         poll->poll.Data.egmcp2.MAXPWIN = data.maxpwin;
         poll->poll.Data.egmcp2.MAXECT = data.maxect;
-        PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
-        poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
+        //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);
+        //poll->length = poll->poll.DLL.Length + QCOM_CRC_SIZE;
 
         return poll;
     }

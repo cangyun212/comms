@@ -59,6 +59,8 @@ namespace sg
             AT_QCOM_HOPPPER_TICKET_PRINTER,
             AT_QCOM_LP_AWARD_ACK,
             AT_QCOM_GENERAL_RESET,
+            AT_QCOM_SPAM,
+            AT_QCOM_TOWER_LIGHT_MAINTENANCE,
             AT_QCOM_PENDING,
             AT_QCOM_SEND,
  

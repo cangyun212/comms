@@ -1597,7 +1597,7 @@ upon next return to idle mode if the credit meter is not zero at that time\n";
                 COMMS_LOG("Too many arguments for meters option\n", CLL_Error);
                 return false;
             }
- 
+
             SG_SET_FLAG_OPTION("qnasr", s_nasr);
             SG_SET_FLAG_OPTION("mef", s_mef);
             SG_SET_FLAG_OPTION("pcmr", s_pcmr);
@@ -1743,7 +1743,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     bool QcomNoteAcceptorMaintenanceAction::Parse(const ActionArgs & args)
     {
-       bool res = false;
+        bool res = false;
 
         this->ResetArgOptions();
 
@@ -1839,7 +1839,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     bool QcomHopperTicketPrinterMaintenanceAction::Parse(const ActionArgs & args)
     {
-       bool res = false;
+        bool res = false;
 
         this->ResetArgOptions();
 
@@ -1933,7 +1933,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     bool QcomGeneralResetAction::Parse(const ActionArgs &args)
     {
-       bool res = false;
+        bool res = false;
 
         this->ResetArgOptions();
 
@@ -1978,6 +1978,160 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
     const char* QcomGeneralResetAction::Description() const
     {
         static const char* des = "\tGeneral Reset Poll:\n\t\tThis poll commands EGM attempt to clear the current lock-up or fault condifition";
+
+        return des;
+    }
+
+    std::string QcomSPAMAction::s_text;
+    uint8 QcomSPAMAction::s_prominence = 0;
+    uint8 QcomSPAMAction::s_fanfare = 0;
+    uint8 QcomSPAMAction::s_type = 1;
+
+    QcomSPAMAction::QcomSPAMAction()
+        : Action(AT_QCOM_SPAM)
+    {
+
+    }
+
+    QcomSPAMAction::~QcomSPAMAction()
+    {
+
+    }
+
+    void QcomSPAMAction::ResetArgOptions()
+    {
+        s_text.clear();
+        s_type = 1;
+    }
+
+    bool QcomSPAMAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        this->ResetArgOptions();
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: spam [options] <type>\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            if (s_type != 1 && s_type != 2)
+            {
+                COMMS_LOG(boost::format("Invalid type %1% for spam") % s_type, CLL_Error);
+                return false;
+            }
+
+            SG_SET_FLAG_OPTION("prom", s_prominence);
+            SG_SET_FLAG_OPTION("fanfare", s_fanfare);
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomSPAMAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("prom", "if set, the EGM must display any SPAM A message while in idle mode, applies to SPAM A only"));
+            m_options->AddOption(ActionOption("fanfare", "if set, the EGM must make an short attention sound"));
+            m_options->AddOption(ActionOption("type", "", Value<uint8>(&s_type), false, 1));
+            m_options->AddOption(ActionOption("text", "message to display", Value<std::string>(&s_text)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomSPAMAction::Clone()
+    {
+        return Action::DoClone<QcomSPAMAction>();
+    }
+
+    const char* QcomSPAMAction::Description() const
+    {
+        static const char * des = "\tSPAM poll:\n\t\tThis poll is used to display various text messages to patrons or attendants";
+
+        return des;
+    }
+
+    uint8 QcomTowerLightMaintenanceAction::s_yellow_on = 0;
+    uint8 QcomTowerLightMaintenanceAction::s_blue_on = 0;
+    uint8 QcomTowerLightMaintenanceAction::s_red_on = 0;
+    uint8 QcomTowerLightMaintenanceAction::s_yellow_flash = 0;
+    uint8 QcomTowerLightMaintenanceAction::s_blue_flash = 0;
+    uint8 QcomTowerLightMaintenanceAction::s_red_flash = 0;
+
+    QcomTowerLightMaintenanceAction::QcomTowerLightMaintenanceAction()
+        : Action(AT_QCOM_TOWER_LIGHT_MAINTENANCE)
+    {
+
+    }
+
+    QcomTowerLightMaintenanceAction::~QcomTowerLightMaintenanceAction()
+    {
+
+    }
+
+    bool QcomTowerLightMaintenanceAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: towerlight/tl [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            SG_SET_FLAG_OPTION("y", s_yellow_on);
+            SG_SET_FLAG_OPTION("b", s_blue_on);
+            SG_SET_FLAG_OPTION("r", s_red_on);
+            SG_SET_FLAG_OPTION("flashy", s_yellow_flash);
+            SG_SET_FLAG_OPTION("falshb", s_blue_flash);
+            SG_SET_FLAG_OPTION("falshr", s_red_flash);
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomTowerLightMaintenanceAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("y", "turn on yellow light"));
+            m_options->AddOption(ActionOption("b", "turn on blue light"));
+            m_options->AddOption(ActionOption("r", "turn on red light"));
+            m_options->AddOption(ActionOption("falshy", "flash yellow light"));
+            m_options->AddOption(ActionOption("falshb", "flash blue light"));
+            m_options->AddOption(ActionOption("falshr", "flash red light"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomTowerLightMaintenanceAction::Clone()
+    {
+        return Action::DoClone<QcomTowerLightMaintenanceAction>();
+    }
+
+    const char* QcomTowerLightMaintenanceAction::Description() const
+    {
+        static const char * des = "\tTower Light Maintenance Poll:\n\t\tControl the tower light of EGM\n";
 
         return des;
     }

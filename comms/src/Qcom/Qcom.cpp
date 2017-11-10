@@ -30,6 +30,8 @@
 #include "Qcom/QcomHTPMaintenance.hpp"
 #include "Qcom/QcomLPAwardAck.hpp"
 #include "Qcom/QcomGeneralReset.hpp"
+#include "Qcom/QcomSPAM.hpp"
+#include "Qcom/QcomTowerLightMaintenance.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -190,7 +192,14 @@ namespace sg
         p = MakeSharedPtr<QcomGeneralReset>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
 
-        // TODO : ...
+        p = MakeSharedPtr<QcomSPAMA>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomSPAMB>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomTowerLightMaintenance>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
 
     }
 
@@ -1069,6 +1078,42 @@ namespace sg
 
         SG_QCOM_ADD_POLL_JOB(job);
     }
+
+    void CommsQcom::SPAM(uint8_t poll_address, uint8_t type, QcomSPAMPollData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        if (type == QCOM_SPAM_TYPE_A)
+        {
+            QcomSPAMAPtr handler = std::static_pointer_cast<QcomSPAMA>(m_handler[QCOM_SPAMA_FC]);
+            if (!handler->BuildSPAMAPoll(job, poll_address, data))
+                return;
+        }
+        else
+        {
+            QcomSPAMBPtr handler = std::static_pointer_cast<QcomSPAMB>(m_handler[QCOM_SPAMB_FC]);
+            if (!handler->BuildSPAMBPoll(job, poll_address, data))
+                return;
+        }
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::TowerLightMaintenance(uint8_t poll_address, QcomTowerLightMaintenancePollData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomTowerLightMaintenancePtr handler = std::static_pointer_cast<QcomTowerLightMaintenance>(m_handler[QCOM_EGMTLMP_FC]);
+        if (!handler->BuildTowerLightMaintenancePoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
 }
 
 

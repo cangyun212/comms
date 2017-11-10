@@ -59,6 +59,8 @@ set(COMMS_QCOM_HEADER_FILES
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomHTPMaintenance.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomLPAwardAck.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomGeneralReset.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomSPAM.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomTowerLightMaintenance.hpp
     )
 
 set(COMMS_QCOM_SOURCE_FILES
@@ -80,12 +82,14 @@ set(COMMS_QCOM_SOURCE_FILES
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomCashTicketOutRequestAck.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomCashTicketInRequestAck.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomCashOutRequest.cpp
-    ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmGeneralMaintance.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomEgmGeneralMaintenance.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomRequestAllLoggedEvents.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomNoteAcceptorMaintenance.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomHTPMaintenance.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomLPAwardAck.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomGeneralReset.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomSPAM.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomTowerLightMaintenance.cpp
     )
 
 set(COMMS_QCOM_QOGR_HEADER_FILES

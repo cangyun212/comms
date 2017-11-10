@@ -612,6 +612,63 @@ namespace sg
         static uint8      s_state;
     };
 
+    class QcomSPAMAction : public Action
+    {
+    public:
+        QcomSPAMAction();
+       ~QcomSPAMAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        std::string Text() const { return s_text; }
+        uint8_t     Type() const { return s_type; }
+        uint8_t     Prom() const { return s_prominence; }
+        uint8_t     Fanfare() const { return s_fanfare; }
+
+    private:
+        static std::string      s_text;
+        static uint8            s_type;
+        static uint8            s_prominence;
+        static uint8            s_fanfare;
+    };
+
+    class QcomTowerLightMaintenanceAction : public Action
+    {
+    public:
+        QcomTowerLightMaintenanceAction();
+       ~QcomTowerLightMaintenanceAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        uint8_t     YellowOn() const { return s_yellow_on; }
+        uint8_t     BlueOn() const { return s_blue_on; }
+        uint8_t     RedOn() const { return s_red_on; }
+        uint8_t     YellowFlash() const { return s_yellow_flash; }
+        uint8_t     BlueFlash() const { return s_blue_flash; }
+        uint8_t     RedFlash() const { return s_red_flash; }
+
+    private:
+        static uint8        s_yellow_on;
+        static uint8        s_blue_on;
+        static uint8        s_red_on;
+        static uint8        s_yellow_flash;
+        static uint8        s_blue_flash;
+        static uint8        s_red_flash;
+    };
+
     class QcomTimeDateAction : public Action
     {
     public:

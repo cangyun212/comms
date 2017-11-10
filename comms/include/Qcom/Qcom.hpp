@@ -50,7 +50,10 @@
 #define QCOM_CTO_CANCEL         0x01
 #define QCOM_CTO_APPROVE        0x02
 
-#define QCOM_AUTHNO_BYTE_NUM     16
+#define QCOM_AUTHNO_BYTE_NUM    16
+
+#define QCOM_SPAM_TYPE_A        1
+#define QCOM_SPAM_TYPE_B        2
 
 namespace sg 
 {
@@ -309,6 +312,25 @@ namespace sg
         uint8_t     state;
     };
 
+    struct QcomSPAMPollData
+    {
+        char        text[QCOM_SPAMP_TEXT_SIZE];
+        uint8_t     len;
+        uint8_t     prominence;
+        uint8_t     fanfare;
+
+    };
+
+    struct QcomTowerLightMaintenancePollData
+    {
+        uint8_t     yellow_on;
+        uint8_t     blue_on;
+        uint8_t     red_on;
+        uint8_t     yellow_flash;
+        uint8_t     blue_flash;
+        uint8_t     red_flash;
+    };
+
     struct QcomEGMData
     {
         QcomEGMControlData              control;
@@ -426,6 +448,8 @@ namespace sg
         void    HopperTicketPrinterMaintenance(uint8_t poll_address, uint8_t test, QcomHopperTicketPrinterData const& data);
         void    LPAwardAck(uint8_t poll_address);
         void    GeneralReset(uint8_t poll_address, QcomGeneralResetPollData const& data);
+        void    SPAM(uint8_t poll_address, uint8_t type, QcomSPAMPollData const& data);
+        void    TowerLightMaintenance(uint8_t poll_address, QcomTowerLightMaintenancePollData const& data);
         void    PendingPoll(size_t poll_num = 2);
         void    SendPoll();
 

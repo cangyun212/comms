@@ -555,6 +555,7 @@ namespace sg
     void QcomSim::CashTicketOutRequest(const ActionCenter & sender, const ActionPtr & action)
     {
         SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
 
         if (m_curr_egm == 0)
             Pick(0);
@@ -685,6 +686,57 @@ namespace sg
             data.state = p->State();
 
             m_qcom->GeneralReset(m_curr_egm, data);
+        }
+    }
+
+    void QcomSim::SPAM(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomSPAMActionPtr p = std::static_pointer_cast<QcomSPAMAction>(action);
+
+            QcomSPAMPollData data;
+
+            std::string text = p->Text();
+            data.len = static_cast<uint8_t>(text.size());
+            data.len = data.len < QCOM_SPAMP_TEXT_SIZE ? data.len : QCOM_SALRP_TEXT_SIZE;
+
+            std::memcpy(data.text, text.c_str(), sizeof(char) * data.len);
+
+            data.prominence = p->Prom();
+            data.fanfare = p->Fanfare();
+
+            m_qcom->SPAM(m_curr_egm, p->Type(), data);
+        }
+
+    }
+
+    void QcomSim::TowerLightMaintenance(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomTowerLightMaintenanceActionPtr p = std::static_pointer_cast<QcomTowerLightMaintenanceAction>(action);
+
+            QcomTowerLightMaintenancePollData data;
+
+            data.yellow_on = p->YellowOn();
+            data.blue_on = p->BlueOn();
+            data.red_on = p->RedOn();
+            data.yellow_flash = p->YellowFlash();
+            data.blue_flash = p->BlueFlash();
+            data.red_flash = p->RedFlash();
+
+            m_qcom->TowerLightMaintenance(m_curr_egm, data);
         }
     }
 

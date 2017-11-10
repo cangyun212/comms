@@ -1,8 +1,8 @@
 #include "Core.hpp"
 #include "Utils.hpp"
 
-#include "Qcom/qogr/qogr_crc.h"
 #include "Qcom/QcomGeneralReset.hpp"
+#include "Qcom/qogr/qogr_crc.h"
 
 namespace sg 
 {

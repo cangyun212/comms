@@ -48,6 +48,8 @@ namespace sg {
         void    HopperTicketPrinterMaintenance(const ActionCenter &sender, const ActionPtr &action);
         void    LPAwardAck(const ActionCenter &sender, const ActionPtr &action);
         void    GeneralReset(const ActionCenter &sender, const ActionPtr &action);
+        void    SPAM(const ActionCenter &sender, const ActionPtr &action);
+        void    TowerLightMaintenance(const ActionCenter & sender, const ActionPtr & action);
         void    PendingPoll(const ActionCenter &sender, const ActionPtr &action);
         void    SendPoll(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);

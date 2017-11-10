@@ -248,6 +248,20 @@ namespace sg
 
             *connection = evt->connect(std::bind(&QcomSim::GeneralReset, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            connection = sim->Install(Action::AT_QCOM_SPAM);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_SPAM);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::SPAM, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_TOWER_LIGHT_MAINTENANCE);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_TOWER_LIGHT_MAINTENANCE);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::TowerLightMaintenance, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             return sim;
         }
 

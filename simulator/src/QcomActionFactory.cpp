@@ -134,6 +134,15 @@ namespace sg
         ptr->BuildOptions();
         m_actions["reset"] = ptr;
 
+        ptr = MakeSharedPtr<QcomSPAMAction>();
+        ptr->BuildOptions();
+        m_actions["spam"] = ptr;
+
+        ptr = MakeSharedPtr<QcomTowerLightMaintenanceAction>();
+        ptr->BuildOptions();
+        m_actions["towerlight"] = ptr;
+        m_actions["tl"] = ptr;
+
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();
         m_actions["pending"] = ptr;

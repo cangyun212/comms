@@ -30,6 +30,8 @@ namespace sg {
     class QcomHopperTicketPrinterMaintenanceAction;
     class QcomLPAwardAckAction;
     class QcomGeneralResetAction;
+    class QcomSPAMAction;
+    class QcomTowerLightMaintenanceAction;
     class QcomTimeDateAction;
     class QcomLPCurrentAmountAction;
     class QcomGeneralPromotionalAction;
@@ -72,6 +74,8 @@ namespace sg {
     typedef std::shared_ptr<QcomPurgeEventsAction> QcomPurgeEventsActionPtr;
     typedef std::shared_ptr<QcomLPAwardAckAction> QcomLPAwardAckActionPtr;
     typedef std::shared_ptr<QcomGeneralResetAction> QcomGeneralResetActionPtr;
+    typedef std::shared_ptr<QcomSPAMAction> QcomSPAMActionPtr;
+    typedef std::shared_ptr<QcomTowerLightMaintenanceAction> QcomTowerLightMaintenanceActionPtr;
     typedef std::shared_ptr<QcomTimeDateAction> QcomTimeDateActionPtr;
     typedef std::shared_ptr<QcomLPCurrentAmountAction> QcomLPCurrentAmountActionPtr;
     typedef std::shared_ptr<QcomGeneralPromotionalAction> QcomGeneralPromotionalActionPtr;

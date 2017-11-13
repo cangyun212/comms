@@ -137,10 +137,21 @@ namespace sg
         uint8_t         pnum;
     };
 
+    // merge progressive config data and progressive change data together
     struct QcomProgressiveConfigData
     {
-        uint32_t        camt[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, if SAP, then this is the start up value for each level; if LP, this will be the initial jackpot current amount
+        uint32_t        sup[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, if SAP, then this is the start up value for each level; if LP, this will be the initial jackpot current amount
+        uint32_t        pinc[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level percentage increment x 10000
+        uint32_t        ceil[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level ceiling
+        uint32_t        auxrtp[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new auxiliary RTP for the level x 10000
         uint8_t         flag_p[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, check bit 7 to denote the level as a LP, otherwise the level is a SAP
+        //uint8_t         pnum;
+    };
+
+    struct QcomLinkProgressivePoolData
+    {
+        QcomProgressiveConfigData config;
+        uint32_t        camt[QCOM_REMAX_EGMGCP];
         uint8_t         pnum;
     };
 
@@ -161,23 +172,35 @@ namespace sg
 
     struct QcomGameConfigData
     {
-        QcomProgressiveConfigData       progressive_config;
+        QcomProgressiveConfigData       progressive;
         QcomGameSettingData             settings;
+    };
+
+    struct QcomProgressiveLevelData
+    {
+        //uint8_t         type[QCOM_REMAX_PMR]; // ref Qcom1.6-15.6.3 level type
+        uint32_t        camt[QCOM_REMAX_PMR]; // ref Qcom1.6-15.6.3 current progressive level contribution
+        uint16_t        hits[QCOM_REMAX_PMR]; // ref Qcom1.6-15.6.3 total hits on the progressive level
+        uint32_t        wins[QCOM_REMAX_PMR]; // ref Qcom1.6-15.6.3 total wins for the progressive level
+        float           hrate[QCOM_REMAX_PMR];// ref Qcom1.6-15.6.3 theoretical hit rate
     };
 
     struct QcomProgressiveData
     {
-        uint32_t        pinc[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level percentage increment x 10000
-        uint32_t        ceil[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level ceiling
-        uint32_t        auxrtp[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, nw auxiliary RTP for the level x 10000
+        QcomProgressiveLevelData levels;
+        uint32_t        pamt; // ref Qcom1.6.-15.6.3 lp turnover meter
+        uint8_t         pnum; // total level number 0 - 8
+        //uint32_t        pinc[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level percentage increment x 10000
+        //uint32_t        ceil[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level ceiling
+        //uint32_t        auxrtp[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, nw auxiliary RTP for the level x 10000
     };
 
-    struct QcomProgressiveChangeData
-    {
-        uint32_t            sup[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level start-up amount
-        QcomProgressiveData prog;
-        uint8_t             pnum;
-    };
+    //struct QcomProgressiveChangeData
+    //{
+    //    uint32_t            sup[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level start-up amount
+    //    QcomProgressiveData prog;
+    //    uint8_t             pnum;
+    //};
 
     struct QcomExtJPInfoData
     {
@@ -431,10 +454,10 @@ namespace sg
         void    GeneralStatus(uint8_t poll_address);
         void    EGMConfRequest(uint8_t poll_address, QcomEGMControlPollData const& data);
         void    EGMConfiguration(uint8_t poll_address, QcomEGMConfigPollData const& data);
-        void    GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data);
+        void    GameConfiguration(uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomGameConfigData const& data);
         void    GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);
         void    EGMParameters(uint8_t poll_address, QcomEGMParametersData const& data);
-        void    ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const& data);
+        void    ProgressiveChange(uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomProgressiveConfigData const& data);
         void    ExtJPInfo(uint8_t poll_address, QcomExtJPInfoData const& data);
         void    ProgHashRequest(uint8_t poll_address, QcomProgHashRequestData const& data);
         void    SystemLockup(uint8_t poll_address, QcomSysLockupRequestData const& data);
@@ -507,7 +530,7 @@ namespace sg
     private:
         void    StartJobThread();
         void    StopJobThread();
-        bool    AddLPConfigData(uint16_t pgid, QcomProgressiveConfigData const& data);
+        bool    AddLPConfigData(uint16_t pgid, uint8_t pnum, QcomProgressiveConfigData const& data);
         bool    GetLPConfigData(QcomLinkedProgressiveData &data);
         bool    DecoratePoll(QcomPollPtr &p);
 
@@ -536,11 +559,11 @@ namespace sg
 
         bool            m_lpbroadcast;
         std::mutex      m_lp_guard;
-        typedef std::shared_ptr<QcomProgressiveConfigData> QcomProgressiveConfigDataPtr;
-        typedef std::map<uint16_t, QcomProgressiveConfigDataPtr> LPMap;
-        LPMap           m_lps;
-        typedef LPMap::const_iterator   LPMapHandle;
-        LPMapHandle     m_curr_lp;
+        typedef std::shared_ptr<QcomLinkProgressivePoolData> QcomLinkProgressivePoolDataPtr;
+        typedef std::map<uint16_t, QcomLinkProgressivePoolDataPtr> LPPool;
+        LPPool          m_lps;
+        typedef LPPool::const_iterator   LPPoolHandle;
+        LPPoolHandle    m_curr_lp;
 
 
 

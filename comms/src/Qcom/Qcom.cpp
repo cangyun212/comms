@@ -691,10 +691,10 @@ namespace sg
         SG_QCOM_ADD_POLL_JOB(job);
     }
 
-    bool CommsQcom::AddLPConfigData(uint16_t pgid, const QcomProgressiveConfigData &data)
+    bool CommsQcom::AddLPConfigData(uint16_t pgid, uint8_t pnum, const QcomProgressiveConfigData &data)
     {
         bool is_lp = false;
-        for (uint8_t level = 0; level < data.pnum; ++level)
+        for (uint8_t level = 0; level < pnum; ++level)
         {
             if (data.flag_p[level])
             {
@@ -709,25 +709,28 @@ namespace sg
         if (is_lp)
         {
             std::unique_lock<std::mutex> lock(m_lp_guard);
-            auto res = m_lps.insert(std::make_pair(pgid, MakeSharedPtr<QcomProgressiveConfigData>(data)));
+
+            QcomLinkProgressivePoolDataPtr ptr = MakeSharedPtr<QcomLinkProgressivePoolData>();
+            ptr->config = data;
+            ptr->pnum = pnum;
+
+            auto res = m_lps.insert(std::make_pair(pgid, ptr));
 
             if (!res.second)
             {
-                QcomProgressiveConfigData tmp;
-                if (res.first->second->pnum == data.pnum)
+                if (res.first->second->pnum == pnum)
                 {
-                    tmp.pnum = data.pnum;
-                    for (uint8_t level = 0; level < data.pnum; ++level)
+                    for (uint8_t level = 0; level < pnum; ++level)
                     {
-                        if (res.first->second->flag_p[level] && data.flag_p[level])
+                        if (res.first->second->config.flag_p[level] && data.flag_p[level])
                         {
-                            tmp.flag_p[level] = 1;
-                            tmp.camt[level] = data.camt[level];
+                            //ptr->config.flag_p[level] = 1;
+                            //ptr->config.sup[level] = data.sup[level];
+                            ptr->camt[level] = ptr->config.sup[level];
                         }
-                        else if (!res.first->second->flag_p[level] && !data.flag_p[level])
+                        else if (!res.first->second->config.flag_p[level] && !data.flag_p[level])
                         {
-                            tmp.flag_p[level] = 0;
-                            tmp.camt[level] = 0;
+                            ptr->camt[level] = 0;
                         }
                         else
                         {
@@ -738,13 +741,7 @@ namespace sg
 
                     if (err_level_type == QCOM_REMAX_EGMGCP)
                     {
-                        for (uint8_t level = 0; level < tmp.pnum; ++level)
-                        {
-                            if (tmp.flag_p[level])
-                            {
-                                res.first->second->camt[level] = tmp.camt[level];
-                            }
-                        }
+                        *(res.first->second) = *ptr;
                     }
                 }
                 else
@@ -757,7 +754,7 @@ namespace sg
         if (err_pnum != QCOM_REMAX_EGMGCP)
         {
             COMMS_LOG(boost::format("Can't update link progressive data of PGID %1% due to wrong level num %2% (%3% is expected).\n") %
-                pgid % static_cast<uint32_t>(data.pnum) % static_cast<uint32_t>(err_pnum), CLL_Error);
+                pgid % static_cast<uint32_t>(pnum) % static_cast<uint32_t>(err_pnum), CLL_Error);
 
             return false;
         }
@@ -784,7 +781,7 @@ namespace sg
             uint8_t num = 0;
             for (uint8_t i = 0; i < m_curr_lp->second->pnum; ++i)
             {
-                if (m_curr_lp->second->flag_p[i])
+                if (m_curr_lp->second->config.flag_p[i])
                 {
                     m_curr_lp->second->camt[i] += 1; // TODO: increment lp here implicitly
                     data.lpamt[num] = m_curr_lp->second->camt[i];
@@ -833,7 +830,7 @@ namespace sg
         return true;
     }
 
-    void CommsQcom::GameConfiguration(uint8_t poll_address, uint16_t gvn, QcomGameConfigData const& data)
+    void CommsQcom::GameConfiguration(uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomGameConfigData const& data)
     {
         SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
@@ -848,15 +845,15 @@ namespace sg
         //if (!handler->BuildGameConfigPoll(job, poll_address, gvn, data))
         //    return;
         std::vector<QcomJobDataPtr> jobs;
-        if (!handler->BuildGameConfigJobs(jobs, poll_address, gvn, data))
+        if (!handler->BuildGameConfigJobs(jobs, poll_address, gvn, pnum, data))
             return;
 
-        for (uint8_t i = 0; i < data.progressive_config.pnum; ++i)
+        for (uint8_t i = 0; i < pnum; ++i)
         {
-            if (data.progressive_config.flag_p[i])
+            if (data.progressive.flag_p[i])
             {
                 // from now, sim should keep sending link broadcast instead date and time only
-                this->AddLPConfigData(data.settings.pgid, data.progressive_config);
+                this->AddLPConfigData(data.settings.pgid, pnum, data.progressive);
                 m_lpbroadcast = true;
                 break;
             }
@@ -910,14 +907,14 @@ namespace sg
         SG_QCOM_ADD_POLL_JOB(job);
     }
 
-    void CommsQcom::ProgressiveChange(uint8_t poll_address, uint16_t gvn, QcomProgressiveChangeData const & data)
+    void CommsQcom::ProgressiveChange(uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomProgressiveConfigData const & data)
     {
         SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
         QcomProgressiveConfigPtr handler = std::static_pointer_cast<QcomProgressiveConfig>(m_handler[QCOM_PCP_FC]);
-        if (!handler->BuildProgConfigPoll(job, poll_address, gvn, data))
+        if (!handler->BuildProgConfigPoll(job, poll_address, gvn, pnum, data))
             return;
 
         SG_QCOM_ADD_POLL_JOB(job);

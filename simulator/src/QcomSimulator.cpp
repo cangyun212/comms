@@ -269,14 +269,15 @@ namespace sg
             QcomGameConfigurationActionPtr p = std::static_pointer_cast<QcomGameConfigurationAction>(action);
 
             QcomGameConfigData data;
+            std::memset(&data, 0, sizeof(data));
 
             data.settings.pgid = p->PGID();
             data.settings.var = p->VAR();
             data.settings.var_lock = p->VARLock();
             data.settings.game_enable = p->GameEnable();
-            data.progressive_config.pnum = p->ProgressiveConfig(data.progressive_config.flag_p, data.progressive_config.camt);
+            uint8_t pnum = p->ProgressiveConfig(data.progressive.flag_p, data.progressive.sup);
 
-            m_qcom->GameConfiguration(m_curr_egm, p->GVN(), data);
+            m_qcom->GameConfiguration(m_curr_egm, p->GVN(), pnum, data);
         }
     }
 
@@ -365,10 +366,10 @@ namespace sg
         {
             QcomProgressiveConfigActionPtr p = std::static_pointer_cast<QcomProgressiveConfigAction>(action);
 
-            QcomProgressiveChangeData data;
-            data.pnum = p->ProgChangeData(data.sup, data.prog.pinc, data.prog.ceil, data.prog.auxrtp);
+            QcomProgressiveConfigData data;
+            uint8_t pnum = p->ProgChangeData(data.sup, data.pinc, data.ceil, data.auxrtp);
             
-            m_qcom->ProgressiveChange(m_curr_egm, p->GVN(), data);
+            m_qcom->ProgressiveChange(m_curr_egm, p->GVN(), pnum, data);
         }
     }
 

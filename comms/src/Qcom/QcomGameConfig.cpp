@@ -163,17 +163,25 @@ namespace sg
         return false;
     }
 
-    bool QcomGameConfiguration::BuildGameConfigPollForGame(QcomJobDataPtr &job, QcomDataPtr &p, uint8_t poll_address, uint8_t game, const QcomGameConfigData &data)
+    bool QcomGameConfiguration::BuildGameConfigPollForGame(QcomJobDataPtr &job, QcomDataPtr &p, uint8_t poll_address, uint8_t game, uint8_t pnum, const QcomGameConfigData &data)
     {
-        job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, p->data.games[game].gvn, data));
+        job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, p->data.games[game].gvn, pnum, data));
 
         p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
-        p->data.games[game].config = data;
+        //p->data.games[game].config = data;
+        p->data.games[game].config.settings = data.settings;
+        for (uint8_t i = 0; i < pnum; ++i)
+        {
+            p->data.games[game].config.progressive.sup[i] = data.progressive.sup[i];
+            p->data.games[game].config.progressive.flag_p[i] = data.progressive.flag_p[i];
+        }
+
+        p->data.games[game].prog.pnum = pnum;
 
         return true;
     }
 
-    bool QcomGameConfiguration::BuildGameConfigJobs(std::vector<QcomJobDataPtr> &jobs, uint8_t poll_address, uint16_t gvn, const QcomGameConfigData &data)
+    bool QcomGameConfiguration::BuildGameConfigJobs(std::vector<QcomJobDataPtr> &jobs, uint8_t poll_address, uint16_t gvn, uint8_t pnum, const QcomGameConfigData &data)
     {
         if (auto it = m_qcom.lock())
         {
@@ -196,7 +204,7 @@ namespace sg
                             !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY))
                         {
                             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-                            this->BuildGameConfigPollForGame(job, p, poll_address, game, data);
+                            this->BuildGameConfigPollForGame(job, p, poll_address, game, pnum, data);
                             jobs.push_back(job);
                         }
                     }
@@ -208,7 +216,7 @@ namespace sg
                         if (p->data.games[game].gvn == gvn)
                         {
                             QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-                            this->BuildGameConfigPollForGame(job, p, poll_address, game, data);
+                            this->BuildGameConfigPollForGame(job, p, poll_address, game, pnum, data);
                             jobs.push_back(job);
                             break;
                         }
@@ -296,7 +304,7 @@ namespace sg
     //    return false;
     //}
 
-    QcomPollPtr QcomGameConfiguration::MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, 
+    QcomPollPtr QcomGameConfiguration::MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, uint8_t pnum, 
         QcomGameConfigData const& data)
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
@@ -314,18 +322,18 @@ namespace sg
         poll->poll.Data.egmgcp.GFLG.bits.varlock = data.settings.var_lock;
         poll->poll.Data.egmgcp.GFLG.bits.GEF = data.settings.game_enable;
         poll->poll.Data.egmgcp.PGID = data.settings.pgid;
-        poll->poll.Data.egmgcp.PNUM = data.progressive_config.pnum;
+        poll->poll.Data.egmgcp.PNUM = pnum; //data.progressive_config.pnum;
         poll->poll.Data.egmgcp.SIZ = sizeof(qc_egmcpretype);
 
         poll->poll.DLL.Length = QCOM_DLL_HEADER_SIZE + 
             sizeof(poll->poll.Data.egmgcp) - sizeof(poll->poll.Data.egmgcp.re) + 
             poll->poll.Data.egmgcp.PNUM * poll->poll.Data.egmgcp.SIZ;
 
-        for (uint8_t i = 0; i < data.progressive_config.pnum; ++i)
+        for (uint8_t i = 0; i < pnum; ++i)
         {
             poll->poll.Data.egmgcp.re[i].PFLG.bits.res = 0;
-            poll->poll.Data.egmgcp.re[i].PFLG.bits.LP = data.progressive_config.flag_p[i];
-            poll->poll.Data.egmgcp.re[i].CAMT = data.progressive_config.camt[i];
+            poll->poll.Data.egmgcp.re[i].PFLG.bits.LP = data.progressive.flag_p[i];
+            poll->poll.Data.egmgcp.re[i].CAMT = data.progressive.sup[i];
         }
 
         //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);

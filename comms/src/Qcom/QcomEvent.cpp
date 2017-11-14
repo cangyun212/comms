@@ -282,8 +282,8 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.LP.VAR), sizeof(d->EXTD.LP.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| Group:0x%|4X| Lev: %|d| $%|d|") %
-                            d->EXTD.LP.GVN % var % d->EXTD.LP.PGID % d->EXTD.LP.PLVL.PLVL % d->EXTD.LP.PAMT).str();
+                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| PGID:0x%|04X| Lev: %|d| $%|d|") %
+                            d->EXTD.LP.GVN % var % d->EXTD.LP.PGID % d->EXTD.LP.PLVL.bits.level % d->EXTD.LP.PAMT).str();
                     }
                     else
                     {
@@ -303,7 +303,7 @@ namespace sg
                     if (_QComGetBCD(&var, &(d->EXTD.SAP.VAR), sizeof(d->EXTD.SAP.VAR)))
                     {
                         ext = (boost::format("Gem:0x%|04X| Var:%|02d| Lev: %|d| $%|d|") %
-                            d->EXTD.SAP.GVN % var % d->EXTD.SAP.PLVL.PLVL % d->EXTD.SAP.PAMT).str();
+                            d->EXTD.SAP.GVN % var % d->EXTD.SAP.PLVL.bits.level % d->EXTD.SAP.PAMT).str();
                     }
                     else
                     {

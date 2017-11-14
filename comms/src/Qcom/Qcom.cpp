@@ -769,6 +769,13 @@ namespace sg
                     err_pnum = res.first->second->pnum;
                 }
             }
+            else
+            {
+                for (uint8_t level = 0; level < ptr->pnum; ++level)
+                {
+                    ptr->camt[level] = ptr->config.sup[level];
+                }
+            }
         }
 
         if (err_pnum != QCOM_REMAX_EGMGCP)

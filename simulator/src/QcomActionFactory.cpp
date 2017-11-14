@@ -36,14 +36,17 @@ namespace sg
         m_actions["td"] = ptr;
 
         ptr = MakeSharedPtr<QcomLPCurrentAmountAction>();
+        ptr->BuildOptions();
         m_actions["lpcamt"] = ptr;
         m_actions["lp"] = ptr;
 
         ptr = MakeSharedPtr<QcomGeneralPromotionalAction>();
+        ptr->BuildOptions();
         m_actions["generalpromt"] = ptr;
         m_actions["gp"] = ptr;
 
         ptr = MakeSharedPtr<QcomSiteDetailAction>();
+        ptr->BuildOptions();
         m_actions["sitedetail"] = ptr;
         m_actions["sd"] = ptr;
 
@@ -111,6 +114,7 @@ namespace sg
         m_actions["reqto"] = ptr;
 
         ptr = MakeSharedPtr<QcomEGMGeneralMaintenanceAction>();
+        ptr->BuildOptions();
         m_actions["generalmainten"] = ptr;
         m_actions["gm"] = ptr;
 

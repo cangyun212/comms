@@ -24,7 +24,7 @@ namespace sg
             if (p->Data.mgcr.FLG.bits.LP)
                 size += sizeof(qc_progrconttype);
 
-            if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_pmrtype2) - sizeof(p->Data.mgcr.re) + size))
+            if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_mgcrtype) - sizeof(p->Data.mgcr.re) + size))
             {
                 QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 
@@ -65,6 +65,13 @@ namespace sg
                         }
 
                         pd->data.mgc.groups[gid].met[mid] = pmg->MET;
+                    }
+
+                    if (p->Data.mgcr.FLG.bits.LP)
+                    {
+                        qc_progrconttype *plpc = ((qc_progrconttype *)(&p->Data.mgcr.re[p->Data.mgcr.FLG.bits.num+1]));
+                        pd->data.mgc.pgid = plpc->PGID;
+                        pd->data.mgc.pamt = plpc->CAMT;
                     }
                 }
 

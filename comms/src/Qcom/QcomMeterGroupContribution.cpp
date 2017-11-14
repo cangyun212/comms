@@ -43,7 +43,7 @@ namespace sg
 
                         uint8_t gid = 0;
                         uint8_t mid = 0;
-                        if (pmg->MGID >= 0x00 && pmg->MGID <= 0x0F)
+                        if (pmg->MGID <= 0x0F)
                         {
                             gid = 0;
                             mid = pmg->MGID;

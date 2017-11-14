@@ -964,7 +964,16 @@ namespace sg
                                 {
                                     if (_QComGetBCD(&year, &(d.TIMEDATE.year), sizeof(d.TIMEDATE.year)))
                                     {
-                                        return qcom_log_event(&d, sermid, sec, min, hour, day, month, year);
+                                        if (qcom_log_event(&d, sermid, sec, min, hour, day, month, year))
+                                        {
+                                            if (d.ECOD == QC_EC_EGM_EVENT_QUEUE_FULL)
+                                            {
+                                                it->PurgeEvents(p->DLL.PollAddress, 0);
+                                            }
+                                            return true;
+                                        }
+                                        else
+                                            return false;
                                     }
                                 }
                             }

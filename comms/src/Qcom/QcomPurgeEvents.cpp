@@ -24,7 +24,7 @@ namespace sg
         if (auto it = m_qcom.lock())
         {
             QCOM_RespMsgType *p = (QCOM_RespMsgType*)buf;
-            if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_peptype)))
+            if (p->DLL.Length >= QCOM_GET_PACKET_LENGTH(sizeof(qc_pepacktype)))
             {
                 QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 

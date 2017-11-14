@@ -43,6 +43,11 @@ namespace sg
                     return true;
                 }
             }
+            else
+            {
+                COMMS_LOG(boost::format("General Status Response received, data length %|| is not valid.\n") % 
+                    static_cast<uint32_t>(p->DLL.Length), CLL_Error);
+            }
         }
 
         return false;

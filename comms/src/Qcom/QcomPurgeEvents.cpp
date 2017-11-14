@@ -46,6 +46,11 @@ namespace sg
                 COMMS_LOG(boost::format("Received invalid PSN %1%, PSN %2% is expected.\n") %
                     p->Data.pepar.PPSN % psn, CLL_Error);
             }
+            else
+            {
+                COMMS_LOG(boost::format("Purge Event Response received, data length %|| is not valid.\n") % 
+                    static_cast<uint32_t>(p->DLL.Length), CLL_Error);
+            }
         }
 
         return false;

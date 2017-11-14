@@ -32,6 +32,11 @@
 #include "Qcom/QcomGeneralReset.hpp"
 #include "Qcom/QcomSPAM.hpp"
 #include "Qcom/QcomTowerLightMaintenance.hpp"
+#include "Qcom/QcomProgressiveMeters.hpp"
+#include "Qcom/QcomBetMeters.hpp"
+#include "Qcom/QcomMultiGameVarMeters.hpp"
+#include "Qcom/QcomPlayerChoiceMeters.hpp"
+#include "Qcom/QcomMeterGroupContribution.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -200,6 +205,21 @@ namespace sg
 
         p = MakeSharedPtr<QcomTowerLightMaintenance>(this_ptr);
         m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomProgressiveMeters>(this_ptr);
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomBetMeters>(this_ptr);
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomMultiGameVarMeters>(this_ptr);
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomPlayerChoiceMeters>(this_ptr);
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomMeterGroupContribution>(this_ptr);
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
 
     }
 

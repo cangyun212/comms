@@ -983,6 +983,11 @@ namespace sg
                     static_cast<uint32_t>(d.TIMEDATE.year), 
                     CLL_Error);
             }
+            else
+            {
+                COMMS_LOG(boost::format("Event Response received, data length %|| is not valid.\n") % 
+                    static_cast<uint32_t>(p->DLL.Length), CLL_Error);
+            }
         }
 
         return false;

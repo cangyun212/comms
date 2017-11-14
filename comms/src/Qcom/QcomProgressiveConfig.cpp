@@ -147,6 +147,11 @@ namespace sg
                     COMMS_END_LOG_BLOCK();
                 }
             }
+            else
+            {
+                COMMS_LOG(boost::format("Progressive configuration Response received, data length %|| is not valid.\n") % 
+                    static_cast<uint32_t>(p->DLL.Length), CLL_Error);
+            }
         }
 
         return false;

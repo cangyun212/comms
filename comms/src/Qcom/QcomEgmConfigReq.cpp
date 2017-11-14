@@ -181,6 +181,11 @@ namespace sg
                 COMMS_LOG("EGM Configuration Response received\n", CLL_Info);
                 return true;
             }
+            else
+            {
+                COMMS_LOG(boost::format("EGM Configuration Response received, data length %|| is not valid.\n") % 
+                    static_cast<uint32_t>(p->DLL.Length), CLL_Error);
+            }
         }
 
         return false;

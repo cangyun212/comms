@@ -55,6 +55,9 @@
 #define QCOM_SPAM_TYPE_A        1
 #define QCOM_SPAM_TYPE_B        2
 
+#define QCOM_METER_GROUP_NUM    3 // now only 0 -2 is available, group 3 - 15 is reserved
+#define QCOM_METER_NUM          17 // each meter group has 0x00 - 0x0F meters, some of them are reserved
+
 namespace sg 
 {
     inline uint8_t  QcomNextPSN(uint8_t psn)
@@ -213,11 +216,50 @@ namespace sg
         uint8_t             icon;
     };
 
+    struct QcomBetMetersData
+    {
+        uint16_t    maxl;
+        uint16_t    maxb;
+        uint16_t    gbfa;
+        uint16_t    gbfb;
+        uint32_t    cmet[QCOM_BMR_MAX_CMET];
+    };
+
+    struct QcomMultiGameVarMetersData
+    {
+        uint32_t    str;  // Total Game Stroke, ref Qcom1.6-15.6.6
+        uint32_t    turn; // Total Game Turnover, ref Qcom1.6-15.6.6
+        uint32_t    win;  // Total Game Wins added to credit meter. ref Qcom1.6.15.6.6
+        uint32_t    pwin; // Total Game Linked Progressive Wins, ref Qcom1.6-15.6.6
+        uint32_t    gwin; // Total Games Won, ref Qcom1.6-15.6.6
+    };
+
+    struct QcomPlayerChoiceMetersData
+    {
+        uint32_t    pcmet[QCOM_PCMR_MAX_RE];
+    };
+
+    struct QcomMeterGroup
+    {
+        uint32_t    met[QCOM_METER_NUM];
+    };
+
+    struct QcomMeterGroupContributionData
+    {
+        QcomMeterGroup      groups[QCOM_METER_GROUP_NUM];
+        uint32_t            pamt;
+        uint16_t            lgvn; // The Game Version Number of the last initiated game on the EGM, ref Qcom1.6-15.6.8
+        uint16_t            pgid;
+    };
+
     struct QcomGameData
     {
         QcomGameConfigData              config;
         QcomVariationData               variations;
         QcomProgressiveData             prog;
+        QcomBetMetersData               betm;
+        QcomMultiGameVarMetersData      mgvm;
+        QcomPlayerChoiceMetersData      pcm;
         uint16_t                        gvn;
         uint8_t                         var_hot_switching; // ref Qcom1.6-15.6.11, set if the game support on-the-fly variation switching
         uint8_t                         lp_only; // ref Qcom1.6-15.6.11
@@ -364,6 +406,7 @@ namespace sg
         QcomExtJPInfoData               extjpinfo;
         QcomNoteAcceptorStatusData      nasr;
         QcomHopperTicketPrinterData     htp;
+        QcomMeterGroupContributionData  mgc;
         QcomGameData                    games[QCOM_MAX_GAME_NUM];
     };
 

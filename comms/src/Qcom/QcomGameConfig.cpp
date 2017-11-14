@@ -158,6 +158,11 @@ namespace sg
                         can't apply to any game of it.\n") % static_cast<uint32_t>(p->DLL.PollAddress) , CLL_Error);
                 }
             }
+            else
+            {
+                COMMS_LOG(boost::format("Game Configuration Response received, data length %|| is not valid.\n") % 
+                    static_cast<uint32_t>(p->DLL.Length), CLL_Error);
+            }
         }
 
         return false;

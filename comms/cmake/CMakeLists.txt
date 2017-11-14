@@ -61,6 +61,11 @@ set(COMMS_QCOM_HEADER_FILES
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomGeneralReset.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomSPAM.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomTowerLightMaintenance.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomProgressiveMeters.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomBetMeters.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomMultiGameVarMeters.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomPlayerChoiceMeters.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomMeterGroupContribution.hpp
     )
 
 set(COMMS_QCOM_SOURCE_FILES
@@ -90,6 +95,11 @@ set(COMMS_QCOM_SOURCE_FILES
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomGeneralReset.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomSPAM.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomTowerLightMaintenance.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomProgressiveMeters.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomBetMeters.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomMultiGameVarMeters.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomPlayerChoiceMeters.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomMeterGroupContribution.cpp
     )
 
 set(COMMS_QCOM_QOGR_HEADER_FILES

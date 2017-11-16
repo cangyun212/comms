@@ -67,7 +67,7 @@ namespace sg
 
         ptr = MakeSharedPtr<QcomGameConfigurationChangeAction>();
         ptr->BuildOptions();
-        m_actions["gameconfigchange"] = ptr;
+        m_actions["changegconf"] = ptr;
         m_actions["cc"] = ptr;
 
         ptr = MakeSharedPtr<QcomEGMParametersAction>();

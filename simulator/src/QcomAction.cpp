@@ -395,7 +395,7 @@ namespace sg
         if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: gameconfigchange/cc [options]\n");
+            COMMS_PRINT_BLOCK("\nUsage: changegconf/cc [options]\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -433,7 +433,7 @@ namespace sg
 
     const char *QcomGameConfigurationChangeAction::Description() const
     {
-        static const char* des = "\tGame configuration change:\n\t\tcc,gameconfigchange\n";
+        static const char* des = "\tChange Game configuration:\n\t\tcc,changegconf\n";
         return des;
     }
 
@@ -542,7 +542,7 @@ namespace sg
 
     const char *QcomEGMParametersAction::Description() const
     {
-        static const char* des = "\tEGM Parameters:\n\t\tpp,egmparams\n";
+        static const char* des = "\tSet EGM Parameters:\n\t\tpp,egmparams\n";
         return des;
     }
 
@@ -629,7 +629,7 @@ namespace sg
 
     const char * QcomTimeDateAction::Description() const
     {
-        static const char* des = "\tTime Date Broadcast: \n\t\tsend time and date of SC\n";
+        static const char* des = "\tSend Time Date Broadcast: \n\t\ttd,timedate\n";
         return des;
     }
 
@@ -698,7 +698,7 @@ namespace sg
 
     const char * QcomLPCurrentAmountAction::Description() const
     {
-        static const char* des = "\tLP Current Amount Broadcast: \n\t\tsend out the current progressive amount to all LP games\n";
+        static const char* des = "\tSend LP Current Amount Broadcast: \n\t\tlp,lpcamt\n";
         return des;
     }
 
@@ -775,8 +775,7 @@ namespace sg
 
     const char * QcomGeneralPromotionalAction::Description() const
     {
-        static const char* des = "\tGeneral Promotional Broadcast: \n\t\tsend out to request EGM to display an arbitrary text message\
-                                    to the player while it is in idle mode\n";
+        static const char* des = "\tSend General Promotional Broadcast: \n\t\tgp,generalpromt\n";
 
         return des;
     }
@@ -843,7 +842,7 @@ namespace sg
 
     const char * QcomSiteDetailAction::Description() const
     {
-        static const char* des = "\tSite Detail Broadcast: \n\t\tThis message is in support of cash out ticket printing\n";
+        static const char* des = "\tSend Site Detail Broadcast: \n\t\tsd,sitedetail\n";
         return des;
     }
 
@@ -863,7 +862,7 @@ namespace sg
 
     const char * QcomEGMGeneralStatusAction::Description() const
     {
-        static const char* des = "\tGeneral Status: \n\t\tSolicit a response from the EGM to check if the status of the EGM has changed\n";
+        static const char* des = "\tRequest general Status of EGM: \n\t\tgs,generalstatus\n";
         return des;
     }
 
@@ -926,7 +925,7 @@ namespace sg
 
     const char * QcomPendingAction::Description() const
     {
-        static const char* des = "\tPending Poll:\n\t\tPending all polls following this command\n";
+        static const char* des = "\tPending Polls:\n\t\tpending\n";
         return des;
     }
 
@@ -975,7 +974,7 @@ namespace sg
 
     const char * QcomSendAction::Description() const
     {
-        static const char* des = "\tSend Poll:\n\t\tSend all pending polls\n";
+        static const char* des = "\tSend Pending Poll:\n\t\tsend\n";
         return des;
     }
 
@@ -1063,8 +1062,7 @@ namespace sg
 
     const char * QcomProgressiveConfigAction::Description() const
     {
-        static const char* des = "\tProgressive Config Change Poll:\n\t\tChange a game's current SAP configuration and inform the\
-                                EGM of the current parameters being used for its LP level (if any)\n";
+        static const char* des = "\tChange Progressive Config:\n\t\tpc,progressive\n";
         return des;
     }
 
@@ -1176,8 +1174,7 @@ namespace sg
 
     const char * QcomExtJPInfoAction::Description() const
     {
-        static const char* des = "\tExternal Jackpot Information Poll:\n\t\tInforms the EGM regarding details \
-                                of any external jackpot system it has been placed in.\n";
+        static const char* des = "\tExternal Jackpot Information:\n\t\textjpi,extjackpotinfo\n";
         return des;
     }
 
@@ -1262,8 +1259,7 @@ namespace sg
 
     const char * QcomProgHashRequestAction::Description() const
     {
-        static const char* des = "\tProgram Hash Request Poll:\n\t\tCommands the EGM to initiate a program hash calculation \
-                                using the given seed\n";
+        static const char* des = "\tProgram Hash Request:\n\t\thash\n";
         return des;
     }
 
@@ -1356,8 +1352,7 @@ namespace sg
 
     const char * QcomSysLockupRequestAction::Description() const
     {
-        static const char *des = "\tSystem Lockup Request Poll:\n\t\tThis poll is used by the SC when the system wishes award\
-                                  a system triggered prize through the EGM or lockup the EGM for some other reason.\n";
+        static const char *des = "\tSystem Lockup Request:\n\t\tlockup\n";
         return des;
     }
 
@@ -1443,8 +1438,7 @@ namespace sg
 
     const char* QcomCashTicketOutAckAction::Description() const
     {
-        static const char * des = "\tCash Ticket Out Acknowledgement Poll:\n\t\tA SC will send this poll in response\
-                                    to each new valid Cash Ticket Out Request Event received from the EGM.\n";
+        static const char * des = "\tCash Ticket Out Acknowledgement:\n\t\ttorack\n";
 
         return des;
     }
@@ -1514,8 +1508,7 @@ namespace sg
 
     const char* QcomCashTicketInAckAction::Description() const
     {
-        static const char * des = "\tCash Ticket In Acknowledgement Poll:\n\t\tA SC will send this poll in response to each Cash Ticket In Request Event received\
-from the EGM.\n";
+        static const char * des = "\tCash Ticket In Acknowledgement Poll:\n\t\ttirack\n";
 
         return des;
     }
@@ -1538,8 +1531,7 @@ from the EGM.\n";
 
     const char* QcomCashTicketOutRequestAction::Description() const
     {
-        static const char * des = "\tCash Ticket Out Request Poll:\n\t\tThis poll simply queue a 'collect'(as if the collect button was pressed)\
-upon next return to idle mode if the credit meter is not zero at that time\n";
+        static const char * des = "\tCash Ticket Out Request:\n\t\treqto\n";
         return des;
     }
     
@@ -1695,7 +1687,7 @@ upon next return to idle mode if the credit meter is not zero at that time\n";
 
     const char* QcomEGMGeneralMaintenanceAction::Description() const
     {
-        static const char* des = "\tEGM General Maintenance Poll:\n\t\tThis is a multi-purpose poll\n";
+        static const char* des = "\tEGM General Maintenance:\n\t\tgm,generalmainten\n";
         return des;
     }
 
@@ -1717,8 +1709,7 @@ upon next return to idle mode if the credit meter is not zero at that time\n";
 
     const char* QcomRequestAllLoggedEventsAction::Description() const
     {
-        static const char * des = "\tRequest All Logged Events Poll:\n\t\t\
-This poll commands EGM re-queue for transmission all currently logged events.\n";
+        static const char * des = "\tRequest All Logged Events:\n\t\t\reqevents\n";
 
         return des;
     }
@@ -1807,7 +1798,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     const char* QcomNoteAcceptorMaintenanceAction::Description() const
     {
-        static const char * des = "\tNote Acceptor Maintenance Poll:\n\t\tChange note acceptor settings if EGM support\n";
+        static const char * des = "\tNote Acceptor Maintenance:\n\t\tnam\n";
 
         return des;
     }
@@ -1884,7 +1875,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     const char* QcomHopperTicketPrinterMaintenanceAction::Description() const
     {
-        static const char * des = "\tHopper Ticket Printer Maintenance Poll:\n\t\tThis poll can change hopper and ticket printer parameters\n";
+        static const char * des = "\tHopper Ticket Printer Maintenance:\n\t\thtpm\n";
         return des;
     }
 
@@ -1906,8 +1897,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     const char* QcomLPAwardAckAction::Description() const
     {
-        static const char * des = "\tLink Progressive Award Acknowledged Poll:\n\t\tThis poll denotes taht the current linked progressive\
- award on the EGM has been verified by the system\n";
+        static const char * des = "\tLink Progressive Award Acknowledged:\n\t\tla,lpack\n";
         return des;
     }
 
@@ -1977,7 +1967,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     const char* QcomGeneralResetAction::Description() const
     {
-        static const char* des = "\tGeneral Reset Poll:\n\t\tThis poll commands EGM attempt to clear the current lock-up or fault condifition";
+        static const char* des = "\tGeneral Reset:\n\t\treset\n";
 
         return des;
     }
@@ -2057,7 +2047,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     const char* QcomSPAMAction::Description() const
     {
-        static const char * des = "\tSPAM poll:\n\t\tThis poll is used to display various text messages to patrons or attendants";
+        static const char * des = "\tSpecific Promotional/Advisory Message:\n\t\tspam\n";
 
         return des;
     }
@@ -2131,7 +2121,7 @@ This poll commands EGM re-queue for transmission all currently logged events.\n"
 
     const char* QcomTowerLightMaintenanceAction::Description() const
     {
-        static const char * des = "\tTower Light Maintenance Poll:\n\t\tControl the tower light of EGM\n";
+        static const char * des = "\tTower Light Maintenance:\n\t\ttl,towerlight\n";
 
         return des;
     }

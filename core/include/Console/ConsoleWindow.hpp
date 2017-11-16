@@ -16,6 +16,8 @@
 #define SG_CONSOLE_KEY_BACKSPACE                   0407
 #define SG_CONSOLE_KEY_DC                          0512
 #define SG_CONSOLE_KEY_ENTER                       0527
+#define SG_CONSOLE_KEY_HOME                        0406
+#define SG_CONSOLE_KEY_END                         0546
 
 namespace sg
 {

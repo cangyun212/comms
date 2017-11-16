@@ -235,7 +235,7 @@ namespace sg
 
         SG_PARSE_OPTION(args, m_options);
 
-        if (vm.count("help") || !vm.count("egm"))
+        if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: pick <egm>\n");
@@ -311,7 +311,7 @@ namespace sg
 
         SG_PARSE_OPTION(args, m_options);
 
-        if (vm.count("help") || !vm.count("dev"))
+        if (vm.count("help"))
         {
             COMMS_START_PRINT_BLOCK();
             COMMS_PRINT_BLOCK("\nUsage: dev <dev_path>\n");

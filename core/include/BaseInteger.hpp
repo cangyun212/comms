@@ -46,6 +46,7 @@ namespace sg
             {
                 auto r = m_codeMap.insert(std::make_pair(static_cast<BaseCodeType>(c), static_cast<BaseType>(n++)));
                 SG_ASSERT(r.second);
+                SG_UNREF_PARAM(r);
             }
 
             SG_ASSERT(n < std::numeric_limits<BaseType>::max());
@@ -98,6 +99,7 @@ namespace sg
                 {
                     auto r = s_codeMap.insert(std::make_pair(c, n++));
                     SG_ASSERT(r.second);
+                    SG_UNREF_PARAM(r);
                 }
             }
         }
@@ -262,6 +264,7 @@ namespace sg
 
             // should be safe, capacity has enough space to hold all digits needed
             BaseType *pdigits = m_digits.get(); // C++17 support operator[]
+            SG_UNREF_PARAM(pdigits);
 
             std::shared_ptr<BaseType> base2base(MakeArrayPtr(BaseType, counts)); // we need an array to represent the source base in new base
             BaseType *pbase2base = base2base.get(); // should be safe

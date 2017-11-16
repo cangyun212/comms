@@ -314,7 +314,7 @@ namespace sg
         if (vm.count("help") || !vm.count("dev"))
         {
             COMMS_START_PRINT_BLOCK();
-            COMMS_PRINT_BLOCK("\nUsage: resetdev/dev <dev_path>\n");
+            COMMS_PRINT_BLOCK("\nUsage: dev <dev_path>\n");
             COMMS_PRINT_BLOCK(vis_desc);
             COMMS_PRINT_BLOCK("\n");
             COMMS_END_PRINT_BLOCK();
@@ -337,14 +337,14 @@ namespace sg
         {
             m_options = MakeSharedPtr<ActionOptions>();
 
-            m_options->AddOption(ActionOption("dev", "", Value<std::string>(&s_dev), false, 1));
+            m_options->AddOption(ActionOption("d", "", Value<std::string>(&s_dev), false, 1));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }
 
     const char* ResetDevAction::Description() const
     {
-        static const char* des = "\tReset the dev path :\n\t\tdev,resetdev\n";
+        static const char* des = "\tReset the dev path :\n\t\tdev\n";
         return des;
     }
 }

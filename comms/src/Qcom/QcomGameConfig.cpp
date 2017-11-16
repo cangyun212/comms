@@ -141,20 +141,20 @@ namespace sg
 
                     if (flag & QCOM_GAME_CONFIG_READY)
                     {
-                        COMMS_LOG(boost::format("Game configuration of Game %1% (Game Number: %2%) is ready\n") %
-                            static_cast<uint32_t>(game) % static_cast<uint32_t>(game_num), CLL_Info);
+                        COMMS_LOG(boost::format("Game configuration of Game (GVN 0x%|04X|) is ready\n") %
+                            static_cast<uint32_t>(p->Data.egmgcr.GVN), CLL_Info);
                     }
                     else
                     {
-                        COMMS_LOG(boost::format("Game configuration GVN of Game %1% (Game Number: %2%) is ready\n") %
-                            static_cast<uint32_t>(game) % static_cast<uint32_t>(game_num), CLL_Info);
+                        COMMS_LOG(boost::format("Game configuration GVN 0x%|04X| of Game %|| (Game Number: %||) is ready\n") %
+                            p->Data.egmgcr.GVN % static_cast<uint32_t>(game) % static_cast<uint32_t>(game_num), CLL_Info);
                     }
 
                     return true;
                 }
                 else
                 {
-                    COMMS_LOG(boost::format("EGM poll address %1% received game configuration response but\
+                    COMMS_LOG(boost::format("EGM poll address %|| received game configuration response but\
                         can't apply to any game of it.\n") % static_cast<uint32_t>(p->DLL.PollAddress) , CLL_Error);
                 }
             }

@@ -60,6 +60,7 @@ enter command: egmconfig --jur 1 --den 1 --tok 100 [To config EGM with marke QLD
 enter command: gameconfig --var 89 --gameenable [To enable game with variation 89]
 or
 enter command: gameconfig --var 90 --gameenable --pgid 1234 --jptype 1 1 --amount 1000000 500000 [To config game with 2 level lp which intial amount are 1000000 and 50000]
+enter command: gm --gvn [GVN] --var 90 --mef --gef --gamecfg [To verify the game configuration]
 
 Polling Cycle and Responose
 

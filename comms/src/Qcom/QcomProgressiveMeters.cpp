@@ -117,7 +117,7 @@ namespace sg
                 {
                     COMMS_START_LOG_BLOCK();
                     COMMS_LOG_BLOCK("Progressive Meters Response, invalid progressive level type received\n", CLL_Error);
-                    for (uint8_t i = 0; i < ilevel_num; ++i)
+                    for (uint8_t i = 0; i < itype_num; ++i)
                     {
                         COMMS_LOG_BLOCK(boost::format("Level %|| should be %||\n") %
                             static_cast<uint32_t>(itype_level[i]) %

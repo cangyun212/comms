@@ -502,7 +502,7 @@ namespace sg
         {
             SG_SET_FLAG_OPTION("reserve", s_reserve);
             SG_SET_FLAG_OPTION("autoplay", s_autoplay);
-            SG_SET_FLAG_OPTION("crlimitmode", s_crlimitmode);
+            SG_SET_FLAG_OPTION("crlmode", s_crlimitmode);
 
             res = true;
         }
@@ -519,7 +519,7 @@ namespace sg
             m_options->AddOption(ActionOption("reserve",
                 "EGM may offer a player instigated machine reserve feature at its discretion if set, otherwise no reserver feature offered"));
             m_options->AddOption(ActionOption("autoplay", "autoplay is enabled if set, otherwise autoplay is disabled"));
-            m_options->AddOption(ActionOption("crlimitmode", "both CRLIMIT mode are supported if set, otherwise only coin/token is rejected"));
+            m_options->AddOption(ActionOption("crlmode", "both CRLIMIT mode are supported if set, otherwise only coin/token is rejected"));
             m_options->AddOption(ActionOption("opr", "Monitoring system operator ID", Value<uint8>(&s_opr)));
             m_options->AddOption(ActionOption("lwin", "Large win lockup threshold", Value<uint32>(&s_lwin)));
             m_options->AddOption(ActionOption("crlimit", "Credit-in lockout value", Value<uint32>(&s_crlimit)));

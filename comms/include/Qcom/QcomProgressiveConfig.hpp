@@ -5,6 +5,7 @@
 
 #include "CommsPredeclare.hpp"
 #include "Qcom/Qcom.hpp"
+#include "Qcom/QcomInline.h"
 
 namespace sg
 {

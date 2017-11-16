@@ -27,6 +27,7 @@ namespace sg
             {
                 QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 
+                bool success = false;
                 if (pd)
                 {
                     std::unique_lock<std::mutex> lock(pd->locker);
@@ -35,7 +36,17 @@ namespace sg
 
                     pd->data.control.egm_config_state |= QCOM_EGM_HASH_READY;
 
+                    success = true;
+                }
+
+                if (success)
+                {
+                    COMMS_LOG("Program Hash Response received.\n", CLL_Info);
                     return true;
+                }
+                else
+                {
+                    COMMS_LOG("Program Hash Response received, failed to update data\n", CLL_Error);
                 }
             }
             else

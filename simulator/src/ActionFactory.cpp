@@ -88,7 +88,6 @@ namespace sg {
 
         ptr = MakeSharedPtr<ResetDevAction>();
         ptr->BuildOptions();
-        m_actions["resetdev"] = ptr;
         m_actions["dev"] = ptr;
     }
 

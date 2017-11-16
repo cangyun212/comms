@@ -45,6 +45,7 @@
 #define QCOM_EGM_CONFIG_SET     0x01
 #define QCOM_EGM_CONFIG_READY   0x02
 #define QCOM_EGM_HASH_READY     0x04
+#define QCOM_EGM_NAM_SET        0x08
 
 #define QCOM_CTO_FAIL           0x00
 #define QCOM_CTO_CANCEL         0x01

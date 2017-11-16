@@ -282,8 +282,13 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.LP.VAR), sizeof(d->EXTD.LP.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| PGID:0x%|04X| Lev: %|d| $%|d|") %
-                            d->EXTD.LP.GVN % var % d->EXTD.LP.PGID % d->EXTD.LP.PLVL.bits.level % d->EXTD.LP.PAMT).str();
+                        if (d->EXTD.LP.PAMT < 100)
+                            ext = (boost::format("Gem:0x%|04X| VAR:%|02d| PGID:0x%|04X| Lev: %|d| $0.%|02d|") %
+                                d->EXTD.LP.GVN % var % d->EXTD.LP.PGID % static_cast<uint32_t>(d->EXTD.LP.PLVL.PLVL) % d->EXTD.LP.PAMT).str();
+                        else
+                            ext = (boost::format("Gem:0x%|04X| VAR:%|02d| PGID:0x%|04X| Lev: %|d| $%|d|.%|02d|") %
+                                d->EXTD.LP.GVN % var % d->EXTD.LP.PGID % static_cast<uint32_t>(d->EXTD.LP.PLVL.PLVL) %
+                                (d->EXTD.LP.PAMT / 100) % (d->EXTD.LP.PAMT % 100)).str();
                     }
                     else
                     {
@@ -302,8 +307,13 @@ namespace sg
                     u32 var;
                     if (_QComGetBCD(&var, &(d->EXTD.SAP.VAR), sizeof(d->EXTD.SAP.VAR)))
                     {
-                        ext = (boost::format("Gem:0x%|04X| Var:%|02d| Lev: %|d| $%|d|") %
-                            d->EXTD.SAP.GVN % var % d->EXTD.SAP.PLVL.bits.level % d->EXTD.SAP.PAMT).str();
+                        if (d->EXTD.LP.PAMT < 100)
+                            ext = (boost::format("Gem:0x%|04X| VAR:%|02d| Lev: %|d| $0.%|02d|") %
+                                d->EXTD.SAP.GVN % var % static_cast<uint32_t>(d->EXTD.SAP.PLVL.PLVL) % d->EXTD.SAP.PAMT).str();
+                        else
+                            ext = (boost::format("Gem:0x%|04X| VAR:%|02d| Lev: %|d| $%|d|.%|02d|") %
+                                d->EXTD.SAP.GVN % var % static_cast<uint32_t>(d->EXTD.SAP.PLVL.PLVL) %
+                                (d->EXTD.SAP.PAMT / 100) % (d->EXTD.SAP.PAMT % 100)).str();
                     }
                     else
                     {
@@ -546,7 +556,10 @@ namespace sg
                 ev = "EGM Denomination Enabled/Changed";
                 if (d->ESIZ.ESIZ >= sizeof(d->EXTD.EGMDC))
                 {
-                    ext = (boost::format("Denom $%|d|") % d->EXTD.EGMDC.DEN).str();
+                    if (d->EXTD.EGMDC.DEN < 100)
+                        ext = (boost::format("Denom %|d|c") % d->EXTD.EGMDC.DEN).str();
+                    else
+                        ext = (boost::format("Denom $%|d|") % (d->EXTD.EGMDC.DEN / 100)).str();
                 }
                 else
                 {
@@ -908,7 +921,7 @@ namespace sg
                     u8 *p = d->EXTD.TIR.authno.AUTHNO;
                     COMMS_LOG(
                         boost::format("Invalid Tick Authorisation Number: \
-                        0x%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|)") %
+                        0x%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|%|02X|\n)") %
                         p[15] % p[14] % p[13] % p[12] % p[11] % p[10] % p[9] % p[8] % p[7] % p[6] % p[5] % p[4] % p[3] % p[2] % p[1] % p[0],
                         CLL_Error
                     );

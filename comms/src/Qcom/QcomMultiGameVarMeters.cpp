@@ -25,7 +25,9 @@ namespace sg
                 QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 
                 uint16_t igvn = 0;
+                uint8_t ivarbcd = 0;
                 uint8_t ivar = 0;
+                uint32_t nomvar = 0;
                 if (pd)
                 {
                     std::unique_lock<std::mutex> lock(pd->locker);
@@ -43,17 +45,26 @@ namespace sg
 
                     if (game != pd->data.config.games_num)
                     {
-                        if (pd->data.games[game].config.settings.var == p->Data.mgvmr.VAR)
+                        u32 variation = 0;
+                        if (_QComGetBCD(&variation, &(p->Data.mgvmr.VAR), sizeof(p->Data.mgvmr.VAR)))
                         {
-                            pd->data.games[game].mgvm.str = p->Data.mgvmr.meters.meter.STR;
-                            pd->data.games[game].mgvm.turn = p->Data.mgvmr.meters.meter.TURN;
-                            pd->data.games[game].mgvm.win = p->Data.mgvmr.meters.meter.WIN;
-                            pd->data.games[game].mgvm.pwin = p->Data.mgvmr.meters.meter.PWIN;
-                            pd->data.games[game].mgvm.gwin = p->Data.mgvmr.meters.meter.GWON;
+                            if (pd->data.games[game].config.settings.var == static_cast<uint8_t>(variation))
+                            {
+                                pd->data.games[game].mgvm.str = p->Data.mgvmr.meters.meter.STR;
+                                pd->data.games[game].mgvm.turn = p->Data.mgvmr.meters.meter.TURN;
+                                pd->data.games[game].mgvm.win = p->Data.mgvmr.meters.meter.WIN;
+                                pd->data.games[game].mgvm.pwin = p->Data.mgvmr.meters.meter.PWIN;
+                                pd->data.games[game].mgvm.gwin = p->Data.mgvmr.meters.meter.GWON;
+                            }
+                            else
+                            {
+                                ivar = pd->data.games[game].config.settings.var;
+                                nomvar = variation;
+                            }
                         }
                         else
                         {
-                            ivar = pd->data.games[game].config.settings.var;
+                            ivarbcd = p->Data.mgvmr.VAR;
                         }
                     }
                     else
@@ -64,12 +75,17 @@ namespace sg
 
                 if (igvn)
                 {
-                    COMMS_LOG(boost::format("Multi-Game/Var Response received, received GVN 0x%|04X| is invalid\n") % igvn, CLL_Error);
+                    COMMS_LOG(boost::format("Multi-Game/Var Response received, GVN 0x%|04X| is invalid\n") % igvn, CLL_Error);
+                }
+                else if (ivarbcd)
+                {
+                    COMMS_LOG(boost::format("Multi-Game/Var Response received, variation BCD %|| is invalid\n") %
+                        static_cast<uint32_t>(ivarbcd), CLL_Error);
                 }
                 else if (ivar)
                 {
-                    COMMS_LOG(boost::format("Multi-Game/Var Response received, received VAR %|02d| is not current VAR %|02d| for Game(GVN 0x%|04X|)\n") %
-                        static_cast<uint32_t>(p->Data.mgvmr.VAR) % static_cast<uint32_t>(ivar) % p->Data.mgvmr.GVN, CLL_Error);
+                    COMMS_LOG(boost::format("Multi-Game/Var Response received, VAR %|02d| is not current VAR %|02d| for Game(GVN 0x%|04X|)\n") %
+                        nomvar % static_cast<uint32_t>(ivar) % p->Data.mgvmr.GVN, CLL_Error);
                 }
                 else
                 {

@@ -31,7 +31,7 @@ namespace sg
             {
                 QcomDataPtr pd = it->GetEgmData(p->DLL.PollAddress);
 
-                uint8_t iflag = 0xFF;
+                uint8_t iflag = 0;
                 if (pd)
                 {
                     std::unique_lock<std::mutex> _lock(pd->locker);
@@ -39,27 +39,49 @@ namespace sg
                     pd->data.control.last_control ^= (QCOM_ACK_MASK);
 
                     // verify this field
-                    uint8_t flag = (pd->data.nasr.nam.five << 0) |
-                        (pd->data.nasr.nam.ten << 1) |
-                        (pd->data.nasr.nam.twenty << 2) |
-                        (pd->data.nasr.nam.fifty << 3) |
-                        (pd->data.nasr.nam.hundred << 4);
-
-                    if (p->Data.nasr.NAFLG.bytes.MSB != flag)
+                    if (pd->data.control.egm_config_state & QCOM_EGM_NAM_SET)
                     {
-                        iflag = flag;
+                        if (pd->data.nasr.nam.five != p->Data.nasr.NAFLG.bits.five)
+                            iflag &= 0x1 << 0;
+                        if (pd->data.nasr.nam.ten != p->Data.nasr.NAFLG.bits.ten)
+                            iflag &= 0x1 << 1;
+                        if (pd->data.nasr.nam.twenty != p->Data.nasr.NAFLG.bits.twenty)
+                            iflag &= 0x1 << 2;
+                        if (pd->data.nasr.nam.fifty != p->Data.nasr.NAFLG.bits.fifty)
+                            iflag &= 0x1 << 3;
+                        if (pd->data.nasr.nam.hundred != p->Data.nasr.NAFLG.bits.hundred)
+                            iflag &= 0x1 << 4;
+                        pd->data.control.egm_config_state &= ~QCOM_EGM_NAM_SET;
                     }
+
+                    pd->data.nasr.nam.five = p->Data.nasr.NAFLG.bits.five;
+                    pd->data.nasr.nam.ten = p->Data.nasr.NAFLG.bits.ten;
+                    pd->data.nasr.nam.twenty = p->Data.nasr.NAFLG.bits.twenty;
+                    pd->data.nasr.nam.fifty = p->Data.nasr.NAFLG.bits.fifty;
+                    pd->data.nasr.nam.hundred = p->Data.nasr.NAFLG.bits.hundred;
 
                     pd->data.nasr.full = p->Data.nasr.FLGA.bits.full;
 
                     std::memcpy(pd->data.nasr.nads, p->Data.nasr.NADS, sizeof(pd->data.nasr.nads));
                 }
 
-                if (iflag != 0xFF)
+                if (iflag != 0)
                 {
-                    COMMS_LOG(
-                        boost::format("Invalid Note Acceptor denomination setting 0x%|02X| received, setting 0x%|02X| is expected\n") %
-                        p->Data.nasr.NAFLG.bytes.MSB % iflag, CLL_Error);
+                    COMMS_START_LOG_BLOCK();
+                    const char* strs[] = { "$5", "$10", "$20", "$50", "$100" };
+                    for (size_t i = 0; i < SG_ARRAY_SIZE(strs); ++i)
+                    {
+                        if (iflag & (0x1 << i))
+                        {
+                            if (p->Data.nasr.NAFLG.bytes.MSB & (0x1 << i))
+                                COMMS_LOG_BLOCK(
+                                    boost::format("The EGM banknote acceptor still could accept %|| denom banknote\n") % strs[i], CLL_Warning);
+                            else
+                                COMMS_LOG_BLOCK(
+                                    boost::format("The EGM banknote acceptor couldn't accept %|| denom banknote\n") % strs[i] , CLL_Warning);
+                        }
+                    }
+                    COMMS_END_LOG_BLOCK();
                     return false;
                 }
 
@@ -88,6 +110,7 @@ namespace sg
                 job->AddPoll(this->MakeNoteAcceptorMaintenancePoll(poll_address, p->data.control.last_control, data));
 
                 p->data.nasr.nam = data;
+                p->data.control.egm_config_state |= QCOM_EGM_NAM_SET;
 
                 return true;
             }

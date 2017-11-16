@@ -35,7 +35,8 @@ namespace sg
                 {
                     if (p->data.games[game].gvn == gvn)
                     {
-                        if (p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY)
+                        if (p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY ||
+                            p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET)
                         {
                             p->data.games[game].config.settings.game_enable = data.gef;
                             break;
@@ -61,8 +62,12 @@ namespace sg
                 }
                 else
                 {
-                    COMMS_LOG(boost::format("Game(GVN:0x%|04X| is not found, GEF flag setting can't be executed\n") % gvn, CLL_Error);
+                    COMMS_LOG(boost::format("Game(GVN:0x%|04X|) is not found, GEF flag setting can't be executed\n") % gvn, CLL_Error);
                 }
+            }
+            else
+            {
+                return true;
             }
         }
 

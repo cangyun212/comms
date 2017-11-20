@@ -300,7 +300,7 @@ namespace sg
             }
 
             SG_SET_FLAG_OPTION("varlock", s_var_lock);
-            SG_SET_FLAG_OPTION("gameenable", s_game_enable);
+            SG_SET_FLAG_OPTION("gef", s_game_enable);
         }
 
         return res;
@@ -322,7 +322,7 @@ namespace sg
                 ActionOption("varlock",
                     "variation lock, if set, the EGM must lock the variation and not allow the variation to be changed, otherwise variation hot-switch is enabled"));
             m_options->AddOption(
-                ActionOption("gameenable", "game enable flag, if set, enable game denoted by GVN, otherwise disable the game"));
+                ActionOption("gef", "game enable flag, if set, enable game denoted by GVN, otherwise disable the game"));
             m_options->AddOption(
                 ActionOption("jptype", "progressive level type, if set to 0, denotes the level is to be set as SAP, otherwise level is LP",
                     Value< std::vector<uint8> >(&s_lp), true));
@@ -468,8 +468,8 @@ namespace sg
     void QcomEGMParametersAction::ResetArgOptions()
     {
         s_opr = 0;
-        s_lwin = 1000000;
-        s_crlimit = 1000000;
+        s_lwin = 10000000;
+        s_crlimit = 10000;
         s_dumax = 5;
         s_dulimit = 1000000;
         s_tzadj = 0;
@@ -1822,8 +1822,8 @@ namespace sg
 
     void QcomHopperTicketPrinterMaintenanceAction::ResetArgOptions()
     {
-        s_refill = 0;
-        s_collim = 0;
+        s_refill = 16000;
+        s_collim = 5000;
         s_ticket = 0;
         s_dorefill = 0;
     }
@@ -2122,6 +2122,157 @@ namespace sg
     const char* QcomTowerLightMaintenanceAction::Description() const
     {
         static const char * des = "\tTower Light Maintenance:\n\t\ttl,towerlight\n";
+
+        return des;
+    }
+
+    uint8 QcomECTToEGMAction::s_cashless = 0;
+    uint8 QcomECTToEGMAction::s_id = 0;
+    uint32 QcomECTToEGMAction::s_eamt = 0;
+
+    QcomECTToEGMAction::QcomECTToEGMAction()
+        : Action(AT_QCOM_ECT_TO_EGM)
+    {
+
+    }
+
+    QcomECTToEGMAction::~QcomECTToEGMAction()
+    {
+
+    }
+
+    void QcomECTToEGMAction::ResetArgOptions()
+    {
+        s_id = 0;
+        s_eamt = 0;
+    }
+
+    bool QcomECTToEGMAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: ect2egm/ete [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            SG_SET_FLAG_OPTION("cashless", s_cashless);
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomECTToEGMAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("cashless", "turn on yellow light"));
+            m_options->AddOption(ActionOption("id", "ECT source ID", Value<uint8>(&s_id)));
+            m_options->AddOption(ActionOption("eamt", "Amount to add to current credit meter", Value<uint32>(&s_eamt)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomECTToEGMAction::Clone()
+    {
+        return Action::DoClone<QcomECTToEGMAction>();
+    }
+
+    const char* QcomECTToEGMAction::Description() const
+    {
+        static const char* des = "\tECT To EGM:\n\t\tete,ect2egm\n";
+
+        return des;
+    }
+
+    QcomECTFromEGMLockupRequestAction::QcomECTFromEGMLockupRequestAction()
+        : Action(AT_QCOM_ECT_FROM_EGM_REQ)
+    {
+
+    }
+
+    QcomECTFromEGMLockupRequestAction::~QcomECTFromEGMLockupRequestAction()
+    {
+
+    }
+
+    ActionPtr QcomECTFromEGMLockupRequestAction::Clone()
+    {
+        return Action::DoClone<QcomECTFromEGMLockupRequestAction>();
+    }
+
+    const char* QcomECTFromEGMLockupRequestAction::Description() const
+    {
+        static const char* des = "\tECT From EGM Lockup Request:\n\t\tefe,ectfromegm\n";
+        
+        return des;
+    }
+
+    uint8 QcomECTLockupResetAction::s_denied = 0;
+
+    QcomECTLockupResetAction::QcomECTLockupResetAction()
+        : Action(AT_QCOM_ECT_LOCKUP_RESET)
+    {
+
+    }
+
+    QcomECTLockupResetAction::~QcomECTLockupResetAction()
+    {
+
+    }
+
+    bool QcomECTLockupResetAction::Parse(const ActionArgs & args)
+    {
+        bool res = false;
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: ect [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            SG_SET_FLAG_OPTION("denied", s_denied);
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    void QcomECTLockupResetAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("denied", "the credit transfer from the EGM is denied"));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomECTLockupResetAction::Clone()
+    {
+        return Action::DoClone<QcomECTLockupResetAction>();
+    }
+
+    const char* QcomECTLockupResetAction::Description() const
+    {
+        static const char* des = "\tECT Lockup Reset:\n\t\tect\n";
 
         return des;
     }

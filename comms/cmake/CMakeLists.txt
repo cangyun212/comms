@@ -66,6 +66,9 @@ set(COMMS_QCOM_HEADER_FILES
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomMultiGameVarMeters.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomPlayerChoiceMeters.hpp
     ${COMMS_PROJECT_DIR}/include/Qcom/QcomMeterGroupContribution.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomECTToEGM.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomECTFromEGMRequest.hpp
+    ${COMMS_PROJECT_DIR}/include/Qcom/QcomECTLockupReset.hpp
     )
 
 set(COMMS_QCOM_SOURCE_FILES
@@ -100,6 +103,9 @@ set(COMMS_QCOM_SOURCE_FILES
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomMultiGameVarMeters.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomPlayerChoiceMeters.cpp
     ${COMMS_PROJECT_DIR}/src/Qcom/QcomMeterGroupContribution.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomECTToEGM.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomECTFromEGMRequest.cpp
+    ${COMMS_PROJECT_DIR}/src/Qcom/QcomECTLockupReset.cpp
     )
 
 set(COMMS_QCOM_QOGR_HEADER_FILES

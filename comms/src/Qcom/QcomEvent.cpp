@@ -827,6 +827,19 @@ namespace sg
                 break;
             case QC_EXT_EC_ECT_FROM_EGM_V2:
                 ev = "EGM ECT From EGM";
+                if (d->ESIZ.ESIZ >= sizeof(d->EXTD.ECTEGM2))
+                {
+                    if (d->EXTD.ECTEGM2.CAMT < 100)
+                    {
+                        ext = (boost::format("EGM ECT from EGM $0.%|02d|") %
+                            d->EXTD.ECTEGM2.CAMT).str();
+                    }
+                    else
+                    {
+                        ext = (boost::format("EGM ECT from EGM $%|d|.%|02d|") %
+                            (d->EXTD.ECTEGM2.CAMT / 100) % (d->EXTD.ECTEGM2.CAMT % 100)).str();
+                    }
+                }
                 break;
             case QC_EXT_EC_RES_CC_LOCKUP_V2:
                 ev = "EGM Residual Cancel Credit Lock Up";

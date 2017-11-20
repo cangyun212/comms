@@ -575,6 +575,63 @@ namespace sg
        static  uint32      s_dorefill;
     };
 
+    class QcomECTToEGMAction : public Action
+    {
+    public:
+        QcomECTToEGMAction();
+       ~QcomECTToEGMAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        uint8_t     Cashless() const { return s_cashless; }
+        uint8_t     ID() const { return s_id; }
+        uint32_t    EAMT() const { return s_eamt; }
+
+    private:
+        static uint8        s_cashless;
+        static uint8        s_id;
+        static uint32       s_eamt;
+    };
+
+    class QcomECTFromEGMLockupRequestAction : public Action
+    {
+    public:
+        QcomECTFromEGMLockupRequestAction();
+       ~QcomECTFromEGMLockupRequestAction();
+
+    public:
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+    };
+
+    class QcomECTLockupResetAction : public Action
+    {
+    public:
+        QcomECTLockupResetAction();
+       ~QcomECTLockupResetAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    public:
+        uint8_t     Denied() const { return s_denied; }
+
+    private:
+        static uint8    s_denied;
+
+    };
+
     class QcomLPAwardAckAction : public Action
     {
     public:

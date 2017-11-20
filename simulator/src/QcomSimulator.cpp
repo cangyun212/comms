@@ -741,6 +741,56 @@ namespace sg
         }
     }
 
+    void QcomSim::ECTToEGM(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomECTToEGMActionPtr p = std::static_pointer_cast<QcomECTToEGMAction>(action);
+
+            QcomECTToEGMPollData data;
+
+            data.cashless = p->Cashless();
+            data.id = p->ID();
+            data.eamt = p->EAMT();
+
+            m_qcom->ECTToEGM(m_curr_egm, data);
+        }
+    }
+
+    void QcomSim::ECTFromEGMLockupRequest(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+        SG_UNREF_PARAM(action);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            m_qcom->ECTFromEGMRequest(m_curr_egm);
+        }
+    }
+
+    void QcomSim::ECTLockupReset(const ActionCenter & sender, const ActionPtr & action)
+    {
+        SG_UNREF_PARAM(sender);
+
+        if (m_curr_egm == 0)
+            Pick(0);
+
+        if (m_curr_egm > 0)
+        {
+            QcomECTLockupResetActionPtr p = std::static_pointer_cast<QcomECTLockupResetAction>(action);
+
+            m_qcom->ECTLockupReset(m_curr_egm, p->Denied());
+        }
+    }
+
     void QcomSim::PendingPoll(const ActionCenter & sender, const ActionPtr & action)
     {
         SG_UNREF_PARAM(sender);

@@ -262,6 +262,27 @@ namespace sg
 
             *connection = evt->connect(std::bind(&QcomSim::TowerLightMaintenance, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
+            connection = sim->Install(Action::AT_QCOM_ECT_TO_EGM);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_ECT_TO_EGM);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::ECTToEGM, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_ECT_FROM_EGM_REQ);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_ECT_FROM_EGM_REQ);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::ECTFromEGMLockupRequest, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
+            connection = sim->Install(Action::AT_QCOM_ECT_LOCKUP_RESET);
+            SG_ASSERT(connection);
+            evt = center.Install(Action::AT_QCOM_ECT_LOCKUP_RESET);
+            SG_ASSERT(evt);
+
+            *connection = evt->connect(std::bind(&QcomSim::ECTLockupReset, sim.get(), std::placeholders::_1, std::placeholders::_2));
+
             return sim;
         }
 

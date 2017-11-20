@@ -147,6 +147,18 @@ namespace sg
         m_actions["towerlight"] = ptr;
         m_actions["tl"] = ptr;
 
+        ptr = MakeSharedPtr<QcomECTToEGMAction>();
+        ptr->BuildOptions();
+        m_actions["ect2egm"] = ptr;
+        m_actions["ete"] = ptr;
+
+        ptr = MakeSharedPtr<QcomECTFromEGMLockupRequestAction>();
+        m_actions["ectfromegm"] = ptr;
+        m_actions["efe"] = ptr;
+
+        ptr = MakeSharedPtr<QcomECTLockupResetAction>();
+        m_actions["ect"] = ptr;
+
         ptr = MakeSharedPtr<QcomPendingAction>();
         ptr->BuildOptions();
         m_actions["pending"] = ptr;

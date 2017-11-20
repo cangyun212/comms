@@ -50,6 +50,9 @@ namespace sg {
         void    GeneralReset(const ActionCenter &sender, const ActionPtr &action);
         void    SPAM(const ActionCenter &sender, const ActionPtr &action);
         void    TowerLightMaintenance(const ActionCenter & sender, const ActionPtr & action);
+        void    ECTToEGM(const ActionCenter & sender, const ActionPtr & action);
+        void    ECTFromEGMLockupRequest(const ActionCenter & sender, const ActionPtr & action);
+        void    ECTLockupReset(const ActionCenter &sender, const ActionPtr &action);
         void    PendingPoll(const ActionCenter &sender, const ActionPtr &action);
         void    SendPoll(const ActionCenter &sender, const ActionPtr &action);
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);

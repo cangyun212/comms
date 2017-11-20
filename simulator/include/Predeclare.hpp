@@ -32,6 +32,9 @@ namespace sg {
     class QcomGeneralResetAction;
     class QcomSPAMAction;
     class QcomTowerLightMaintenanceAction;
+    class QcomECTToEGMAction;
+    class QcomECTFromEGMLockupRequestAction;
+    class QcomECTLockupResetAction;
     class QcomTimeDateAction;
     class QcomLPCurrentAmountAction;
     class QcomGeneralPromotionalAction;
@@ -76,6 +79,9 @@ namespace sg {
     typedef std::shared_ptr<QcomGeneralResetAction> QcomGeneralResetActionPtr;
     typedef std::shared_ptr<QcomSPAMAction> QcomSPAMActionPtr;
     typedef std::shared_ptr<QcomTowerLightMaintenanceAction> QcomTowerLightMaintenanceActionPtr;
+    typedef std::shared_ptr<QcomECTToEGMAction> QcomECTToEGMActionPtr;
+    typedef std::shared_ptr<QcomECTFromEGMLockupRequestAction> QcomECTFromEGMLockupRequestActionPtr;
+    typedef std::shared_ptr<QcomECTLockupResetAction> QcomECTLockupResetActionPtr;
     typedef std::shared_ptr<QcomTimeDateAction> QcomTimeDateActionPtr;
     typedef std::shared_ptr<QcomLPCurrentAmountAction> QcomLPCurrentAmountActionPtr;
     typedef std::shared_ptr<QcomGeneralPromotionalAction> QcomGeneralPromotionalActionPtr;

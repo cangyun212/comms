@@ -37,6 +37,9 @@
 #include "Qcom/QcomMultiGameVarMeters.hpp"
 #include "Qcom/QcomPlayerChoiceMeters.hpp"
 #include "Qcom/QcomMeterGroupContribution.hpp"
+#include "Qcom/QcomECTToEGM.hpp"
+#include "Qcom/QcomECTFromEGMRequest.hpp"
+#include "Qcom/QcomECTLockupReset.hpp"
 
 // Typically 32, max 250
 #define SG_QCOM_MAX_EGM_NUM 32
@@ -221,6 +224,15 @@ namespace sg
         p = MakeSharedPtr<QcomMeterGroupContribution>(this_ptr);
         m_resp_handler.insert(std::make_pair(p->RespId(), p));
 
+        p = MakeSharedPtr<QcomECTToEGM>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+        m_resp_handler.insert(std::make_pair(p->RespId(), p));
+
+        p = MakeSharedPtr<QcomECTFromEGMRequest>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
+
+        p = MakeSharedPtr<QcomECTLockupReset>(this_ptr);
+        m_handler.insert(std::make_pair(p->Id(), p));
     }
 
     CommsPacketHandlerPtr CommsQcom::GetHandler(uint8_t id) const
@@ -1138,6 +1150,45 @@ namespace sg
         SG_QCOM_ADD_POLL_JOB(job);
     }
 
+    void CommsQcom::ECTToEGM(uint8_t poll_address, QcomECTToEGMPollData const& data)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomECTToEGMPtr handler = std::static_pointer_cast<QcomECTToEGM>(m_handler[QCOM_ECTEGMP_FC]);
+        if (!handler->BuildECTToEGMPoll(job, poll_address, data))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+
+    }
+
+    void CommsQcom::ECTFromEGMRequest(uint8_t poll_address)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomECTFromEGMRequestPtr handler = std::static_pointer_cast<QcomECTFromEGMRequest>(m_handler[QCOM_ECTEGMLRP_FC]);
+        if (!handler->BuildECTFromEGMRequestPoll(job, poll_address))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
+
+    void CommsQcom::ECTLockupReset(uint8_t poll_address, uint8_t denied)
+    {
+        SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
+
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomECTLockupResetPtr handler = std::static_pointer_cast<QcomECTLockupReset>(m_handler[QCOM_ECTLRP_FC]);
+        if (!handler->BuildECTLockupResetPoll(job, poll_address, denied))
+            return;
+
+        SG_QCOM_ADD_POLL_JOB(job);
+    }
 }
 
 

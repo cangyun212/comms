@@ -57,7 +57,7 @@
 #define QCOM_SPAM_TYPE_B        2
 
 #define QCOM_METER_GROUP_NUM    3 // now only 0 -2 is available, group 3 - 15 is reserved
-#define QCOM_METER_NUM          17 // each meter group has 0x00 - 0x0F meters, some of them are reserved
+#define QCOM_METER_NUM          16 // each meter group has 0x00 - 0x0F meters, some of them are reserved
 
 namespace sg 
 {
@@ -251,6 +251,13 @@ namespace sg
         uint32_t            pamt;
         uint16_t            lgvn; // The Game Version Number of the last initiated game on the EGM, ref Qcom1.6-15.6.8
         uint16_t            pgid;
+    };
+
+    struct QcomECTToEGMPollData
+    {
+        uint32_t            eamt;
+        uint8_t             id;
+        uint8_t             cashless;
     };
 
     struct QcomGameData
@@ -517,6 +524,9 @@ namespace sg
         void    GeneralReset(uint8_t poll_address, QcomGeneralResetPollData const& data);
         void    SPAM(uint8_t poll_address, uint8_t type, QcomSPAMPollData const& data);
         void    TowerLightMaintenance(uint8_t poll_address, QcomTowerLightMaintenancePollData const& data);
+        void    ECTToEGM(uint8_t poll_address, QcomECTToEGMPollData const& data);
+        void    ECTFromEGMRequest(uint8_t poll_address);
+        void    ECTLockupReset(uint8_t poll_address, uint8_t deined);
         void    PendingPoll(size_t poll_num = 2);
         void    SendPoll();
 

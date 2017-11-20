@@ -61,6 +61,9 @@ namespace sg
             AT_QCOM_GENERAL_RESET,
             AT_QCOM_SPAM,
             AT_QCOM_TOWER_LIGHT_MAINTENANCE,
+            AT_QCOM_ECT_TO_EGM,
+            AT_QCOM_ECT_FROM_EGM_REQ,
+            AT_QCOM_ECT_LOCKUP_RESET,
             AT_QCOM_PENDING,
             AT_QCOM_SEND,
  

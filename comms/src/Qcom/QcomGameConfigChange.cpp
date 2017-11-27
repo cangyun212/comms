@@ -12,89 +12,82 @@ namespace sg {
         return QCOM_EGMVCP_FC;
     }
 
-    bool QcomGameConfigurationChange::BuildGameConfigChangePoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const & data)
+    bool QcomGameConfigurationChange::BuildGameConfigChangePoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const & data, uint16_t &old_pgid, uint8_t &shared)
     {
         if (auto it = m_qcom.lock())
         {
-            bool invalid_gvn = false;
-
             QcomDataPtr p = it->GetEgmData(poll_address);
+
+            uint8_t game_num = 0;
+            uint8_t game = 0;
+            bool istate = false;
+
             if (p)
             {
                 std::unique_lock<std::mutex> lock(p->locker);
 
-                uint8_t game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
-                uint8_t game = 0;
+                game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
 
-                // different with GameConfigPoll, we only need to find one available game
-                if (!gvn)
+                for (; game < game_num; ++game)
                 {
-                    for (; game < game_num; ++game)
+                    if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN) &&
+                        (p->data.games[game].gvn == gvn))
                     {
-                        if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY) &&
-                            !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ))
-                            break;
-                    }
-                }
-                else
-                {
-                    for (; game < game_num; ++game)
-                    {
-                        if (p->data.games[game].gvn == gvn)
-                            break;
-                    }
-                }
-
-                if (game != game_num)
-                {
-                    job->AddPoll(this->MakeGameConfigChangePoll(poll_address, p->data.control.last_control, gvn, data));
-
-                    //uint8_t var_lock = p->data.games[game].config.settings.var_lock;
-                    if (!p->data.games[game].config.settings.var_lock)
-                    {
-                        p->data.games[game].config.settings.var = data.var;
-                    }
-
-                    p->data.games[game].config.settings.game_enable = data.game_enable;
-
-                    if (!gvn)
-                    {
-                        for (uint8_t i = 0; i < game_num; ++i)
+                        if (p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY)
                         {
-                            if ((p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_READY) &&
-                                p->data.games[i].config.settings.pgid == p->data.games[game].config.settings.pgid)
+                            job->AddPoll(this->MakeGameConfigChangePoll(poll_address, p->data.control.last_control, gvn, data));
+
+                            p->data.games[game].config.settings.var = data.var; // set here, verified by request Game Configuration Response
+                            p->data.games[game].config.settings.game_enable = data.game_enable;
+
+                            old_pgid = p->data.games[game].config.settings.pgid;
+                            if (!p->data.config.shared_progressive)
                             {
-                                p->data.games[i].config.settings.pgid = data.pgid;
+                                shared = 0;
+                                p->data.games[game].config.settings.pgid = data.pgid;
+                            }
+                            else
+                            {
+                                shared = 1;
+                                for (uint8_t i = 0; i < game_num; ++i)
+                                {
+                                    if ((p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_GVN) &&
+                                        (p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_READY))
+                                    {
+                                        p->data.games[i].config.settings.pgid = data.pgid;
+                                    }
+                                }
                             }
                         }
+                        else
+                        {
+                            istate = true;
+                        }
+
+                        break;
                     }
-                    else
-                    {
-                        p->data.games[game].config.settings.pgid = data.pgid;
-                    }
-
-                    // TODO : according Qcom1.6.15.4.4, the EGM will ignore this poll's entire message data are if either
-                    // VAR, GVN or PGID field is incorrect or not applicable to the game or EGM. so we may need to check
-                    // the data correctiness before we change egm data since there no response for this poll to tell us
-                    // if the change was applied.
-
-                    //p->data.games[game].config.settings = data;
-                    //p->data.games[game].config.settings.var_lock = var_lock;
-
-                    return true;
-
-                }
-                else
-                {
-                    invalid_gvn = true;
                 }
             }
 
-            if (invalid_gvn)
+            if (game >= game_num)
             {
-                COMMS_LOG(boost::format("EGM poll address %1% has no avaiable game for GVN %2% to be configed currently\n") %
-                    static_cast<uint32_t>(poll_address) % gvn, CLL_Error);
+                COMMS_LOG(
+                    boost::format("Can't change game configuration. GVN 0x%|04X| is not valid or EGM %|| is not configured\n") %
+                    gvn % static_cast<uint32_t>(poll_address), CLL_Error);
+
+                return false;
             }
+
+            if (istate)
+            {
+                COMMS_LOG(
+                    boost::format("Can't change game configuration. Game(GVN 0x%|04X|) is not configured or configuration is not verified\n") % 
+                    gvn, CLL_Error);
+
+                return false;
+            }
+
+            return true;
         }
 
         return false;

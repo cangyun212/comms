@@ -39,7 +39,7 @@ namespace sg
 
                     psn = QcomNextPSN(pd->data.control.psn[Qcom_PSN_ECT]);
 
-                    pd->data.mgc.groups[1].met[5] = p->Data.ectack.TCCIM;
+                    //pd->data.mgc.groups[1].met[5] = p->Data.ectack.TCCIM;
 
                     if (p->Data.ectack.ECTPSN == psn)
                         return true;

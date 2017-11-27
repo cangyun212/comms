@@ -39,6 +39,12 @@ namespace sg
                 uint8_t gvn_status[QCOM_MAX_GAME_NUM];
                 uint8_t ivn = 0;
                 uint8_t ivs[QCOM_REMAX_EGMGCR];
+                bool ivarbcd = false;
+                uint8_t icvar = 0;
+                uint32_t cvar = 0;
+                uint8_t ipnum = 0xFF;
+                uint8_t iptype = 0;
+                uint16_t ipgid = 0;
 
                 if (pd)
                 {
@@ -78,6 +84,45 @@ namespace sg
                                             ivs[ivn++] = v;
                                         }
                                     }
+
+                                    variation = 0;
+                                    if (_QComGetBCD(&variation, &(p->Data.egmgcr.VAR), sizeof(p->Data.egmgcr.VAR)))
+                                    {
+                                        if (pd->data.games[game].config.settings.var != static_cast<uint8_t>(variation))
+                                        {
+                                            icvar = pd->data.games[game].config.settings.var;
+                                            pd->data.games[game].config.settings.var = static_cast<uint8_t>(variation);
+                                            cvar = variation;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ivarbcd = true;
+                                    }
+
+                                    if (pd->data.games[game].prog.pnum != p->Data.egmgcr.PNUM)
+                                    {
+                                        ipnum = pd->data.games[game].prog.pnum;
+                                        pd->data.games[game].prog.pnum = p->Data.egmgcr.PNUM;
+                                    }
+
+                                    for (uint8_t i = 0; i < p->Data.egmgcr.PNUM; ++i)
+                                    {
+                                        uint8_t type = (p->Data.egmgcr.PLBM & (0x1 << i)) >> i;
+                                        if (pd->data.games[game].config.progressive.flag_p[i] !=
+                                            type)
+                                        {
+                                            iptype |= (0x1 << i);
+                                            pd->data.games[game].config.progressive.flag_p[i] = type;
+                                        }
+                                    }
+
+                                    if (pd->data.games[game].config.settings.pgid != p->Data.egmgcr.PGID)
+                                    {
+                                        ipgid = pd->data.games[game].config.settings.pgid;
+                                        pd->data.games[game].config.settings.pgid = p->Data.egmgcr.PGID;
+                                    }
+
                                     pd->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_READY;
                                     flag = pd->data.control.game_config_state[game];
                                     break;
@@ -105,27 +150,6 @@ namespace sg
 
                 if (game < game_num)
                 {
-                    if (ivn)
-                    {
-                        COMMS_START_LOG_BLOCK();
-
-                        for (uint8_t i = 0; i < ivn; ++i)
-                        {
-                            qc_egmgcrretype *var = (qc_egmgcrretype*)((uint8_t*)(p->Data.egmgcr.re) + 
-                                ivs[i] * p->Data.egmgcr.SIZ);
-
-                            COMMS_LOG_BLOCK(
-                                boost::format("EGM poll address %1% received variation value %2% which is not a BCD value") %
-                                static_cast<uint32_t>(p->DLL.PollAddress) %
-                                static_cast<uint32_t>(var->VAR), 
-                                CLL_Error);
-                        }
-
-                        COMMS_END_LOG_BLOCK();
-
-                        return false;
-                    }
-
                     if (gvn_status_num)
                     {
                         COMMS_START_LOG_BLOCK();
@@ -141,7 +165,90 @@ namespace sg
 
                     if (flag & QCOM_GAME_CONFIG_READY)
                     {
-                        COMMS_LOG(boost::format("Game configuration of Game (GVN 0x%|04X|) is ready\n") %
+                        if (ivn)
+                        {
+                            COMMS_START_LOG_BLOCK();
+
+                            for (uint8_t i = 0; i < ivn; ++i)
+                            {
+                                qc_egmgcrretype *var = (qc_egmgcrretype*)((uint8_t*)(p->Data.egmgcr.re) +
+                                    ivs[i] * p->Data.egmgcr.SIZ);
+
+                                COMMS_LOG_BLOCK(
+                                    boost::format(
+                                        "Game configuration received VAR %|| for Game(GVN 0x%|04X|) is not a BCD value\n") %
+                                    static_cast<uint32_t>(var->VAR) %
+                                    static_cast<uint32_t>(p->Data.egmgcr.GVN),
+                                    CLL_Error);
+                            }
+
+                            COMMS_END_LOG_BLOCK();
+
+                            return false;
+                        }
+
+                        if (ivarbcd)
+                        {
+                            COMMS_LOG(
+                                boost::format(
+                                    "Game configuration received current VAR %|02d| for Game(GVN 0x%|04X|) is not a valid BCD value\n") %
+                                static_cast<uint32_t>(p->Data.egmgcr.VAR) % p->Data.egmgcr.GVN , CLL_Error);
+
+                            return false;
+                        }
+
+                        if (icvar)
+                        {
+                            COMMS_LOG(
+                                boost::format(
+                                    "Game configuration received current VAR %|02d| for Game(GVN 0x%|04X|) is not match current setting VAR %|02d|\n") %
+                                cvar % p->Data.egmgcr.GVN % static_cast<uint32_t>(icvar), CLL_Error);
+                            return false;
+                        }
+
+                        if (ipnum != 0xFF)
+                        {
+                            COMMS_LOG(
+                                boost::format(
+                                    "Game configuration received progressive level number %|| for Game(GVN 0x%|04X|) is not match current setting %||\n") %
+                                static_cast<uint32_t>(p->Data.egmgcr.PNUM) %
+                                p->Data.egmgcr.GVN %
+                                static_cast<uint32_t>(ipnum), CLL_Error);
+
+                            return false;
+                        }
+
+                        if (iptype)
+                        {
+                            COMMS_START_LOG_BLOCK();
+
+                            for (uint8_t i = 0; i < p->Data.egmgcr.PNUM; ++i)
+                            {
+                                if ((iptype & (0x1 << i)))
+                                {
+                                    COMMS_LOG_BLOCK(
+                                        boost::format(
+                                            "Game configuration received progressive level %||'s type for Game(GVN 0x%|04X|) is %||, not match current setting\n") %
+                                        static_cast<uint32_t>(i) %
+                                        p->Data.egmgcr.GVN %
+                                        ((p->Data.egmgcr.PLBM & (0x1 << i)) ? "LP" : "SAP"), CLL_Error);
+                                }
+                            }
+
+                            COMMS_END_LOG_BLOCK();
+
+                            return false;
+                        }
+
+                        if (ipgid)
+                        {
+                            COMMS_LOG(boost::format("Game configuration received PGID 0x%|04X| for Game(GVN 0x%|04X|) is not match current PGID 0x%|04X|\n") %
+                                p->Data.egmgcr.PGID % p->Data.egmgcr.GVN % ipgid, CLL_Error);
+
+                            return false;
+                        }
+
+                        COMMS_LOG(boost::format("Game configuration of Game(GVN 0x%|04X|) is ready\n") %
                             static_cast<uint32_t>(p->Data.egmgcr.GVN), CLL_Info);
                     }
                     else
@@ -168,82 +275,129 @@ namespace sg
         return false;
     }
 
-    bool QcomGameConfiguration::BuildGameConfigPollForGame(QcomJobDataPtr &job, QcomDataPtr &p, uint8_t poll_address, uint8_t game, uint8_t pnum, const QcomGameConfigData &data)
-    {
-        job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, p->data.games[game].gvn, pnum, data));
+    //bool QcomGameConfiguration::BuildGameConfigPollForGame(QcomJobDataPtr &job, QcomDataPtr &p, uint8_t poll_address, uint8_t game, uint8_t pnum, const QcomGameConfigData &data)
+    //{
+    //    job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, p->data.games[game].gvn, pnum, data));
 
-        p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
-        //p->data.games[game].config = data;
-        p->data.games[game].config.settings = data.settings;
-        for (uint8_t i = 0; i < pnum; ++i)
-        {
-            p->data.games[game].config.progressive.sup[i] = data.progressive.sup[i];
-            p->data.games[game].config.progressive.flag_p[i] = data.progressive.flag_p[i];
-        }
+    //    p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
+    //    //p->data.games[game].config = data;
+    //    p->data.games[game].config.settings = data.settings;
+    //    for (uint8_t i = 0; i < pnum; ++i)
+    //    {
+    //        p->data.games[game].config.progressive.sup[i] = data.progressive.sup[i];
+    //        p->data.games[game].config.progressive.flag_p[i] = data.progressive.flag_p[i];
+    //    }
 
-        p->data.games[game].prog.pnum = pnum;
+    //    p->data.games[game].prog.pnum = pnum;
 
-        return true;
-    }
+    //    return true;
+    //}
 
-    bool QcomGameConfiguration::BuildGameConfigJobs(std::vector<QcomJobDataPtr> &jobs, uint8_t poll_address, uint16_t gvn, uint8_t pnum, const QcomGameConfigData &data)
+    bool QcomGameConfiguration::BuildGameConfigJobs(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, uint8_t pnum, const QcomGameConfigData &data)
     {
         if (auto it = m_qcom.lock())
         {
             QcomDataPtr p = it->GetEgmData(poll_address);
 
+            bool istate = false;
+            bool ignore = false;
+            uint8_t game_num = 0;
+            uint8_t game = 0;
+
             if (p)
             {
                 std::unique_lock<std::mutex> lock(p->locker);
 
-                uint8_t game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
-                uint8_t game = 0;
+                game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
 
-                jobs.clear();
-                if (!gvn)
+                QcomProgressiveConfigData *share = nullptr;
+                if (p->data.config.shared_progressive) // make sure all game use same progressive config
                 {
-
-                    for (; game < game_num; ++game)
+                    for (uint8_t i = 0; i < game_num; ++i)
                     {
-                        if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN) &&
-                            !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY))
+                        if (p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_SET)
                         {
-                            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-                            this->BuildGameConfigPollForGame(job, p, poll_address, game, pnum, data);
-                            jobs.push_back(job);
-                        }
-                    }
-                }
-                else
-                {
-                    for (; game < game_num; ++game)
-                    {
-                        if (p->data.games[game].gvn == gvn)
-                        {
-                            QcomJobDataPtr job = MakeSharedPtr<QcomJobData>(QcomJobData::JT_POLL);
-                            this->BuildGameConfigPollForGame(job, p, poll_address, game, pnum, data);
-                            jobs.push_back(job);
+                            share = &(p->data.games[i].config.progressive);
                             break;
                         }
                     }
                 }
+
+                for (; game < game_num; ++game)
+                {
+                    if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN) &&
+                        (p->data.games[game].gvn == gvn))
+                    {
+                        if (!(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET)) // use game config change poll if you want to change
+                        {
+                            if (share)
+                                pnum = 0; // I think this will work, fix if not
+
+                            job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, gvn, pnum, data));
+
+                            p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
+
+                            p->data.games[game].config.settings = data.settings;
+
+                            if (!share)
+                            {
+                                for (uint8_t i = 0; i < pnum; ++i)
+                                {
+                                    p->data.games[game].config.progressive.init_contri[i] = data.progressive.init_contri[i];
+                                    p->data.games[game].config.progressive.flag_p[i] = data.progressive.flag_p[i];
+                                }
+
+                                p->data.games[game].prog.pnum = pnum;
+
+                                if (p->data.config.shared_progressive) // spread the progressive settting
+                                {
+                                    for (uint8_t i = 0; i < game_num; ++i)
+                                    {
+                                        if (i != game && (p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_GVN))
+                                        {
+                                            for (uint8_t j = 0; j < pnum; ++j)
+                                            {
+                                                p->data.games[i].config.progressive.init_contri[j] = data.progressive.init_contri[j];
+                                                p->data.games[i].config.progressive.flag_p[j] = data.progressive.flag_p[j];
+                                            }
+
+                                            p->data.games[i].prog.pnum = pnum;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (p->data.config.shared_progressive)
+                                    ignore = true;
+                            }
+                        }
+                        else
+                        {
+                            istate = true;
+                        }
+                        break;
+                    }
+                }
+
             }
 
-            if (!jobs.empty())
+            if (game >= game_num)
             {
+                COMMS_LOG(boost::format("GVN 0x%|04X| is invalid or game's GVN is not ready\n") % gvn, CLL_Error);
+            }
+            else if (istate)
+            {
+                COMMS_LOG(boost::format("Game (GVN 0x%|04X|) has been set already, use cc to change the setting\n") % gvn, CLL_Error);
+            }
+            else if (ignore)
+            {
+                COMMS_LOG("EGM use shared progressvie. Progressive setting is ignored\n", CLL_Warning);
                 return true;
             }
             else
             {
-                if (!gvn)
-                {
-                    COMMS_LOG("Can't set game configuration, please configure EGM first.", CLL_Error);
-                }
-                else
-                {
-                    COMMS_LOG(boost::format("Can't set game configuration due to invalid GVN number : 0x%|04X|.") %
-                              gvn, CLL_Error);
-                }
+                return true;
             }
         }
 

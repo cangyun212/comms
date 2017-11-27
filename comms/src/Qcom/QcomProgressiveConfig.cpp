@@ -35,6 +35,7 @@ namespace sg
                 uint8_t ipnum = 0;
                 uint8_t inum = 0;
                 uint8_t ipnums[QCOM_REMAX_PCP];
+                uint8_t icustomSAP[QCOM_REMAX_PCP];
                 //uint32_t isups[QCOM_REMAX_PCP];
                 //uint8_t saplp[QCOM_REMAX_PCP];
                 QcomProgressiveConfigData iprog;
@@ -76,32 +77,42 @@ namespace sg
                                     qc_pcrretype *pcrre = (qc_pcrretype*)(((uint8_t*)(&p->Data.pcr)) + sizeof(qc_pcrtype) +
                                                                           i * p->Data.pcr.SIZ);
 
-                                    if ((pd->data.control.game_config_state[game] & QCOM_GAME_PC_CHANGE) &&
-                                            i < ipnum)
+                                    //if ((pd->data.control.game_config_state[game] & QCOM_GAME_PC_CHANGE))
+                                    //{
+                                    if (pcrre->SUP != gc.config.progressive.sup[i] ||
+                                        pcrre->PLF.bits.saplp != gc.config.progressive.flag_p[i] ||
+                                        pcrre->PINC != gc.config.progressive.pinc[i] ||
+                                        pcrre->CEIL != gc.config.progressive.ceil[i] ||
+                                        pcrre->AUXRTP != gc.config.progressive.auxrtp[i])
                                     {
-                                        if (pcrre->SUP != gc.config.progressive.sup[i] ||
-                                                pcrre->PLF.bits.saplp != (gc.config.progressive.flag_p[i] >> 7) ||
-                                                pcrre->PINC != gc.config.progressive.pinc[i] ||
-                                                pcrre->CEIL != gc.config.progressive.ceil[i] ||
-                                                pcrre->AUXRTP != gc.config.progressive.auxrtp[i])
-                                        {
-                                            ipnums[inum] = i;
-                                            iprog.sup[inum] = gc.config.progressive.sup[i];
-                                            iprog.flag_p[inum] = gc.config.progressive.flag_p[i] >> 7;
-                                            iprog.pinc[inum] = gc.config.progressive.pinc[i];
-                                            iprog.ceil[inum] = gc.config.progressive.ceil[i];
-                                            iprog.auxrtp[inum] = gc.config.progressive.auxrtp[i];
+                                        ipnums[inum] = i;
 
-                                            ++inum;
-                                        }
+                                        if ((pcrre->PLF.bits.saplp == gc.config.progressive.flag_p[i]) &&
+                                            (!pcrre->PLF.bits.saplp) &&
+                                            (!gc.customSAP))
+                                            icustomSAP[inum] = 1;
+                                        else
+                                            icustomSAP[inum] = 0;
+
+                                        iprog.sup[inum] = gc.config.progressive.sup[i];
+                                        iprog.flag_p[inum] = gc.config.progressive.flag_p[i];
+                                        iprog.pinc[inum] = gc.config.progressive.pinc[i];
+                                        iprog.ceil[inum] = gc.config.progressive.ceil[i];
+                                        iprog.auxrtp[inum] = gc.config.progressive.auxrtp[i];
+
+                                        ++inum;
                                     }
+                                    //}
 
                                     gc.config.progressive.sup[i] = pcrre->SUP;
-                                    gc.config.progressive.flag_p[i] = pcrre->PLF.bits.saplp << 7;
+                                    gc.config.progressive.flag_p[i] = pcrre->PLF.bits.saplp;
                                     gc.config.progressive.pinc[i] = pcrre->PINC;
                                     gc.config.progressive.ceil[i] = pcrre->CEIL;
                                     gc.config.progressive.auxrtp[i] = pcrre->AUXRTP;
                                 }
+
+                                if (pd->data.control.game_config_state[game] & QCOM_GAME_PC_CHANGE)
+                                    pd->data.control.game_config_state[game] &= ~QCOM_GAME_PC_CHANGE;
                             }
                             else
                             {
@@ -123,24 +134,24 @@ namespace sg
                     }
                 }
 
-                if (game == game_num)
+                if (game >= game_num)
                 {
-                    COMMS_LOG(boost::format("Can't find game(GVN: 0x%|04X|) for the progressive config change\n") % 
+                    COMMS_LOG(boost::format("Can't find Game(GVN: 0x%|04X|) for the progressive config change\n") % 
                         p->Data.pcr.GVN, CLL_Error);
                 }
                 else if (ivarbcd)
                 {
-                    COMMS_LOG(boost::format("Invalid VAR BCD %|| of game(GVN: 0x%|04X|) received for progressive config change\n")%
+                    COMMS_LOG(boost::format("Invalid VAR BCD %|| of Game(GVN: 0x%|04X|) received for progressive config change\n")%
                         static_cast<uint32_t>(ivarbcd) % p->Data.pcr.GVN, CLL_Error);
                 }
                 else if (ivar)
                 {
-                    COMMS_LOG(boost::format("VAR %|02d| is not current VAR %|02d| of game(GVN: 0x%|04X|) received for progressive config change\n") %
+                    COMMS_LOG(boost::format("VAR %|02d| is not current VAR %|02d| of Game(GVN: 0x%|04X|) received for progressive config change\n") %
                         nomvar % static_cast<uint32_t>(ivar) % p->Data.pcr.GVN, CLL_Error);
                 }
                 else if (ipnum)
                 {
-                    COMMS_LOG(boost::format("EGM report game(GVN: 0x%|04X|) has %|| progressive levels instead of\
+                    COMMS_LOG(boost::format("EGM report Game(GVN: 0x%|04X|) has %|| progressive levels instead of\
                         %|| levels which reported by local data\n") % 
                         p->Data.pcr.GVN % (unsigned int)p->Data.pcr.NUM.bits.num % (unsigned int)ipnum
                         , CLL_Error);
@@ -149,18 +160,27 @@ namespace sg
                 {
                     COMMS_START_LOG_BLOCK();
 
-                    COMMS_LOG_BLOCK("Progressive config mismatch.\n", CLL_Error);
                     for (uint8_t i = 0; i < inum; ++i)
                     {
                         uint8_t ip = ipnums[i];
                         qc_pcrretype *pcrre = (qc_pcrretype*)(((uint8_t*)(&p->Data.pcr)) + sizeof(qc_pcrtype) +
                             ip * p->Data.pcr.SIZ);
 
-                        COMMS_LOG_BLOCK(boost::format("EGM:\tSUP %||,\tTYPE %||,\tPINC %||,\tCEIL %||,\tAUXRTP %||.\n") %
-                            pcrre->SUP % (pcrre->PLF.bits.saplp ? "LP" : "SAP") % pcrre->PINC % pcrre->CEIL % pcrre->AUXRTP, CLL_Error);
-                        COMMS_LOG_BLOCK(boost::format("LOCAL:\tSUP %||,\tTYPE %||,\tPINC %||,\tCEIL %||.\tAUXRTP %||.\n") %
-                            iprog.sup[i] % (iprog.flag_p[i] ? "LP" : "SAP") % iprog.pinc[i] % iprog.ceil[i] % iprog.auxrtp[i], CLL_Error);
-                        COMMS_LOG_BLOCK("\n", CLL_Error);
+                        if (!icustomSAP[i])
+                        {
+                            COMMS_LOG_BLOCK(boost::format("Progressive configuration for Game(GVN 0x%|04X|) Level %|| mismatch.\n") %
+                                p->Data.pcr.GVN % static_cast<uint32_t>(i), CLL_Error);
+                            COMMS_LOG_BLOCK(boost::format("EGM:\tSUP %||,\tTYPE %||,\tPINC %||,\tCEIL %||,\tAUXRTP %||.\n") %
+                                pcrre->SUP % (pcrre->PLF.bits.saplp ? "LP" : "SAP") % pcrre->PINC % pcrre->CEIL % pcrre->AUXRTP, CLL_Error);
+                            COMMS_LOG_BLOCK(boost::format("LOCAL:\tSUP %||,\tTYPE %||,\tPINC %||,\tCEIL %||.\tAUXRTP %||.\n") %
+                                iprog.sup[i] % (iprog.flag_p[i] ? "LP" : "SAP") % iprog.pinc[i] % iprog.ceil[i] % iprog.auxrtp[i], CLL_Error);
+                            COMMS_LOG_BLOCK("\n", CLL_Error);
+                        }
+                        else
+                        {
+                            COMMS_LOG_BLOCK(boost::format("Custom SAP is not suppport for Game(GVN 0x%|04X|) Level %||\n") %
+                                p->Data.pcr.GVN % static_cast<uint32_t>(i), CLL_Error);
+                        }
                     }
 
                     COMMS_END_LOG_BLOCK();
@@ -176,75 +196,94 @@ namespace sg
         return false;
     }
 
-    bool QcomProgressiveConfig::BuildProgConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomProgressiveConfigData const & data)
+    bool QcomProgressiveConfig::BuildProgConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomProgressiveConfigData const & data, uint16_t &pgid)
     {
         if (auto it = m_qcom.lock())
         {
-            uint8_t ipnum = 0;
-            bool igvn = false;
-
             QcomDataPtr p = it->GetEgmData(poll_address);
+
+            uint8_t game_num = 0;
+            uint8_t game = 0;
+            uint8_t ipnum = 0;
+            bool istate = false;
             if (p)
             {
                 std::unique_lock<std::mutex> lock(p->locker);
 
-                uint8_t game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
-                uint8_t game = 0;
-                if (!gvn)
-                {
-                    for (; game < game_num; ++game)
-                    {
-                        if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY) &&
-                            !(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ))
-                            break;
-                    }
-                }
-                else
-                {
-                    for (; game < game_num; ++game)
-                    {
-                        if (p->data.games[game].gvn == gvn)
-                            break;
-                    }
-                }
+                game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
 
-                if (game != game_num)
+                for (; game < game_num; ++game)
                 {
-                    if (p->data.games[game].prog.pnum == pnum)
+                    if ((p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN) &&
+                        p->data.games[game].gvn == gvn)
                     {
-                        job->AddPoll(this->MakeProgConfigPoll(poll_address, p->data.control.last_control, gvn, pnum, data));
-
-                        p->data.control.game_config_state[game] |= QCOM_GAME_PC_CHANGE;
-
-                        QcomGameData &gc = p->data.games[game];
-                        for (uint8_t i = 0; i < pnum; ++i)
+                        if (p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY)
                         {
-                            gc.config.progressive.sup[i] = data.sup[i];
-                            gc.config.progressive.pinc[i] = data.pinc[i];
-                            gc.config.progressive.auxrtp[i] = data.auxrtp[i];
-                            gc.config.progressive.ceil[i] = data.ceil[i];
+                            if (p->data.games[game].prog.pnum == pnum) // Is level number able to be changed? 
+                            {
+                                job->AddPoll(this->MakeProgConfigPoll(poll_address, p->data.control.last_control, gvn, pnum, data));
+
+                                p->data.control.game_config_state[game] |= QCOM_GAME_PC_CHANGE;
+
+                                if (!p->data.config.shared_progressive)
+                                {
+                                    QcomGameData &gc = p->data.games[game];
+                                    for (uint8_t i = 0; i < pnum; ++i)
+                                    {
+                                        gc.config.progressive.sup[i] = data.sup[i];
+                                        gc.config.progressive.pinc[i] = data.pinc[i];
+                                        gc.config.progressive.auxrtp[i] = data.auxrtp[i];
+                                        gc.config.progressive.ceil[i] = data.ceil[i];
+                                    }
+                                }
+                                else
+                                {
+                                    for (uint8_t i = 0; i < game_num; ++i)
+                                    {
+                                        if (p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_READY)
+                                        {
+                                            QcomGameData &gc = p->data.games[i];
+                                            for (uint8_t j = 0; j < pnum; ++j)
+                                            {
+                                                gc.config.progressive.sup[j] = data.sup[j];
+                                                gc.config.progressive.pinc[j] = data.pinc[j];
+                                                gc.config.progressive.auxrtp[j] = data.auxrtp[j];
+                                                gc.config.progressive.ceil[j] = data.ceil[j];
+                                            }
+                                        }
+                                    }
+                                }
+
+                                pgid = p->data.games[game].config.settings.pgid; // return the pgid anyway
+
+                                return true;
+                            }
+                            else
+                            {
+                                ipnum = p->data.games[game].prog.pnum;
+                            }
+                        }
+                        else
+                        {
+                            istate = true;
                         }
 
-                        return true;
+                        break;
                     }
-                    else
-                    {
-                        ipnum = p->data.games[game].prog.pnum;
-                    }
-                }
-                else
-                {
-                    igvn = true;
                 }
             }
 
-            if (igvn)
+            if (game >= game_num)
             {
-                COMMS_LOG(boost::format("Can't change progressive config due to invalid GVN number: %|04X|\n") % gvn, CLL_Error);
+                COMMS_LOG(boost::format("Can't set progressive configuration. GVN 0x%|04X| is not avaiable\n") % gvn, CLL_Error);
+            }
+            else if (istate)
+            {
+                COMMS_LOG(boost::format("Can't set progressive configuration for Game(GVN 0x%|04X|). Game is not configured or verified\n") % gvn, CLL_Error);
             }
             else if (ipnum)
             {
-                COMMS_LOG(boost::format("Invalid progressive levels num: %|| is set, %|| is expected.\n") % pnum % ipnum, CLL_Error);
+                COMMS_LOG(boost::format("Can't set progressive configuration. Invalid progressive levels num: %|| is set while %|| is expected.\n") % pnum % ipnum, CLL_Error);
             }
         }
 

@@ -66,7 +66,9 @@ namespace sg
                             pd->data.config.bsvn = p->Data.egmcr2.BGVN;
                             pd->data.config.last_gvn = p->Data.egmcr2.LGVN;
                             pd->data.config.last_var = p->Data.egmcr2.LVAR;
-                            pd->data.config.flag_s = p->Data.egmcr2.FLGSH.FLGSH;
+                            //pd->data.config.flag_s = p->Data.egmcr2.FLGSH.FLGSH;
+                            pd->data.config.shared_progressive = p->Data.egmcr2.FLGSH.bits.SharedProgressive;
+                            pd->data.config.denom_hot_switching = p->Data.egmcr2.FLGSH.bits.DenomSwitching;
                             pd->data.config.games_num_enable = p->Data.egmcr2.NUME;
 
                             pd->data.control.egm_config_state |= QCOM_EGM_CONFIG_READY;

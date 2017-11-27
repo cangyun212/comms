@@ -275,7 +275,7 @@ namespace sg
             data.settings.var = p->VAR();
             data.settings.var_lock = p->VARLock();
             data.settings.game_enable = p->GameEnable();
-            uint8_t pnum = p->ProgressiveConfig(data.progressive.flag_p, data.progressive.sup);
+            uint8_t pnum = p->ProgressiveConfig(data.progressive.flag_p, data.progressive.init_contri);
 
             m_qcom->GameConfiguration(m_curr_egm, p->GVN(), pnum, data);
         }
@@ -292,7 +292,7 @@ namespace sg
         {
             QcomGameConfigurationChangeActionPtr p = std::static_pointer_cast<QcomGameConfigurationChangeAction>(action);
 
-            QcomGameSettingData data{ p->PGID(), p->VAR(), 0, p->GameEnable() };
+            QcomGameSettingData data{ p->PGID(), p->VAR(), 0, p->GEF() };
 
             m_qcom->GameConfigurationChange(m_curr_egm, p->GVN(), data);
         }

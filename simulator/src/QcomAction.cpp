@@ -362,7 +362,7 @@ namespace sg
     uint16 QcomGameConfigurationChangeAction::s_gvn = 0;
     uint16 QcomGameConfigurationChangeAction::s_pgid = 0xFFFF;
     uint8  QcomGameConfigurationChangeAction::s_var = 0;
-    uint8  QcomGameConfigurationChangeAction::s_game_enable = 1;
+    uint8  QcomGameConfigurationChangeAction::s_gef = 1;
 
     QcomGameConfigurationChangeAction::QcomGameConfigurationChangeAction()
         : Action(Action::AT_QCOM_GAME_CONF_CHANGE)
@@ -404,7 +404,7 @@ namespace sg
         }
         else
         {
-            SG_SET_FLAG_OPTION("gameenable", s_game_enable);
+            SG_SET_FLAG_OPTION("gef", s_gef);
 
             res = true;
         }
@@ -421,7 +421,7 @@ namespace sg
             m_options->AddOption(ActionOption("gvn", "game version number, identifies the game being re-configured", Value<uint16>(&s_gvn)));
             m_options->AddOption(ActionOption("pgid", "new linked progressive group ID", Value<uint16>(&s_pgid)));
             m_options->AddOption(ActionOption("var", "game version number, indicates tot the EGM what new variation to use", Value<uint8>(&s_var)));
-            m_options->AddOption(ActionOption("gameenable", "enable game if set, otherwise disable it", Value<uint8>(&s_game_enable)));
+            m_options->AddOption(ActionOption("gef", "enable game if set, otherwise disable it"));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }
     }

@@ -6,8 +6,9 @@
 #include <algorithm>
 #include <vector>
 #include <list>
-#include <unordered_map>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "CommsPredeclare.hpp"
 #include "Comms.hpp"
@@ -130,7 +131,9 @@ namespace sg
         uint8_t         games_num_enable; // total number of games that can be enable
         uint16_t        last_gvn; // game version number of the last initiated game in the egm
         uint8_t         last_var; // game variation number as above
-        uint8_t         flag_s; // bit 7 for shared progressive component flag, ref Qcom1.6-10.9; bit 8 for denomination hot-switching, ref Qcom1.6-15.6.12
+        //uint8_t         flag_s; // bit 7 for shared progressive component flag, ref Qcom1.6-10.9; bit 8 for denomination hot-switching, ref Qcom1.6-15.6.12
+        uint8_t         shared_progressive;
+        uint8_t         denom_hot_switching;
     };
 
     struct QcomLinkedProgressiveData
@@ -144,10 +147,12 @@ namespace sg
     // merge progressive config data and progressive change data together
     struct QcomProgressiveConfigData
     {
-        uint32_t        sup[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, if SAP, then this is the start up value for each level; if LP, this will be the initial jackpot current amount
+        uint32_t        sup[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot start up amount
         uint32_t        pinc[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level percentage increment x 10000
         uint32_t        ceil[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new jackpot level ceiling
         uint32_t        auxrtp[QCOM_REMAX_PCP]; // ref Qcom1.6-15.4.6, new auxiliary RTP for the level x 10000
+        uint32_t        init_contri[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, if SAP, will be added on top of current amount; if LP, is the initial jackpot current amount
+        //char            name[QCOM_REMAX_PCP][21]; // level name, display purpose only
         uint8_t         flag_p[QCOM_REMAX_EGMGCP]; // ref Qcom1.6-15.4.3, check bit 7 to denote the level as a LP, otherwise the level is a SAP
         //uint8_t         pnum;
     };
@@ -156,7 +161,9 @@ namespace sg
     {
         QcomProgressiveConfigData config;
         uint32_t        camt[QCOM_REMAX_EGMGCP];
+        uint32_t        overflow[QCOM_REMAX_EGMGCP];
         uint8_t         pnum;
+        uint8_t         configured;
     };
 
     struct QcomVariationData
@@ -248,9 +255,9 @@ namespace sg
     struct QcomMeterGroupContributionData
     {
         QcomMeterGroup      groups[QCOM_METER_GROUP_NUM];
-        uint32_t            pamt;
-        uint16_t            lgvn; // The Game Version Number of the last initiated game on the EGM, ref Qcom1.6-15.6.8
-        uint16_t            pgid;
+        uint32_t            pamt; // LP Turnover meter. The total game turnover applicable to PGID, ref Qcom1.6-15.6.8
+        //uint16_t            lgvn; // The Game Version Number of the last initiated game on the EGM, ref Qcom1.6-15.6.8
+        //uint16_t            pgid;
     };
 
     struct QcomECTToEGMPollData
@@ -268,6 +275,7 @@ namespace sg
         QcomBetMetersData               betm;
         QcomMultiGameVarMetersData      mgvm;
         QcomPlayerChoiceMetersData      pcm;
+        QcomMeterGroupContributionData  mgc;
         uint16_t                        gvn;
         uint8_t                         var_hot_switching; // ref Qcom1.6-15.6.11, set if the game support on-the-fly variation switching
         uint8_t                         lp_only; // ref Qcom1.6-15.6.11
@@ -414,7 +422,7 @@ namespace sg
         QcomExtJPInfoData               extjpinfo;
         QcomNoteAcceptorStatusData      nasr;
         QcomHopperTicketPrinterData     htp;
-        QcomMeterGroupContributionData  mgc;
+        //QcomMeterGroupContributionData  mgc;
         QcomGameData                    games[QCOM_MAX_GAME_NUM];
     };
 
@@ -584,8 +592,10 @@ namespace sg
     private:
         void    StartJobThread();
         void    StopJobThread();
-        bool    AddLPConfigData(uint16_t pgid, uint8_t pnum, QcomProgressiveConfigData const& data);
+        bool    AddLPConfigData(uint8_t poll_address, uint16_t gvn, uint16_t pgid, uint8_t pnum, QcomProgressiveConfigData const& data);
+        bool    UpdateLPConfigData(uint16_t pgid, uint8_t pnum, QcomProgressiveConfigData const& data);
         bool    GetLPConfigData(QcomLinkedProgressiveData &data);
+        bool    ReMapPGID(uint8_t poll_address, uint16_t gvn, uint16_t new_pgid, uint16_t old_pgid, uint8_t shared);
         bool    DecoratePoll(QcomPollPtr &p);
 
     private:
@@ -618,7 +628,12 @@ namespace sg
         LPPool          m_lps;
         typedef LPPool::const_iterator   LPPoolHandle;
         LPPoolHandle    m_curr_lp;
-
+        typedef std::unordered_set<uint16_t>                LPGameSet;
+        typedef std::shared_ptr<LPGameSet>                  LPGameSetPtr;
+        typedef std::unordered_map<uint8_t, LPGameSetPtr>   LPEGM;
+        typedef std::shared_ptr<LPEGM>                      LPEGMPtr;
+        typedef std::unordered_map<uint16_t, LPEGMPtr>      LPEGMPool;
+        LPEGMPool       m_lp_egms;
 
 
         typedef std::list<QcomJobDataPtr>   JobQueue;

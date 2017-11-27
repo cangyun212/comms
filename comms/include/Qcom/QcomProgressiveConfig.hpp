@@ -25,7 +25,7 @@ namespace sg
         bool        Parse(uint8_t buf[], int length) override;
 
     public:
-        bool        BuildProgConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomProgressiveConfigData const& data);
+        bool        BuildProgConfigPoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomProgressiveConfigData const& data, uint16_t &pgid);
 
     private:
         QcomPollPtr MakeProgConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, uint8_t pnum, QcomProgressiveConfigData const& data);

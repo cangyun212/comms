@@ -723,7 +723,7 @@ namespace sg
         SG_QCOM_ADD_POLL_JOB(job);
     }
 
-    bool CommsQcom::AddLPConfigData(uint16_t pgid, uint8_t pnum, const QcomProgressiveConfigData &data)
+    bool CommsQcom::AddLPConfigData(uint8_t poll_address, uint16_t gvn, uint16_t pgid, uint8_t pnum, const QcomProgressiveConfigData &data)
     {
         bool is_lp = false;
         for (uint8_t level = 0; level < pnum; ++level)
@@ -745,6 +745,9 @@ namespace sg
             QcomLinkProgressivePoolDataPtr ptr = MakeSharedPtr<QcomLinkProgressivePoolData>();
             ptr->config = data;
             ptr->pnum = pnum;
+            ptr->configured = 0;
+            std::memset(ptr->camt, 0, sizeof(ptr->camt));
+            std::memset(ptr->overflow, 0, sizeof(ptr->overflow));
 
             auto res = m_lps.insert(std::make_pair(pgid, ptr));
 
@@ -758,11 +761,11 @@ namespace sg
                         {
                             //ptr->config.flag_p[level] = 1;
                             //ptr->config.sup[level] = data.sup[level];
-                            ptr->camt[level] = ptr->config.sup[level];
+                            //ptr->camt[level] = ptr->config.sup[level];
                         }
                         else if (!res.first->second->config.flag_p[level] && !data.flag_p[level])
                         {
-                            ptr->camt[level] = 0;
+                            //ptr->camt[level] = 0;
                         }
                         else
                         {
@@ -771,10 +774,10 @@ namespace sg
                         }
                     }
 
-                    if (err_level_type == QCOM_REMAX_EGMGCP)
-                    {
-                        *(res.first->second) = *ptr;
-                    }
+                    //if (err_level_type == QCOM_REMAX_EGMGCP)
+                    //{
+                    //    *(res.first->second) = *ptr;
+                    //}
                 }
                 else
                 {
@@ -785,23 +788,124 @@ namespace sg
             {
                 for (uint8_t level = 0; level < ptr->pnum; ++level)
                 {
-                    ptr->camt[level] = ptr->config.sup[level];
+                    ptr->camt[level] = ptr->config.init_contri[level];
                 }
             }
+
+            auto it = m_lp_egms.insert(std::make_pair(pgid, nullptr));
+            if (it.second) // new pgid
+            {
+                LPEGMPtr pegms = MakeSharedPtr<LPEGM>();
+                LPGameSetPtr pgames = MakeSharedPtr<LPGameSet>();
+                pgames->insert(gvn);
+                (*pegms)[poll_address] = pgames;
+                it.first->second = pegms;
+            }
+            else
+            {
+                LPEGMPtr pegms = nullptr;
+                if (!it.first->second) // should not happen
+                {
+                    pegms = MakeSharedPtr<LPEGM>();
+                    it.first->second = pegms;
+                }
+
+                auto itegm = it.first->second->insert(std::make_pair(poll_address, nullptr));
+                if (itegm.second) // new egm
+                {
+                    LPGameSetPtr pgames = MakeSharedPtr<LPGameSet>();
+                    pgames->insert(gvn);
+                    itegm.first->second = pgames;
+                }
+                else
+                {
+                    LPGameSetPtr pgames = nullptr;
+                    if (!itegm.first->second) // should not happen
+                    {
+                        pgames = MakeSharedPtr<LPGameSet>();
+                        itegm.first->second = pgames;
+                    }
+
+                    itegm.first->second->insert(gvn);
+                }
+            }
+        }
+        else
+        {
+            return false;
         }
 
         if (err_pnum != QCOM_REMAX_EGMGCP)
         {
-            COMMS_LOG(boost::format("Can't update link progressive data of PGID %1% due to wrong level num %2% (%3% is expected).\n") %
+            COMMS_LOG(boost::format("Configure same PGID 0x%|04X| with different configuration. Level num is %|| (%|| is expected).\n") %
                 pgid % static_cast<uint32_t>(pnum) % static_cast<uint32_t>(err_pnum), CLL_Error);
 
             return false;
         }
         else if (err_level_type != QCOM_REMAX_EGMGCP)
         {
-            COMMS_LOG(boost::format("Can't update link progressive data of PGID %1% due to wrong level type. Level %2% should be %3%.\n") % 
+            COMMS_LOG(boost::format("Configure same PGID 0x%|04X| with different configuration. Level %|| is set to %||.\n") % 
                 pgid % static_cast<uint32_t>(err_level_type) % (data.flag_p[err_level_type] == 1 ? std::string("SAP") : std::string("LP")), CLL_Error);
             
+            return false;
+        }
+
+        return true;
+    }
+
+    bool CommsQcom::UpdateLPConfigData(uint16_t pgid, uint8_t pnum, QcomProgressiveConfigData const& data)
+    {
+
+        uint8_t err_pnum = QCOM_REMAX_EGMGCP;
+
+        {
+            std::unique_lock<std::mutex> lock(m_lp_guard);
+
+            auto it = m_lps.find(pgid);
+
+            if (it != m_lps.end())
+            {
+                if (it->second->pnum == pnum)
+                {
+                    for (uint8_t level = 0; level < pnum; ++level)
+                    {
+                        uint32_t turnover = 0;
+                        if (it->second->configured)
+                            turnover = it->second->camt[level] + it->second->overflow[level] - it->second->config.sup[level];
+
+                        it->second->config.sup[level] = data.sup[level];
+                        it->second->config.pinc[level] = data.pinc[level];
+                        it->second->config.ceil[level] = data.ceil[level];
+                        it->second->config.auxrtp[level] = data.auxrtp[level];
+
+                        if (it->second->configured)
+                            it->second->camt[level] = turnover + it->second->config.sup[level];
+                        else if (it->second->camt[level] < it->second->config.sup[level])
+                            it->second->camt[level] = it->second->config.sup[level];
+
+                        if (it->second->camt[level] > it->second->config.ceil[level])
+                        {
+                            it->second->overflow[level] = it->second->camt[level] - it->second->config.ceil[level];
+                            it->second->camt[level] = it->second->config.ceil[level];
+                        }
+                    }
+
+                    it->second->configured = 1;
+                }
+                else
+                {
+                    err_pnum = it->second->pnum;
+                }
+            }
+        }
+
+        if (err_pnum != QCOM_REMAX_EGMGCP)
+        {
+            COMMS_LOG(
+                boost::format(
+                    "Can't update LP configuration. Progressive level num %|| mismatch game configuration setting num %||") % 
+                static_cast<uint32_t>(pnum) % static_cast<uint32_t>(err_pnum), CLL_Error);
+
             return false;
         }
 
@@ -822,7 +926,20 @@ namespace sg
             {
                 if (m_curr_lp->second->config.flag_p[i])
                 {
-                    m_curr_lp->second->camt[i] += 1; // TODO: increment lp here implicitly
+                    if (m_curr_lp->second->configured)
+                    {
+                        // uint32_t turnover = /*Get Turnover from EGM data, we don't do this, just fake one*/
+                        // uint32_t current_contribution = turnover * m_curr_lp->second->pinc[i] / 10000;
+                        // m_curr_lp->second->camt[i] = m_curr_lp->second->sup[i] + current_contribution;
+                        m_curr_lp->second->camt[i] += 1; // fake
+                        uint32_t amt = m_curr_lp->second->camt[i] + m_curr_lp->second->overflow[i];
+                        if (amt > m_curr_lp->second->config.ceil[i])
+                        {
+                            m_curr_lp->second->overflow[i] = amt - m_curr_lp->second->config.ceil[i];
+                            m_curr_lp->second->camt[i] = m_curr_lp->second->config.ceil[i];
+                        }
+                    }
+
                     data.lpamt[num] = m_curr_lp->second->camt[i];
                     data.plvl[num] = i;
                     data.pgid[num++] = m_curr_lp->first;
@@ -840,6 +957,150 @@ namespace sg
         }
 
         return true;
+    }
+
+    bool CommsQcom::ReMapPGID(uint8_t poll_address, uint16_t gvn, uint16_t new_pgid, uint16_t old_pgid, uint8_t shared)
+    {
+        bool old_pgid_err = false;
+        bool egm_no_pool_err = false;
+        bool pool_no_egm_err = false;
+
+        if (new_pgid != old_pgid)
+        {
+            std::unique_lock<std::mutex> lock(m_lp_guard);
+
+            auto itoldpool = m_lps.find(old_pgid);
+            auto itoldegms = m_lp_egms.find(old_pgid);
+            auto itoldgameset = itoldegms->second->find(poll_address);
+            auto itoldgame = itoldgameset->second->find(gvn);
+
+            if (itoldpool != m_lps.end() && itoldegms != m_lp_egms.end() && itoldgameset != itoldegms->second->end() && itoldgame != itoldgameset->second->end())
+            {
+                auto itpool = m_lps.find(new_pgid);
+                auto itegms = m_lp_egms.find(new_pgid);
+
+                if (itpool == m_lps.end()) // new pgid
+                {
+                    if (itegms == m_lp_egms.end())
+                    {
+                        QcomLinkProgressivePoolDataPtr ptr = MakeSharedPtr<QcomLinkProgressivePoolData>();
+                        m_lps[new_pgid] = ptr;
+
+                        *ptr = *(itoldpool->second);
+
+                        LPGameSetPtr pgames = nullptr;
+                        if (!shared)
+                        {
+                            pgames = MakeSharedPtr<LPGameSet>();
+                            pgames->insert(gvn);
+                        }
+                        else
+                        {
+                            pgames = itoldgameset->second;
+                        }
+
+                        LPEGMPtr pegms = MakeSharedPtr<LPEGM>();
+                        (*pegms)[poll_address] = pgames;
+                        m_lp_egms[new_pgid] = pegms;
+                    }
+                    else
+                    {
+                        egm_no_pool_err = true;
+                    }
+                }
+                else
+                {
+                    if (itegms != m_lp_egms.end()) // exist pgid
+                    {
+                        if (!itegms->second)
+                        {
+                            itegms->second = MakeSharedPtr<LPEGM>();
+                        }
+
+                        auto itegm = itegms->second->insert(std::make_pair(poll_address, nullptr));
+                        if (itegm.second)
+                        {
+                            if (!shared)
+                            {
+                                itegm.first->second = MakeSharedPtr<LPGameSet>();
+                                itegm.first->second->insert(gvn);
+                            }
+                            else
+                            {
+                                itegm.first->second = itoldgameset->second;
+                            }
+                        }
+                        else
+                        {
+                            if (!shared)
+                            {
+                                itegm.first->second->insert(gvn);
+                            }
+                            else
+                            {
+                                // actually I think this case should not happen
+                                for (auto g : *(itoldgameset->second))
+                                {
+                                    itegm.first->second->insert(g);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        pool_no_egm_err = true;
+                    }
+                }
+
+                if (!pool_no_egm_err && !egm_no_pool_err)
+                {
+                    if (!shared)
+                    {
+                        itoldgameset->second->erase(itoldgame);
+                        if (!itoldgameset->second->empty())
+                        {
+                            return true;
+                        }
+                    }
+
+                    itoldgameset->second = nullptr;
+                    itoldegms->second->erase(itoldgameset);
+                    if (itoldegms->second->empty())
+                    {
+                        itoldegms->second = nullptr;
+                        m_lp_egms.erase(itoldegms);
+                    }
+
+                    return true;
+                }
+            }
+            else
+            {
+                old_pgid_err = true;
+            }
+        }
+        else
+        {
+            return true; // no need to re-map
+        }
+
+        if (old_pgid_err)
+        {
+            COMMS_LOG(boost::format("No info of PGID 0x%|04X| found for EGM %|| Game(GVN 0x%|04X|) PGID change\n") %
+                old_pgid % static_cast<uint32_t>(poll_address) % gvn, CLL_Error);
+        }
+        else if (egm_no_pool_err)
+        {
+            COMMS_LOG(boost::format("No Configuration info of PGID 0x%|04X| for EGM %|| Game(GVN 0x%|04X|) PGID change") %
+                new_pgid % static_cast<uint32_t>(poll_address) % gvn, CLL_Error);
+        }
+        else if (pool_no_egm_err)
+        {
+            COMMS_LOG(boost::format("EGM data error of PGID 0x%|04X| for EGM %|| Game(GVN 0x5|04X|) PGID change") %
+                new_pgid % static_cast<uint32_t>(poll_address) % gvn, CLL_Error);
+        }
+
+        return false;
     }
 
     bool CommsQcom::DecoratePoll(QcomPollPtr &p)
@@ -873,37 +1134,32 @@ namespace sg
     {
         SG_ASSERT(poll_address > 0 && poll_address <= this->GetEgmNum());
 
-        //SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
         if (m_pending)
         {
             COMMS_LOG("Can't use pending job when configure game\n", CLL_Error);
             return;
         }
 
-        QcomGameConfigurationPtr handler = std::static_pointer_cast<QcomGameConfiguration>(m_handler[QCOM_EGMGCP_FC]);
         //if (!handler->BuildGameConfigPoll(job, poll_address, gvn, data))
         //    return;
-        std::vector<QcomJobDataPtr> jobs;
-        if (!handler->BuildGameConfigJobs(jobs, poll_address, gvn, pnum, data))
+        //std::vector<QcomJobDataPtr> jobs;
+        SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
+
+        QcomGameConfigurationPtr handler = std::static_pointer_cast<QcomGameConfiguration>(m_handler[QCOM_EGMGCP_FC]);
+        if (!handler->BuildGameConfigJobs(job, poll_address, gvn, pnum, data))
             return;
 
-        for (uint8_t i = 0; i < pnum; ++i)
+        if (this->AddLPConfigData(poll_address, gvn, data.settings.pgid, pnum, data.progressive))
         {
-            if (data.progressive.flag_p[i])
-            {
-                // from now, sim should keep sending link broadcast instead date and time only
-                this->AddLPConfigData(data.settings.pgid, pnum, data.progressive);
-                m_lpbroadcast = true;
-                break;
-            }
+            m_lpbroadcast = true;
         }
 
-        for (size_t i = 0; i < jobs.size(); ++i)
-        {
-            SG_QCOM_ADD_POLL_JOB(jobs[i]);
-        }
+        //for (size_t i = 0; i < jobs.size(); ++i)
+        //{
+        //   SG_QCOM_ADD_POLL_JOB(jobs[i]);
+        //}
 
-        //SG_QCOM_ADD_POLL_JOB(job);
+        SG_QCOM_ADD_POLL_JOB(job);
     }
 
     void CommsQcom::GameConfigurationChange(uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data)
@@ -912,10 +1168,18 @@ namespace sg
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
+        uint16_t old_pgid = 0;
+        uint8_t shared = 0;
+
         QcomGameConfigurationChangePtr handler = std::static_pointer_cast<QcomGameConfigurationChange>(m_handler[QCOM_EGMVCP_FC]);
 
-        if (!handler->BuildGameConfigChangePoll(job, poll_address, gvn, data))
+        if (!handler->BuildGameConfigChangePoll(job, poll_address, gvn, data, old_pgid, shared))
             return;
+
+        if (old_pgid && old_pgid != data.pgid)
+        {
+            this->ReMapPGID(poll_address, gvn, data.pgid, old_pgid, shared);
+        }
 
         SG_QCOM_ADD_POLL_JOB(job);
     }
@@ -952,9 +1216,16 @@ namespace sg
 
         SG_QCOM_MAKE_JOB(job, QcomJobData::JT_POLL);
 
+        uint16_t pgid = 0;
+
         QcomProgressiveConfigPtr handler = std::static_pointer_cast<QcomProgressiveConfig>(m_handler[QCOM_PCP_FC]);
-        if (!handler->BuildProgConfigPoll(job, poll_address, gvn, pnum, data))
+        if (!handler->BuildProgConfigPoll(job, poll_address, gvn, pnum, data, pgid))
             return;
+
+        if (pgid != 0 && pgid != 0xFFFF) // a valid lp pgid
+        {
+            this->UpdateLPConfigData(pgid, pnum, data);
+        }
 
         SG_QCOM_ADD_POLL_JOB(job);
     }

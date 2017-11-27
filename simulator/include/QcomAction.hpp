@@ -205,13 +205,13 @@ namespace sg
         uint16_t    GVN() const { return s_gvn; }
         uint16_t    PGID() const { return s_pgid; }
         uint8_t     VAR() const { return s_var; }
-        uint8_t     GameEnable() const { return s_game_enable; }
+        uint8_t     GEF() const { return s_gef; }
 
     private:
         static uint16   s_gvn;
         static uint16   s_pgid;
         static uint8    s_var;
-        static uint8    s_game_enable;
+        static uint8    s_gef;
     };
 
     class QcomEGMParametersAction : public Action

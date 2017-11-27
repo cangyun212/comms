@@ -22,7 +22,7 @@ namespace sg {
         uint8_t     Id() const override;
 
     public:
-        bool        BuildGameConfigChangePoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data);
+        bool        BuildGameConfigChangePoll(QcomJobDataPtr &job, uint8_t poll_address, uint16_t gvn, QcomGameSettingData const& data, uint16_t &old_pgid, uint8_t &shared);
 
     private:
         QcomPollPtr MakeGameConfigChangePoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, QcomGameSettingData const& data);

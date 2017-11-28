@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <type_traits>
 #include "boost/assert.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/numeric/conversion/cast.hpp"
@@ -27,6 +28,107 @@ namespace sg
 #endif // SG_CPU_X64
 #endif
 
+    namespace utils
+    {
+        namespace conversion
+        {
+            template <typename Target, typename Source>
+            struct conversion_impl
+            {
+                static Target convert(Source const& s, std::size_t *pos, int base)
+                {
+                    static_assert(true, "Wrong Target type.");
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<long long, Source>
+            {
+                static long long convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stoll(s, pos, base);
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<int, Source>
+            {
+                static int convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stoi(s, pos, base);
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<long, Source>
+            {
+                static long convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stol(s, pos, base);
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<float, Source>
+            {
+                static float convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stof(s, pos, base);
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<double, Source>
+            {
+                static double convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stod(s, pos, base);
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<long double, Source>
+            {
+                static long double convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stold(s, pos, base);
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<unsigned long long, Source>
+            {
+                static unsigned long long convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stoull(s, pos, base);
+                }
+            };
+
+            template <typename Source>
+            struct conversion_impl<unsigned long, Source>
+            {
+                static unsigned long convert(Source const& s, std::size_t *pos, int base)
+                {
+                    return ::std::stoul(s, pos, base);
+                }
+            };
+
+            template <typename Target, typename Source>
+            bool try_lexical_convert(Source const& s, Target & t, std::size_t *pos = nullptr, int base = 10)
+            {
+                try
+                {
+                    t = conversion_impl<Target, Source>::convert(s, pos, base);
+                    return true;
+                }
+                catch (...)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
     struct uint8
     {
         uint8_t value;
@@ -42,16 +144,18 @@ namespace sg
             std::string _v;
             in >> _v;
 
-            // boost::numeric_cast won't raise exception for negative number, so we use
+            // boost::lexical_cast won't raise exception for negative number, so we use
             // signed value first to cover this
             int _t;
-            if (boost::conversion::try_lexical_convert(_v, _t))
+            //if (boost::conversion::try_lexical_convert(_v, _t))
+            if (utils::conversion::try_lexical_convert(_v, _t, nullptr, 0)) // boost lexical_convert can't deal with hex/oct input, use stoi instead
             {
                 value = boost::numeric_cast<uint8_t>(_t); // exception if _t is negative value or out of range
             }
             else
             {
-                unsigned int _ut = boost::lexical_cast<unsigned int>(_v); // exception if failed
+                //unsigned int _ut = boost::lexical_cast<unsigned int>(_v); // exception if failed
+                unsigned long _ut = ::std::stoul(_v, nullptr, 0);
                 value = boost::numeric_cast<uint8_t>(_ut); // exception if out of range
             }
 
@@ -81,7 +185,8 @@ namespace sg
             std::string _v;
             in >> _v;
 
-            int _t = boost::lexical_cast<int>(_v);
+            //int _t = boost::lexical_cast<int>(_v);
+            int _t = ::std::stoi(_v, nullptr, 0);
             value = boost::numeric_cast<int8_t>(_t);
 
             return in;
@@ -110,13 +215,15 @@ namespace sg
             in >> _v;
 
             int _t;
-            if (boost::conversion::try_lexical_convert(_v, _t))
+            //if (boost::conversion::try_lexical_convert(_v, _t))
+            if (utils::conversion::try_lexical_convert(_v, _t, nullptr, 0))
             {
                 value = boost::numeric_cast<uint16_t>(_t);
             }
             else
             {
-                unsigned int _ut = boost::lexical_cast<unsigned int>(_v);
+                //unsigned int _ut = boost::lexical_cast<unsigned int>(_v);
+                unsigned long _ut = ::std::stoul(_v, nullptr, 0);
                 value = boost::numeric_cast<uint16_t>(_ut);
             }
 
@@ -145,7 +252,8 @@ namespace sg
             std::string _v;
             in >> _v;
 
-            int _t = boost::lexical_cast<int>(_v);
+            //int _t = boost::lexical_cast<int>(_v);
+            int _t = ::std::stoi(_v, nullptr, 0);
             value = boost::numeric_cast<int16_t>(_t);
 
             return in;
@@ -174,13 +282,15 @@ namespace sg
             in >> _v;
 
             int _t;
-            if (boost::conversion::try_lexical_convert(_v, _t))
+            //if (boost::conversion::try_lexical_convert(_v, _t))
+            if (utils::conversion::try_lexical_convert(_v, _t, nullptr, 0))
             {
                 value = boost::numeric_cast<uint32_t>(_t);
             }
             else
             {
-                unsigned int _ut = boost::lexical_cast<unsigned int>(_v);
+                //unsigned int _ut = boost::lexical_cast<unsigned int>(_v);
+                unsigned long _ut = ::std::stoul(_v, nullptr, 0);
                 value = boost::numeric_cast<uint32_t>(_ut);
             }
 
@@ -209,7 +319,8 @@ namespace sg
             std::string _v;
             in >> _v;
 
-            int _t = boost::lexical_cast<int>(_v);
+            //int _t = boost::lexical_cast<int>(_v);
+            int _t = ::std::stoi(_v, nullptr, 0);
             value = boost::numeric_cast<int32_t>(_t);
 
             return in;

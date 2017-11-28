@@ -126,11 +126,11 @@ namespace sg
                             ivarbcd = p->Data.pcr.VAR;
                         }
 
-                        if (!ipnum && !inum && !ivar && !ivarbcd)
-                        {
-                            COMMS_LOG("Progressive configuration Response received.\n", CLL_Info);
-                            return true;
-                        }
+                        //if (!ipnum && !inum && !ivar && !ivarbcd)
+                        //{
+                        //    COMMS_LOG("Progressive configuration Response received.\n", CLL_Info);
+                        //    return true;
+                        //}
                     }
                 }
 
@@ -184,6 +184,13 @@ namespace sg
                     }
 
                     COMMS_END_LOG_BLOCK();
+                }
+                else
+                {
+                    COMMS_LOG(boost::format("Progressive configuration Response of Game(GVN 0x%|04X|) received.\n") %
+                        p->Data.pcmr.GVN, CLL_Info);
+                    return true;
+
                 }
             }
             else

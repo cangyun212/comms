@@ -367,9 +367,6 @@ namespace sg
     QcomGameConfigurationChangeAction::QcomGameConfigurationChangeAction()
         : Action(Action::AT_QCOM_GAME_CONF_CHANGE)
     {
-        m_options = MakeSharedPtr<ActionOptions>();
-
-
     }
 
     QcomGameConfigurationChangeAction::~QcomGameConfigurationChangeAction()
@@ -420,7 +417,7 @@ namespace sg
 
             m_options->AddOption(ActionOption("gvn", "game version number, identifies the game being re-configured", Value<uint16>(&s_gvn)));
             m_options->AddOption(ActionOption("pgid", "new linked progressive group ID", Value<uint16>(&s_pgid)));
-            m_options->AddOption(ActionOption("var", "game version number, indicates tot the EGM what new variation to use", Value<uint8>(&s_var)));
+            m_options->AddOption(ActionOption("var", "game version number, indicates the EGM what new variation to use", Value<uint8>(&s_var)));
             m_options->AddOption(ActionOption("gef", "enable game if set, otherwise disable it"));
             m_options->AddOption(ActionOption("help,h", "help message"));
         }

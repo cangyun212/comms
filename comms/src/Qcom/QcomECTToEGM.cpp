@@ -41,12 +41,19 @@ namespace sg
 
                     //pd->data.mgc.groups[1].met[5] = p->Data.ectack.TCCIM;
 
-                    if (p->Data.ectack.ECTPSN == psn)
-                        return true;
+                    //if (p->Data.ectack.ECTPSN == psn)
+                    //    return true;
                 }
 
-                COMMS_LOG(boost::format("ECT To EGM Ack response received, received psn %|| is not math expected next psn %||\n") %
-                    static_cast<uint32_t>(p->Data.ectack.ECTPSN) % static_cast<uint32_t>(psn) , CLL_Error);
+                if (p->Data.ectack.ECTPSN == psn)
+                {
+                    COMMS_LOG("ECT To EGM Ack\n", CLL_Info);
+                }
+                else
+                {
+                    COMMS_LOG(boost::format("ECT To EGM Ack response received, received psn %|| is not match expected next psn %||\n") %
+                        static_cast<uint32_t>(p->Data.ectack.ECTPSN) % static_cast<uint32_t>(psn) , CLL_Error);
+                }
             }
             else
             {

@@ -17,7 +17,11 @@
 #define SG_CONSOLE_KEY_DC                          0512
 #define SG_CONSOLE_KEY_ENTER                       0527
 #define SG_CONSOLE_KEY_HOME                        0406
-#define SG_CONSOLE_KEY_END                         0546
+#if defined(SG_PLATFORM_LINUX) && !defined(SG_USE_PDCURSES)
+    #define SG_CONSOLE_KEY_END                     0550
+#else
+    #define SG_CONSOLE_KEY_END                     0546
+#endif
 
 namespace sg
 {

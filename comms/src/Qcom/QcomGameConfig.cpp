@@ -254,7 +254,7 @@ namespace sg
                     else
                     {
                         COMMS_LOG(boost::format("Game configuration GVN 0x%|04X| of Game %|| (Game Number: %||) is ready\n") %
-                            p->Data.egmgcr.GVN % static_cast<uint32_t>(game) % static_cast<uint32_t>(game_num), CLL_Info);
+                            p->Data.egmgcr.GVN % static_cast<uint32_t>(game + 1) % static_cast<uint32_t>(game_num), CLL_Info);
                     }
 
                     return true;

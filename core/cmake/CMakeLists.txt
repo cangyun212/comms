@@ -89,7 +89,7 @@ add_library(${LIB_NAME} SHARED
 target_include_directories(${LIB_NAME} PUBLIC ${RAPIDJSON_INCLUDE_DIR})
 
 if(SG_PLATFORM_WINDOWS)
-    target_compiler_definitions(${LIB_NAME} PUBLIC -DSG_USE_PDCURSES)
+    target_compile_definitions(${LIB_NAME} PUBLIC -DSG_USE_PDCURSES)
     target_link_libraries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
         debug pdcurses${SG_OUTPUT_SUFFIX}_d optimized pdcurses${SG_OUTPUT_SUFFIX})
 else()
@@ -98,7 +98,7 @@ else()
 endif()
 
 #if(SG_PLATFORM_LINUX)
-#    target_compiler_definitions(${LIB_NAME} PUBLIC -DSG_USE_PDCURSES)
+#    target_compile_definitions(${LIB_NAME} PUBLIC -DSG_USE_PDCURSES)
 #    include(${PDCURSES_PROJECT_DIR}/pdcurses/x11/pdcurses.cmake)
 #    target_link_libraries(${LIB_NAME} ${PDCURSES_XLIBS} ${PDCURSES_EXTRA_LIBS})
 #endif()

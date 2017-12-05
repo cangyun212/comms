@@ -28,6 +28,7 @@ namespace sg
         m_actions["sk"] = ptr;
 
         ptr = MakeSharedPtr<QcomListAction>();
+        ptr->BuildOptions();
         m_actions["list"] = ptr;
         m_actions["ls"] = ptr;
         m_actions["l"] = ptr;

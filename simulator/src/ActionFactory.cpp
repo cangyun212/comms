@@ -71,12 +71,6 @@ namespace sg {
         m_actions["quit"] = ptr;
         m_actions["q"] = ptr;
 
-        ptr = MakeSharedPtr<ListEGMAction>();
-        ptr->BuildOptions();
-        m_actions["list"] = ptr;
-        m_actions["l"] = ptr;
-        m_actions["ls"] = ptr;
-
         ptr = MakeSharedPtr<PickEGMAction>();
         ptr->BuildOptions();
         m_actions["pick"] = ptr;

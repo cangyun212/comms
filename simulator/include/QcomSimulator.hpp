@@ -58,7 +58,7 @@ namespace sg {
         void    ChangeDev(const ActionCenter &sender, const ActionPtr &action);
 
     private:
-        void    ListEGMInfo(bool show_all = true);
+        //void    ListEGMInfo(bool show_all = true);
         bool    Pick(uint8_t target);
 
     private:

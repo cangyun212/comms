@@ -90,10 +90,10 @@ target_include_directories(${LIB_NAME} PUBLIC ${RAPIDJSON_INCLUDE_DIR})
 
 if(SG_PLATFORM_WINDOWS)
     target_compile_definitions(${LIB_NAME} PUBLIC -DSG_USE_PDCURSES)
-    target_link_libraries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
+    target_link_libraries(${LIB_NAME} PUBLIC ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
         debug pdcurses${SG_OUTPUT_SUFFIX}_d optimized pdcurses${SG_OUTPUT_SUFFIX})
 else()
-    target_link_libraries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
+    target_link_libraries(${LIB_NAME} PUBLIC ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY}
         ncurses)
 endif()
 

@@ -29,7 +29,6 @@ namespace sg
         enum ActionType
         {
             AT_QUIT = 0,
-            AT_LIST_EGM,
             AT_PICK_EGM,
             AT_RESET_DEV,
 
@@ -66,6 +65,7 @@ namespace sg
             AT_QCOM_ECT_LOCKUP_RESET,
             AT_QCOM_PENDING,
             AT_QCOM_SEND,
+            AT_QCOM_LIST,
  
             AT_HELP,
             AT_NUM
@@ -113,25 +113,6 @@ namespace sg
     public:
         ActionPtr   Clone() override;
         const char* Description() const override;
-    };
-
-    class ListEGMAction : public Action
-    {
-    public:
-        ListEGMAction();
-       ~ListEGMAction();
-
-    public:
-        bool        Parse(const ActionArgs &args) override;
-        void        BuildOptions() override;
-        ActionPtr   Clone() override;
-        const char* Description() const override;
-
-    public:
-        bool        ListAll() const { return s_list_all; }
-
-    private:
-        static bool        s_list_all;
     };
 
     class PickEGMAction : public Action

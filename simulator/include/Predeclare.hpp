@@ -7,7 +7,6 @@ namespace sg {
     class ActionCenter;
     class QuitAction;
     class ResetDevAction;
-    class ListEGMAction;
     class PickEGMAction;
     class QcomSeekEGMAction;
     class QcomEGMPollAddConfAction;
@@ -42,6 +41,7 @@ namespace sg {
     class QcomEGMGeneralStatusAction;
     class QcomPendingAction;
     class QcomSendAction;
+    class QcomListAction;
     class ActionFactory;
     class QcomActionFactory;
     class Simulator;
@@ -52,7 +52,6 @@ namespace sg {
     typedef std::shared_ptr<Action>      ActionPtr;
     typedef std::shared_ptr<QuitAction>  QuitActionPtr;
     typedef std::shared_ptr<ResetDevAction>  ResetDevActionPtr;
-    typedef std::shared_ptr<ListEGMAction>   ListEGMActionPtr;
     typedef std::shared_ptr<PickEGMAction>   PickEGMActionPtr;
     typedef std::shared_ptr<ActionFactory>   ActionFactoryPtr;
     typedef std::shared_ptr<QcomActionFactory> QcomActionFactoryPtr;
@@ -89,6 +88,7 @@ namespace sg {
     typedef std::shared_ptr<QcomEGMGeneralStatusAction> QcomEGMGeneralStatusActionPtr;
     typedef std::shared_ptr<QcomPendingAction> QcomPendingActionPtr;
     typedef std::shared_ptr<QcomSendAction> QcomSendActionPtr;
+    typedef std::shared_ptr<QcomListAction> QcomListActionPtr;
 }
 
 

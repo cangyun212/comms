@@ -63,6 +63,8 @@ namespace sg
                     pd->data.nasr.full = p->Data.nasr.FLGA.bits.full;
 
                     std::memcpy(pd->data.nasr.nads, p->Data.nasr.NADS, sizeof(pd->data.nasr.nads));
+
+                    pd->data.control.egm_config_state |= QCOM_EGM_NAM_READY;
                 }
 
                 if (iflag != 0)

@@ -47,6 +47,7 @@
 #define QCOM_EGM_CONFIG_READY   0x02
 #define QCOM_EGM_HASH_READY     0x04
 #define QCOM_EGM_NAM_SET        0x08
+#define QCOM_EGM_NAM_READY      0x10
 
 #define QCOM_CTO_FAIL           0x00
 #define QCOM_CTO_CANCEL         0x01
@@ -89,7 +90,7 @@ namespace sg
         uint8_t     poll_address; // 1 <= valid address <= 25
         uint8_t     last_control; // ACK/NAK bit
         uint8_t     protocol_ver; // 0x00 for Qcom1.5.x egm and 0x01 for Qcom1.6.x egm
-        uint8_t     machine_eable; // if equal 1, then egm enable, otherwise egm disable
+        uint8_t     machine_enable; // if equal 1, then egm enable, otherwise egm disable
         uint8_t     seed[QCOM_MAX_PHA_SH_LENGTH];
         uint8_t     hash[QCOM_MAX_PHA_SH_LENGTH];
         uint8_t     game_config_state[QCOM_MAX_GAME_NUM]; // indicate egm game config state
@@ -169,7 +170,7 @@ namespace sg
     struct QcomVariationData
     {
         uint16_t        pret[QCOM_REMAX_EGMGCR]; // ref Qcom1.6-15.6.11, theoretical RTP of the non-progressive component, BCD value for Qcom 1.5, hex x 100 for Qcom 1.6
-        uint8_t         var[QCOM_REMAX_EGMGCR]; // ref Qcom1.6-15.6.11, BCD value
+        uint8_t         var[QCOM_REMAX_EGMGCR]; // ref Qcom1.6-15.6.11
         uint8_t         vnum;
     };
 
@@ -245,6 +246,7 @@ namespace sg
     struct QcomPlayerChoiceMetersData
     {
         uint32_t    pcmet[QCOM_PCMR_MAX_RE];
+        uint8_t     num;
     };
 
     struct QcomMeterGroup

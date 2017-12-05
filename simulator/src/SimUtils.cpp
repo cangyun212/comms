@@ -72,9 +72,9 @@ namespace sg
 
             *connection = evt->connect(std::bind(&QcomSim::SiteDetail, sim.get(), std::placeholders::_1, std::placeholders::_2));
 
-            connection = sim->Install(Action::AT_LIST_EGM);
+            connection = sim->Install(Action::AT_QCOM_LIST);
             SG_ASSERT(connection);
-            evt = center.Install(Action::AT_LIST_EGM);
+            evt = center.Install(Action::AT_QCOM_LIST);
             SG_ASSERT(evt);
 
             *connection = evt->connect(std::bind(&QcomSim::ListEGM, sim.get(), std::placeholders::_1, std::placeholders::_2));

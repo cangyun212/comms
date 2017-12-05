@@ -44,6 +44,102 @@ namespace sg
         const char* Description() const override;
     };
 
+    class QcomListAction : public Action
+    {
+    public:
+        QcomListAction();
+       ~QcomListAction();
+
+    public:
+        bool        Parse(const ActionArgs &args) override;
+        void        BuildOptions() override;
+        ActionPtr   Clone() override;
+        const char* Description() const override;
+
+    protected:
+        void        ResetArgOptions() override;
+
+    public:
+        uint8_t     All() const { return s_all; }
+        uint8_t     EGM() const { return s_egm; }
+        uint8_t     Config() const { return s_config; }
+        uint8_t     Devices() const { return s_devices; }
+        uint8_t     Settings() const { return s_settings; }
+        uint8_t     Hash() const { return s_hash; }
+        uint8_t     PSN() const { return s_psn; }
+        uint8_t     Parameters() const { return s_parameters; }
+        uint8_t     State() const { return s_state; }
+        uint8_t     Concurrents() const { return s_concurrents; }
+        uint8_t     NoteAcceptor() const { return s_note_acceptor; }
+        uint8_t     ExtJPInfo() const { return s_extjpinfo; }
+        uint8_t     Levels() const { return s_levels; }
+        uint8_t     Games() const { return s_games; }
+        uint16_t    GVN() const { return s_gvn; }
+        uint8_t     Variations() const { return s_variations; }
+        uint8_t     Progressives() const { return s_progressive; }
+        uint8_t     Meters() const { return s_meters; }
+        uint8_t     CMET() const { return s_cmet; }
+        uint8_t     PROG() const { return s_prog; }
+        uint8_t     MultiGameVar() const { return s_multigame_var; }
+        uint8_t     PlayerChoice() const { return s_player_choice; }
+        uint8_t     Group() const { return s_group; }
+        uint8_t     NoOpt() const { return s_no_opt; }
+
+    private:
+        void        IgnoreEGM();
+        void        IgnoreConfig();
+        void        IgnoreHash();
+        void        IgnorePSN();
+        void        IgnoreParameters();
+        void        IgnoreState();
+        void        IgnoreExtJPInfo();
+        void        IgnoreGames();
+        void        IgnoreGVN();
+
+        void        IgnoreDevices();
+        void        IgnoreSettings();
+
+        void        IgnoreConcurrents();
+        void        IgnoreNoteAcceptor();
+
+        void        IgnoreLevels();
+        
+        void        IgnoreVariations();
+        void        IgnoreProgressive();
+        void        IgnoreMeters();
+        void        IgnoreCMET();
+        void        IgnorePROG();
+        void        IgnoreMultiGameVar();
+        void        IgnorePlayerChoice();
+        void        IgnoreGroup();
+
+    private:
+        static uint8          s_all;          
+        static uint8          s_egm;          
+        static uint8          s_config;       
+        static uint8          s_devices;      
+        static uint8          s_settings;     
+        static uint8          s_hash;         
+        static uint8          s_psn;          
+        static uint8          s_parameters;   
+        static uint8          s_state;        
+        static uint8          s_concurrents;  
+        static uint8          s_note_acceptor;
+        static uint8          s_extjpinfo;    
+        static uint8          s_levels;       
+        static uint8          s_games;        
+        static uint16         s_gvn;          
+        static uint8          s_variations;   
+        static uint8          s_progressive;  
+        static uint8          s_meters;       
+        static uint8          s_cmet;         
+        static uint8          s_prog;         
+        static uint8          s_multigame_var;
+        static uint8          s_player_choice;
+        static uint8          s_group;        
+        static uint8_t        s_no_opt;
+    };
+
     class QcomSeekEGMAction : public Action
     {
     public:

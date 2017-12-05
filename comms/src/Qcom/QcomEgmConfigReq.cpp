@@ -205,7 +205,7 @@ namespace sg
 
                 job->AddPoll(this->MakeEGMConfigReqPoll(poll_address, p->data.control.last_control, data));
 
-                p->data.control.machine_eable = data.mef;
+                p->data.control.machine_enable = data.mef;
 
                 if (data.gcr)
                 {

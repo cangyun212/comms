@@ -27,6 +27,11 @@ namespace sg
         m_actions["seek"] = ptr;
         m_actions["sk"] = ptr;
 
+        ptr = MakeSharedPtr<QcomListAction>();
+        m_actions["list"] = ptr;
+        m_actions["ls"] = ptr;
+        m_actions["l"] = ptr;
+
         ptr = MakeSharedPtr<QcomEGMPollAddConfAction>();
         m_actions["polladdress"] = ptr;
         m_actions["pa"] = ptr;

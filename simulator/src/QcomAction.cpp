@@ -2273,6 +2273,341 @@ namespace sg
 
         return des;
     }
+
+    uint8          QcomListAction::s_all;
+    uint8          QcomListAction::s_egm;
+    uint8          QcomListAction::s_config;
+    uint8          QcomListAction::s_devices;
+    uint8          QcomListAction::s_settings;
+    uint8          QcomListAction::s_hash;
+    uint8          QcomListAction::s_psn;
+    uint8          QcomListAction::s_parameters;
+    uint8          QcomListAction::s_state;
+    uint8          QcomListAction::s_concurrents;
+    uint8          QcomListAction::s_note_acceptor;
+    uint8          QcomListAction::s_extjpinfo;
+    uint8          QcomListAction::s_levels;
+    uint8          QcomListAction::s_games;
+    uint16         QcomListAction::s_gvn;
+    uint8          QcomListAction::s_variations;
+    uint8          QcomListAction::s_progressive;
+    uint8          QcomListAction::s_meters;
+    uint8          QcomListAction::s_cmet;
+    uint8          QcomListAction::s_prog;
+    uint8          QcomListAction::s_multigame_var;
+    uint8          QcomListAction::s_player_choice;
+    uint8          QcomListAction::s_group;
+    uint8_t        QcomListAction::s_no_opt;
+
+    QcomListAction::QcomListAction()
+        : Action(AT_QCOM_LIST)
+    {
+
+    }
+
+    QcomListAction::~QcomListAction()
+    {
+
+    }
+
+    void QcomListAction::ResetArgOptions()
+    {
+        s_egm = 0;
+        s_gvn = 0;
+        s_group = 0x10;
+    }
+
+#define SG_IGNORE_OPTION(option, func)      if (vm.count(option)) func();
+#define SG_IGNORE_SUB_OPTION(parent, child, func) if (child && !parent) func();
+
+    bool QcomListAction::Parse(const ActionArgs &args)
+    {
+        bool res = false;
+
+        this->ResetArgOptions();
+
+        SG_PARSE_OPTION(args, m_options);
+
+        if (vm.count("help"))
+        {
+            COMMS_START_PRINT_BLOCK();
+            COMMS_PRINT_BLOCK("\nUsage: list [options]\n");
+            COMMS_PRINT_BLOCK(vis_desc);
+            COMMS_PRINT_BLOCK("\n");
+            COMMS_END_PRINT_BLOCK();
+        }
+        else
+        {
+            SG_SET_FLAG_OPTION("all", s_all);
+            
+            if (s_all)
+            {
+                SG_IGNORE_OPTION("egm", IgnoreEGM);
+                SG_IGNORE_OPTION("config", IgnoreConfig);
+                SG_IGNORE_OPTION("hash", IgnoreHash);
+                SG_IGNORE_OPTION("psn", IgnorePSN);
+                SG_IGNORE_OPTION("parameters", IgnoreParameters);
+                SG_IGNORE_OPTION("state", IgnoreState);
+                SG_IGNORE_OPTION("extjpinfo", IgnoreExtJPInfo);
+                SG_IGNORE_OPTION("games", IgnoreGames);
+                SG_IGNORE_OPTION("gvn", IgnoreGVN);
+
+                return true;
+            }
+
+            SG_SET_FLAG_OPTION("config", s_config);
+            SG_SET_FLAG_OPTION("devices", s_devices);
+            SG_IGNORE_SUB_OPTION(s_config, s_devices, IgnoreDevices);
+            SG_SET_FLAG_OPTION("settings", s_settings);
+            SG_IGNORE_SUB_OPTION(s_config, s_settings, IgnoreSettings);
+
+            SG_SET_FLAG_OPTION("hash", s_hash);
+
+            SG_SET_FLAG_OPTION("psn", s_psn);
+
+            SG_SET_FLAG_OPTION("parameters", s_parameters);
+
+            SG_SET_FLAG_OPTION("state", s_state);
+            SG_SET_FLAG_OPTION("concurrents", s_concurrents);
+            SG_IGNORE_SUB_OPTION(s_state, s_concurrents, IgnoreConcurrents);
+            SG_SET_FLAG_OPTION("noteacceptor", s_note_acceptor);
+            SG_IGNORE_SUB_OPTION(s_state, s_note_acceptor, IgnoreNoteAcceptor);
+
+            SG_SET_FLAG_OPTION("extjpinfo", s_extjpinfo);
+            SG_SET_FLAG_OPTION("levels", s_levels);
+            SG_IGNORE_SUB_OPTION(s_extjpinfo, s_levels, IgnoreLevels);
+
+            SG_SET_FLAG_OPTION("games", s_games);
+
+            SG_SET_FLAG_OPTION("gvn", s_gvn);
+            SG_SET_FLAG_OPTION("variations", s_variations);
+            SG_IGNORE_SUB_OPTION(s_gvn, s_variations, IgnoreVariations);
+            SG_SET_FLAG_OPTION("progressive", s_progressive);
+            SG_IGNORE_SUB_OPTION(s_gvn, s_progressive, IgnoreProgressive);
+            SG_SET_FLAG_OPTION("meters", s_meters);
+            SG_IGNORE_SUB_OPTION(s_gvn, s_meters, IgnoreMeters);
+            if (!(s_gvn && !s_meters))
+            {
+                SG_SET_FLAG_OPTION("cmet", s_cmet);
+                SG_SET_FLAG_OPTION("prog", s_prog);
+                SG_SET_FLAG_OPTION("multigamevar", s_multigame_var);
+                SG_SET_FLAG_OPTION("playerchoice", s_player_choice);
+                SG_SET_FLAG_OPTION("group", s_group);
+
+                if (!s_meters)
+                {
+                    SG_IGNORE_SUB_OPTION(s_meters, s_cmet, IgnoreCMET);
+                    SG_IGNORE_SUB_OPTION(s_meters, s_prog, IgnorePROG);
+                    SG_IGNORE_SUB_OPTION(s_meters, s_multigame_var, IgnoreMultiGameVar);
+                    SG_IGNORE_SUB_OPTION(s_meters, s_player_choice, IgnorePlayerChoice);
+                    SG_IGNORE_SUB_OPTION(s_meters, s_group, IgnoreGroup);
+                }
+            }
+
+            if (!s_config && s_hash && !s_psn && !s_parameters && !s_state && !s_extjpinfo && !s_games && !s_gvn)
+                s_no_opt = 1;
+            else
+                s_no_opt = 0;
+
+            return true;
+        }
+
+        return res;
+    }
+
+    void QcomListAction::IgnoreEGM()
+    {
+        COMMS_LOG("--egm,-e will be ignored, unset --all before set\n", CLL_Warning);
+        s_egm = 0;
+    }
+
+    void QcomListAction::IgnoreConfig()
+    {
+        COMMS_LOG("--config,--devices,--settings will be ignored, unset --all before set\n", CLL_Warning);
+        s_config = 0;
+        s_devices = 0;
+        s_settings = 0;
+    }
+
+    void QcomListAction::IgnoreHash()
+    {
+        COMMS_LOG("--hash will be ignored, unset --all before set\n", CLL_Warning);
+        s_hash = 0;
+    }
+
+    void QcomListAction::IgnorePSN()
+    {
+        COMMS_LOG("--psn will be ignored, unset --all before set\n", CLL_Warning);
+        s_psn = 0;
+    }
+
+    void QcomListAction::IgnoreParameters()
+    {
+        COMMS_LOG("--parameters will be ignored, unset --all before set\n", CLL_Warning);
+        s_parameters = 0;
+    }
+
+    void QcomListAction::IgnoreState()
+    {
+        COMMS_LOG("--state,--concurrents,--noteacceptor will be ignored, unset --all before set\n", CLL_Warning);
+        s_state = 0;
+        s_concurrents = 0;
+        s_note_acceptor = 0;
+    }
+
+    void QcomListAction::IgnoreExtJPInfo()
+    {
+        COMMS_LOG("--extjpinfo,--levels will be ignored, unset --all before set\n", CLL_Warning);
+        s_extjpinfo = 0;
+        s_levels = 0;
+    }
+
+    void QcomListAction::IgnoreGames()
+    {
+        COMMS_LOG("--games will be ignored, unset --all before set\n", CLL_Warning);
+        s_games = 0;
+    }
+
+    void QcomListAction::IgnoreGVN()
+    {
+        COMMS_LOG("--gvn,--varations,--progressive,--meters will be ignored, unset --all before set\n", CLL_Warning);
+        s_gvn = 0;
+        s_variations = 0;
+        s_progressive = 0;
+        s_meters = 0;
+    }
+
+    void QcomListAction::IgnoreDevices()
+    {
+        COMMS_LOG("--devices will be ignored, set --config before use\n", CLL_Warning);
+        s_devices = 0;
+    }
+
+    void QcomListAction::IgnoreSettings()
+    {
+        COMMS_LOG("--settings will be ignored, set --config before use\n", CLL_Warning);
+        s_settings = 0;
+    }
+
+    void QcomListAction::IgnoreConcurrents()
+    {
+        COMMS_LOG("--concurrent will be ignored, set --state before use\n", CLL_Warning);
+        s_concurrents = 0;
+    }
+
+    void QcomListAction::IgnoreNoteAcceptor()
+    {
+        COMMS_LOG("--noteacceptor will be ignored, set --state before use\n", CLL_Warning);
+        s_note_acceptor = 0;
+    }
+
+    void QcomListAction::IgnoreLevels()
+    {
+        COMMS_LOG("--levels will be ignored, set --extjpinfo before use\n", CLL_Warning);
+        s_levels = 0;
+    }
+
+    void QcomListAction::IgnoreVariations()
+    {
+        COMMS_LOG("--variations will be ignored, set --gvn before use\n", CLL_Warning);
+        s_variations = 0;
+    }
+
+    void QcomListAction::IgnoreProgressive()
+    {
+        COMMS_LOG("--progressive will be ignored, set --gvn before use\n", CLL_Warning);
+        s_progressive = 0;
+    }
+
+    void QcomListAction::IgnoreMeters()
+    {
+        COMMS_LOG("--meters will be ignored, set --gvn before use\n", CLL_Warning);
+        s_meters = 0;
+        s_cmet = 0;
+        s_prog = 0;
+        s_multigame_var = 0;
+        s_player_choice = 0;
+        s_group = 0x10;
+    }
+
+    void QcomListAction::IgnoreCMET()
+    {
+        COMMS_LOG("--cmet will be ignored, set --gvn and --meters before use\n", CLL_Warning);
+        s_cmet = 0;
+    }
+
+    void QcomListAction::IgnorePROG()
+    {
+        COMMS_LOG("--prog will be ignored, set --gvn and --meters before use\n", CLL_Warning);
+        s_prog = 0;
+    }
+
+    void QcomListAction::IgnoreMultiGameVar()
+    {
+        COMMS_LOG("--multigamevar will be ignored, set --gvn and --meters before use\n", CLL_Warning);
+        s_multigame_var = 0;
+    }
+
+    void QcomListAction::IgnorePlayerChoice()
+    {
+        COMMS_LOG("--playerchoice will be ignored, set --gvn and --meters before use\n", CLL_Warning);
+        s_player_choice = 0;
+    }
+
+    void QcomListAction::IgnoreGroup()
+    {
+        COMMS_LOG("--group will be ignored, set --gvn and --meters before use\n", CLL_Warning);
+        s_group = 0x10;
+    }
+
+    void QcomListAction::BuildOptions()
+    {
+        if (!m_options)
+        {
+            m_options = MakeSharedPtr<ActionOptions>();
+            m_options->AddOption(ActionOption("all,a", "list all EGM information, if set, all other options will be ignored"));
+            m_options->AddOption(ActionOption("egm,e", "list specified EGM information, if omit, current EGM information will be displayed", Value<uint8>(&s_egm)));
+            m_options->AddOption(ActionOption("config", "list EGM configuration information"));
+            m_options->AddOption(ActionOption("devices", "list EGM devices expectedness, must be used with config option, otherwise ignored"));
+            m_options->AddOption(ActionOption("settings", "list EGM configuration settings, must be used with config option, otherwise ignored"));
+            m_options->AddOption(ActionOption("hash", "list EGM hash information"));
+            m_options->AddOption(ActionOption("psn", "list EGM PSN information"));
+            m_options->AddOption(ActionOption("parameters", "list EGM parameters settings"));
+            m_options->AddOption(ActionOption("state", "list EGM current state and door states"));
+            m_options->AddOption(ActionOption("concurrents", "list EGM concurretns states, must be used with state option, otherwise ignored"));
+            m_options->AddOption(ActionOption("noteacceptor", "list EGM note acceptor state, must be used with state option, otherwise ignored"));
+            m_options->AddOption(ActionOption("extjpinfo", "list EGM external jackpot information"));
+            m_options->AddOption(ActionOption("levels", "list all EGM external jackpot level information, must be used with extjpinfo option"));
+            m_options->AddOption(ActionOption("games", "list all games of EGM"));
+            m_options->AddOption(ActionOption("gvn", "list sepcified game of EGM", Value<uint16>(&s_gvn)));
+            m_options->AddOption(ActionOption("variations", "list game variations information, must be used with gvn option"));
+            m_options->AddOption(ActionOption("progressive", "list game progressive information, must be used with gvn option"));
+            m_options->AddOption(ActionOption("meters", "list game bet meters information, must be used with gvn option"));
+            m_options->AddOption(ActionOption("cmet", "list total number of bets made in this category for the game, must be used with meters option"));
+            m_options->AddOption(ActionOption("prog", "list game progressive meters information, must be used with meters option"));
+            m_options->AddOption(ActionOption("multigamevar", "list game multi-game/variation meters information, must be used with meters option"));
+            m_options->AddOption(ActionOption("playerchoice", "list game player choice meters information, must be used with meters option"));
+            m_options->AddOption(ActionOption("group", "list sepcified group meters information of game, must be used with meters option", Value<uint8>(&s_group)));
+            m_options->AddOption(ActionOption("help,h", "help message"));
+        }
+    }
+
+    ActionPtr QcomListAction::Clone()
+    {
+        return Action::DoClone<QcomListAction>();
+    }
+
+    const char* QcomListAction::Description() const
+    {
+        static const char* des = "\tQcom List:\n\t\tl,ls,list\n";
+
+        return des;
+    }
+
+
+
+
+    
 }
 
 

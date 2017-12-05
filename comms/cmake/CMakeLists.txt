@@ -144,7 +144,8 @@ add_library(${LIB_NAME} SHARED
     ${COMMS_QCOM_QOGR_HEADER_FILES}
 )
 
-target_link_libraries(${LIB_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX})
+#target_link_libraries(${LIB_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX})
+target_link_libraries(${LIB_NAME} core)
 
 set_target_properties(${LIB_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${SG_LIB_DIR}

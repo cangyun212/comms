@@ -491,6 +491,17 @@ namespace sg
         p->data.custom.maxpwin = 4294967295;
         p->data.custom.maxect = 1000000;
 
+        // ref Qcom1.6-8.1.17 defaults value for EGM Parameters Poll
+        p->data.param.reserve = 1;
+        p->data.param.lwin = 1000000;
+        p->data.param.crlimit = 10000;
+        p->data.param.dumax = 5;
+        p->data.param.dulimit = 1000000;
+        p->data.param.pwrtime = 900;
+        p->data.param.eodt = 180;
+        p->data.param.npwinp = 1000000;
+        p->data.param.sapwinp = 1000000;
+
         std::unique_lock<std::mutex> lock(m_egms_guard);
         m_egms.push_back(p);
         return p;

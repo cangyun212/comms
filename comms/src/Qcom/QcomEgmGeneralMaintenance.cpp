@@ -28,7 +28,7 @@ namespace sg
 
                 job->AddPoll(this->MakeEgmGeneralMaintenancePoll(poll_address, gvn, p->data.control.last_control, data));
 
-                p->data.control.machine_eable = data.mef;
+                p->data.control.machine_enable = data.mef;
 
                 uint8_t game = 0;
                 for (game = 0; game < p->data.config.games_num; ++game)

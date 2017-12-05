@@ -43,6 +43,7 @@ namespace sg
 
                     if (game != pd->data.config.games_num)
                     {
+                        pd->data.games[game].pcm.num = p->Data.pcmr.NUM;
                         for (uint8_t i = 0; i < p->Data.pcmr.NUM; ++i)
                         {
                             uint32_t *pcmet = (uint32_t*)((uint8_t*)(p->Data.pcmr.PMET) + i * p->Data.pcmr.SIZ);

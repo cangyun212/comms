@@ -71,7 +71,7 @@ namespace sg
 
                 job->AddPoll(this->MakeProgHashRequestPoll(poll_address, p->data.control.last_control, data));
 
-                p->data.control.machine_eable = data.mef;
+                p->data.control.machine_enable = data.mef;
 
                 if (data.new_seed)
                 {

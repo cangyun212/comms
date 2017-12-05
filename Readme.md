@@ -1,4 +1,4 @@
-
+﻿
 
 #CommsSim
 
@@ -9,6 +9,7 @@
 *[Feature](#Feature)
 *[Design](#Design)
 *[Debug](#Debug)
+*[How To Use](#HowToUse)
 *[Authors](#Authors)
 
 <a name="Environment"></a>
@@ -116,10 +117,84 @@ The core lib is designed and implemented as a very fundamental lib which could b
  
  The current console utilities can handle all three cases by using different initial types. If you initialize console by custom window type, you can treat a console window as a normal GUI window. You can even register message handler to handle message (this means you can handle console input by register a message handler, it's very like windows GUI programming that you get a windows message then dispatch it to your window message callback). Besides the thread safe control, the console utilities also provide some other useful function, such as color output, table output and progress bar output. There are also some limitation of console module, for example you cannot mix using sg::ConsolePrinter with C std output function after initialization. But it won't bother user a lot since user can customize the console module to minimize these limitation.
  * *uintx_t* vs *uintx*. We can use *uintx_t* as a variable type when we need a fix width integer. For example, we can use uint8_t to represent a 8 bit width unsigned int value. This works fine in most case but failed when we use them with boost program option module which provide a simple way to parse command line options of your application. Let's assume you have an option named 'a' and it's take a value which target type is *uint8_t*, when boost program option parse the command line *"-a 0"* it will treat *'0'* as a *uint8_t* value. Unfortunately the underling type of *uint8_t* on our Windows/Linux system is *unsigned char* and inside boost program option uses std iostream to cast lexical *'0'* to it's target type, *unsigned char* in this case, so the actual value stored is the ASCII code of *'0'* which is 49. This is a disaster for our application. So that's why we implement a group of new type *uintx*. These new types overload operator >> and << which are used by program option to do the lexical cast. At first, they cast string literal to integer type and then cast those integer to the target type by using boost numeric cast. Through this way we can get the correct value of those fix width types variable. There is one more thing need to be noticed that boost numeric cast could raise  bad numeric cast exception which will not be handled by boost program option, so when you use it you need to handle it by yourself.
+ * concatenate string. /\*TODO*/
+ * big integer with base conversion. /\*TODO*/
 ####Comms
+* serial port communication. /\*TODO*/
+* Qcom protocol. Poll Cycle and Response.  /\*TODO*/
 ####Simulator
+* Action/Action Handler architecture. /\*TODO*/
+* Command Parser. /\*TODO*/
+
 <a name="Debug"></a>
 ## Debug ##
+
+<a name="HowToUse"></a>
+##How To Use
+### Change and Compile Kernel
+Skip this part if you want to use comms simulator with EGM machine. These changes only applied for running it on PC with simulator game.
+#### Change kernel configuration
+* Run make menuconfig
+* Select Comms Enable
+* Tick Use Qcom Protocol Qpv1.6.3
+* Tick Dont use Microblaze serial port for COMMS
+* Untick everything else
+####Change Kernel code
+Skip this part if you are not working on Alpha or DualOS platform.
+
+ * Go to game_proc/egm/comms/base/comms.c, add following code into Comms Constructor: 
+ 
+
+        if (grantpt(fd) == -1 || unlockpt(fd) == -1)
+        {
+            cerr << strerror(errno) << endl;
+        }
+        else
+        {
+            const char* slave = ptsname(fd);
+            if (!slave)
+            {
+                std::cout<< "unable to retrive slave device name" << endl;
+            }
+            else
+            {
+                std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl <<
+                             slave << endl <<
+                             "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
+            }
+        }
+
+ * Modify game_proc/egm/comms/qcom/qfunctions.c, line 39:
+ 
+	    c = new CommsQcom("/dev/ptmx");
+
+ * Modify game_proc/egm/comms/qcom/qcom_lib.c, line 3077:
+
+            #ifndef __COMMS_QCOM_USE_SERIAL__
+                qcom_ptr->comms_enabled = 1;
+            #endi
+
+compile the kernel after you finish the change.
+###Run the game and simulator
+####Run the game
+* Run the game as normal and do the NVRAM clear
+* Check the game output to find the slave device opened by game, such as ***/dev/pts/15***. (for PC only)
+####Run the simulator
+* Run the simulator. If you work on PC, run with -d option: ***./simulator -d /dev/pts/15***
+* Enter command: ***seek*** (Find available EGM)
+* Enter command: ***ls*** (Check the EGMs found by seek)
+* Enter command: ***pa*** (Configure EGM poll address)
+* Enter command: ***cr --mef --gcr --psn*** (Send configuration request to EGM)
+* Enter command: ***cf --jur 1 --den 1 --tok 100*** (Configure EGM with market QLD; denom 1c; token 100c)
+* Enter command: ***gc --var 90 --gef --gvn < GVN >*** (Enable game which use specified GVN and variation)
+* To Enable game with Link Jackpot: ***gc --var 90 --gef --pgid 1234 --jptype 1 1 --amount 1000000 100000 --gvn < GVN >*** (This will enable game with two link jackpot level and set initial current amount)
+* Enter command: ***gm --var 90 --mef --gef --gamecfg --gvn < GVN >*** (Verify game configuration)
+* Enter command: ***pc --sup 1000000 100000 --pinc 1230 2350 --ceil 2000000 500000 --auxrtp 0 0 --gvn < GVN >*** (Configure jackpot parameter)
+* Enter command: ***gm --var 90 --mef --gef --procfg*** (Veify jackpot configuration)
+####Misc usage
+* Use up/down arrow to access last/next command.
+* Use help command to check all available commands.
+* Use Tab to complete the command option, if more than 1 option is available, then all available options will be listed.
 
 <a name="Authors"></a>
 ## Authors ##

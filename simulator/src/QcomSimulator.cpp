@@ -117,7 +117,7 @@ namespace sg
             }
             else
             {
-                AppendEGMInfoToTable(egm, data[egm], t);
+                AppendEGMInfoToTable(egm, data[egm - 1], t);
             }
 
             COMMS_START_PRINT_BLOCK();
@@ -1591,7 +1591,7 @@ namespace sg
             return;
         }
 
-        QcomDataPtr const& d = data[egm];
+        QcomDataPtr const& d = data[egm - 1];
 
         if (p->Config())
             ListEGMConfig(p->Devices(), p->Settings(), d);

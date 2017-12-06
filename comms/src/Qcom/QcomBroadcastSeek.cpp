@@ -38,6 +38,8 @@ namespace sg
                     pd->data.control.last_control |= (QCOM_ACK_MASK | QCOM_LAMAPOLL_MASK);
                 }
 
+                COMMS_LOG(boost::format("EGM(SERMID: %|#X|) found.\n") % p->Data.segmbr.SN.SER, CLL_Info);
+
                 return true;
 
             }

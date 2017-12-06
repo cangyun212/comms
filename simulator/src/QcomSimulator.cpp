@@ -27,7 +27,7 @@ namespace sg
             uint32_t ser = 0;
             _QComGetBCD(&ser, (uint8_t*)(&serbcd), 3);
 
-            uint32_t midbcd = (d->data.control.serialMidBCD & 0xFF000000) >> 6;
+            uint32_t midbcd = (d->data.control.serialMidBCD & 0xFF000000) >> 24;
             uint32_t mid = 0;
             _QComGetBCD(&mid, (uint8_t*)(&midbcd), 1);
 
@@ -36,8 +36,10 @@ namespace sg
                 sg::concatenate(state, "READY");
             if (d->data.control.egm_config_state & QCOM_EGM_HASH_READY)
                 sg::concatenate(state, (state.size() ? "|HASH" : "HASH"));
-            if ((d->data.control.egm_config_state & QCOM_EGM_CONFIG_SET) ||
-                (d->data.control.egm_config_state & QCOM_EGM_NAM_SET))
+            if (((d->data.control.egm_config_state & QCOM_EGM_CONFIG_SET) &&
+                 !(d->data.control.egm_config_state & QCOM_EGM_CONFIG_READY)) ||
+                ((d->data.control.egm_config_state & QCOM_EGM_NAM_SET) &&
+                 !(d->data.control.egm_config_state & QCOM_EGM_NAM_READY)))
                 sg::concatenate(state, (state.size() ? "|PENDING" : "PENDING"));
             if (!state.size())
                 sg::concatenate(state, "NOT CONFIG");
@@ -65,7 +67,9 @@ namespace sg
                 sg::concatenate(state, "GVN");
 
             if ((d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_REQ) ||
-                (d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET) ||
+                ((d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET) &&
+                 !(d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY)) ||
+                (d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_CHANGE) ||
                 (d->data.control.game_config_state[game] & QCOM_GAME_PC_CHANGE))
                 sg::concatenate(state, (state.empty() ? "PENDING" : "|PENDING"));
 
@@ -79,8 +83,8 @@ namespace sg
                 state,
                 SG_FLAG_STR_SWITCH(d->data.games[game].config.settings.game_enable, "ENABLED", "DISABLED"),
                 d->data.games[game].config.settings.pgid,
-                d->data.games[game].config.settings.var,
-                SG_FLAG_STR_SWITCH(d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET, (d->data.games[game].config.settings.var_lock ? "SET" : "NOT SET"), "N/A"),
+                (uint32_t)d->data.games[game].config.settings.var,
+                SG_FLAG_STR_SWITCH(d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET, (d->data.games[game].config.settings.var_lock ? "YES" : "NO"), "N/A"),
                 SG_FLAG_STR_SWITCH(d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY, (d->data.games[game].var_hot_switching ? "YES" : "NO"), "N/A"),
                 SG_FLAG_STR_SWITCH(d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY, (d->data.games[game].lp_only ? "YES" : "NO"), "N/A"),
                 SG_FLAG_STR_SWITCH(d->data.control.game_config_state[game] & QCOM_GAME_CONFIG_READY, (d->data.games[game].customSAP ? "YES" : "NO"), "N/A")
@@ -88,13 +92,16 @@ namespace sg
 
             t.AddRow(&row);
 
+            t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
+            t.SetCellFormat(t.GetRowNum() - 1, 4, ConsoleTableFormat(std::string(" 0x%|04X|"), CTPT_AlignLeft));
+
             return true;
         }
 
         bool ListEGMInfo(uint8_t egm, uint8_t all, std::vector<QcomDataPtr> const& data)
         {
             ConsoleTable t;
-            t.SetStyle("compact");
+            t.SetStyle("borderless");
 
             ConsoleTableItem header[] =
             {
@@ -135,7 +142,7 @@ namespace sg
             if (!devices && !settings)
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 ConsoleTableItem header[] =
                 {
@@ -153,8 +160,8 @@ namespace sg
 
                 if (data->data.control.egm_config_state & QCOM_EGM_CONFIG_READY)
                 {
-                    t.SetHeaderCellFormat(2, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
-                    t.SetHeaderCellFormat(3, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                    //t.SetHeaderCellFormat(2, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
+                    //t.SetHeaderCellFormat(3, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     t.SetHeaderCellFormat(4, ConsoleTableFormat(std::string(" %|02d| "), CTPT_AlignLeft));
 
                     {
@@ -166,13 +173,15 @@ namespace sg
                             (data->data.control.protocol_ver == 0x01) ? std::string("Qcom 1.6") : std::string("Qcom 1.5"),
                             data->data.config.bsvn,
                             data->data.config.last_gvn,
-                            data->data.config.last_var,
-                            data->data.config.games_num,
+                            (uint32_t)data->data.config.last_var,
+                            (uint32_t)data->data.config.games_num,
                             SG_FLAG_STR_SWITCH(data->data.config.shared_progressive, "YES", "NO"),
                             SG_FLAG_STR_SWITCH(data->data.config.denom_hot_switching, "YES", "NO")
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 2, ConsoleTableFormat(std::string(" 0x%|04X|"), CTPT_AlignLeft));
+                        t.SetCellFormat(t.GetRowNum() - 1, 3, ConsoleTableFormat(std::string(" 0x%|04X|"), CTPT_AlignLeft));
                     }
 
                     COMMS_START_PRINT_BLOCK();
@@ -204,7 +213,7 @@ namespace sg
                 if (devices)
                 {
                     ConsoleTable t;
-                    t.SetStyle("compact");
+                    t.SetStyle("borderless");
 
                     ConsoleTableItem header[] =
                     {
@@ -214,6 +223,7 @@ namespace sg
                         std::string("PROGRESSIVE DISPLAY"),
                         std::string("TOUCH SCREEN"),
                         std::string("TICKET PRINTER"),
+                        std::string("COIN/TOKEN VALIDATOR"),
                         std::string("HOPPER"),
                         std::string("NOTE ACCEPTOR"),
                         std::string("AUXILIARY DISPLAY"),
@@ -275,7 +285,7 @@ namespace sg
                 if (settings)
                 {
                     ConsoleTable t;
-                    t.SetStyle("compact");
+                    t.SetStyle("borderless");
 
                     ConsoleTableItem header[] =
                     {
@@ -368,7 +378,7 @@ namespace sg
         bool ListEGMHash(QcomDataPtr const& data)
         {
             ConsoleTable t;
-            t.SetStyle("compact");
+            t.SetStyle("borderless");
 
             ConsoleTableItem header[] =
             {
@@ -414,7 +424,7 @@ namespace sg
         bool ListEGMPSN(QcomDataPtr const& data)
         {
             ConsoleTable t;
-            t.SetStyle("compact");
+            t.SetStyle("borderless");
 
             ConsoleTableItem header[] =
             {
@@ -450,12 +460,12 @@ namespace sg
         bool ListEGMParameters(QcomDataPtr const& data)
         {
             ConsoleTable t;
-            t.SetStyle("compact");
+            t.SetStyle("borderless");
 
             ConsoleTableItem header[] =
             {
                 std::string("EGM"),
-                std::string("RESERVE FEATURE"),
+                std::string("RESERVE"),
                 std::string("AUTOPLAY"),
                 std::string("CRLIMIT MODE"),
                 std::string("OPERATOR ID"),
@@ -464,16 +474,16 @@ namespace sg
                 std::string("MAX GAMBLE"),
                 std::string("GAMBLE LIMIT"),
                 std::string("TIME ZONE AD"),
-                std::string("POWER-SAVE TIME-OUT"),
+                std::string("POWER-SAVE"),
                 std::string("PID"),
-                std::string("END OF DAY TIME"),
-                std::string("NP WIN PAYOUT THRESHOLD"),
-                std::string("SAP WIN PAYOUT THRESHOLD")
+                std::string("EOD TIME"),
+                std::string("NPWIN THRESHOLD"),
+                std::string("SAPWIN THRESHOLD")
             };
 
             t.SetHeader(&header);
 
-            t.SetHeaderCellFormat(4, ConsoleTableFormat(" %|#02X| ", CTPT_AlignLeft));
+            //t.SetHeaderCellFormat(4, ConsoleTableFormat(" %|#02X| ", CTPT_AlignLeft));
 
             {
                 std::unique_lock<std::mutex> lock(data->locker);
@@ -484,10 +494,11 @@ namespace sg
                     SG_FLAG_STR_SWITCH(data->data.param.reserve, "ENABLED", "DISABLED"),
                     SG_FLAG_STR_SWITCH(data->data.param.auto_play, "ENABLED", "DISABLED"),
                     SG_FLAG_STR_SWITCH(data->data.param.crlimit_mode, "YES", "NO"),
+                    (uint32_t)(data->data.param.opr),
                     data->data.param.lwin,
                     data->data.param.crlimit,
                     data->data.param.dulimit,
-                    data->data.param.dumax,
+                    (uint32_t)data->data.param.dumax,
                     data->data.param.tzadj,
                     data->data.param.pwrtime,
                     (uint32_t)(data->data.param.pid),
@@ -497,6 +508,7 @@ namespace sg
                 };
 
                 t.AddRow(&row);
+                t.SetCellFormat(t.GetRowNum() - 1, 4, ConsoleTableFormat(std::string(" 0x%|02X|"), CTPT_AlignLeft));
             }
 
             COMMS_START_PRINT_BLOCK();
@@ -513,20 +525,20 @@ namespace sg
             if (!concurrent && !note_acceptor)
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 ConsoleTableItem header[] =
                 {
                     std::string("EGM"),
                     std::string("STATUS"),
-                    std::string("MAIN DOOR"),
-                    std::string("CASH BOX DOOR"),
-                    std::string("PROCESSOR DOOR"),
-                    std::string("BELLY PANEL DOOR"),
-                    std::string("NOTE ACCEPTOR DOOR"),
+                    std::string("MAIN"),
+                    std::string("CASH BOX"),
+                    std::string("PROCESSOR"),
+                    std::string("BELLY PANEL"),
+                    std::string("NOTE ACCEPTOR"),
                     std::string("NOTE STACKER"),
-                    std::string("MECHANICAL METER DOOR"),
-                    std::string("TOP BOX/AUX DOOR"),
+                    std::string("MECHANICAL METER"),
+                    std::string("TOP BOX/AUX"),
                 };
 
                 t.SetHeader(&header);
@@ -623,7 +635,7 @@ namespace sg
                 if (concurrent)
                 {
                     ConsoleTable t;
-                    t.SetStyle("compact");
+                    t.SetStyle("borderless");
 
                     ConsoleTableItem header[] =
                     {
@@ -663,7 +675,7 @@ namespace sg
                 if (note_acceptor)
                 {
                     ConsoleTable t;
-                    t.SetStyle("compact");
+                    t.SetStyle("borderless");
 
                     ConsoleTableItem header[] =
                     {
@@ -722,7 +734,7 @@ namespace sg
             if (!levels)
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 ConsoleTableItem header[] =
                 {
@@ -759,7 +771,7 @@ namespace sg
             else
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 ConsoleTableItem header[] =
                 {
@@ -772,7 +784,7 @@ namespace sg
 
                 t.SetHeader(&header);
 
-                t.SetHeaderCellFormat(2, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                //t.SetHeaderCellFormat(2, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                 {
                     std::unique_lock<std::mutex> lock(data->locker);
@@ -789,6 +801,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 2, ConsoleTableFormat(std::string(" 0x%|04X|"), CTPT_AlignLeft));
                     }
                 }
 
@@ -805,7 +818,7 @@ namespace sg
         bool ListEGMGames(uint16_t gvn, QcomDataPtr const& data)
         {
             ConsoleTable t;
-            t.SetStyle("compact");
+            t.SetStyle("borderless");
 
             ConsoleTableItem header[] =
             {
@@ -824,8 +837,8 @@ namespace sg
             t.SetHeader(&header);
 
             
-            t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
-            t.SetHeaderCellFormat(4, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+            //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+            //t.SetHeaderCellFormat(4, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
             t.SetHeaderCellFormat(5, ConsoleTableFormat(std::string(" %|02d| "), CTPT_AlignLeft));
 
             {
@@ -864,7 +877,7 @@ namespace sg
         bool ListGameVariations(uint8_t game, QcomDataPtr const& data)
         {
            ConsoleTable t;
-            t.SetStyle("compact");
+            t.SetStyle("borderless");
 
             ConsoleTableItem header[] =
             {
@@ -894,6 +907,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     }
                 }
                 else
@@ -907,6 +921,7 @@ namespace sg
                     };
 
                     t.AddRow(&row);
+                    t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                 }
 
             }
@@ -923,7 +938,7 @@ namespace sg
         bool ListGameProgressive(uint8_t game, QcomDataPtr const& data)
         {
            ConsoleTable t;
-            t.SetStyle("compact");
+            t.SetStyle("borderless");
 
             ConsoleTableItem header[] =
             {
@@ -940,7 +955,7 @@ namespace sg
 
             t.SetHeader(&header);
 
-            t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+            //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
             {
                 std::unique_lock<std::mutex> lock(data->locker);
@@ -963,6 +978,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     }
                 }
                 else
@@ -981,6 +997,7 @@ namespace sg
                     };
 
                     t.AddRow(&row);
+                    t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                 }
             }
 
@@ -1006,7 +1023,7 @@ namespace sg
                 if (!cmet)
                 {
                     ConsoleTable t;
-                    t.SetStyle("compact");
+                    t.SetStyle("borderless");
 
                     ConsoleTableItem header[] =
                     {
@@ -1020,7 +1037,7 @@ namespace sg
 
                     t.SetHeader(&header);
 
-                    t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                    //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                     {
                         std::unique_lock<std::mutex> lock(data->locker);
@@ -1036,6 +1053,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     }
 
                     COMMS_START_PRINT_BLOCK();
@@ -1047,7 +1065,7 @@ namespace sg
                 else
                 {
                     ConsoleTable t;
-                    t.SetStyle("compact");
+                    t.SetStyle("borderless");
 
                     {
                         std::unique_lock<std::mutex> lock(data->locker);
@@ -1131,7 +1149,7 @@ namespace sg
             if (prog)
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 ConsoleTableItem header[] =
                 {
@@ -1146,7 +1164,7 @@ namespace sg
 
                 t.SetHeader(&header);
 
-                t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                 {
                     std::unique_lock<std::mutex> lock(data->locker);
@@ -1165,6 +1183,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     }
                 }
 
@@ -1178,7 +1197,7 @@ namespace sg
             if (multigamevar)
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 ConsoleTableItem header[] =
                 {
@@ -1193,7 +1212,7 @@ namespace sg
 
                 t.SetHeader(&header);
 
-                t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                 {
                     std::unique_lock<std::mutex> lock(data->locker);
@@ -1209,6 +1228,7 @@ namespace sg
                     };
 
                     t.AddRow(&row);
+                    t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                 }
 
                 COMMS_START_PRINT_BLOCK();
@@ -1221,7 +1241,7 @@ namespace sg
             if (player_choice)
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 ConsoleTableItem header[] =
                 {
@@ -1247,7 +1267,7 @@ namespace sg
 
                 t.SetHeader(&header);
 
-                t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                 {
                     std::unique_lock<std::mutex> lock(data->locker);
@@ -1306,6 +1326,7 @@ namespace sg
                     };
 
                     t.AddRow(&row);
+                    t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                 }
 
                 COMMS_START_PRINT_BLOCK();
@@ -1318,7 +1339,7 @@ namespace sg
             if (group < 0x10)
             {
                 ConsoleTable t;
-                t.SetStyle("compact");
+                t.SetStyle("borderless");
 
                 if (group == 0)
                 {
@@ -1342,7 +1363,7 @@ namespace sg
 
                     t.SetHeader(&header);
 
-                    t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                    //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                     {
                         std::unique_lock<std::mutex> lock(data->locker);
@@ -1365,6 +1386,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     }
 
                     COMMS_START_PRINT_BLOCK();
@@ -1390,7 +1412,7 @@ namespace sg
                         std::string("NIC"), // EGM Notes In Count
                         std::string("RCRT"), // Residual Credit Removal Turnover
                         std::string("RCRW"), // Residual Credit Removal Wins
-                        std::string("Rejected Enabled Notes"),
+                        std::string("REJECTED ENABLED NOTES"),
                         std::string("GT"), // EGM Gamble Turnover
                         std::string("GW"), // EGM Gamble Wins
                         std::string("EGM COINS/TOKENS CLEARED"),
@@ -1399,7 +1421,7 @@ namespace sg
 
                     t.SetHeader(&header);
 
-                    t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                    //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                     {
                         std::unique_lock<std::mutex> lock(data->locker);
@@ -1424,6 +1446,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     }
 
                     COMMS_START_PRINT_BLOCK();
@@ -1447,7 +1470,7 @@ namespace sg
 
                     t.SetHeader(&header);
 
-                    t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
+                    //t.SetHeaderCellFormat(1, ConsoleTableFormat(std::string(" %|#04X| "), CTPT_AlignLeft));
 
                     {
                         std::unique_lock<std::mutex> lock(data->locker);
@@ -1463,6 +1486,7 @@ namespace sg
                         };
 
                         t.AddRow(&row);
+                        t.SetCellFormat(t.GetRowNum() - 1, 1, ConsoleTableFormat(std::string(" 0x%|04X| "), CTPT_AlignLeft));
                     }
 
                     COMMS_START_PRINT_BLOCK();
@@ -1615,7 +1639,7 @@ namespace sg
         {
             ListEGMGames(0, d);
         }
-        else if (!p->Variations() && !p->Progressives() && !p->Meters())
+        else if (p->GVN() && !p->Variations() && !p->Progressives() && !p->Meters())
         {
             ListEGMGames(p->GVN(), d);
             return;

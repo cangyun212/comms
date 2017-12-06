@@ -217,7 +217,7 @@ namespace sg
 
                 if (col < r->col)
                 {
-                    *(r->GetCell(col).fmt) = fmt;
+                    r->GetCell(col).fmt = MakeSharedPtr<ConsoleTableFormat>(fmt);
                 }
             }
         }

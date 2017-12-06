@@ -2379,20 +2379,24 @@ namespace sg
 
             SG_SET_FLAG_OPTION("games", s_games);
 
-            SG_SET_FLAG_OPTION("gvn", s_gvn);
+            uint8_t metgvn = 0;
+            SG_SET_FLAG_OPTION("gvn", metgvn);
+            //SG_SET_FLAG_OPTION("gvn", s_gvn);
             SG_SET_FLAG_OPTION("variations", s_variations);
-            SG_IGNORE_SUB_OPTION(s_gvn, s_variations, IgnoreVariations);
+            SG_IGNORE_SUB_OPTION(metgvn, s_variations, IgnoreVariations);
             SG_SET_FLAG_OPTION("progressive", s_progressive);
-            SG_IGNORE_SUB_OPTION(s_gvn, s_progressive, IgnoreProgressive);
+            SG_IGNORE_SUB_OPTION(metgvn, s_progressive, IgnoreProgressive);
             SG_SET_FLAG_OPTION("meters", s_meters);
-            SG_IGNORE_SUB_OPTION(s_gvn, s_meters, IgnoreMeters);
-            if (!(s_gvn && !s_meters))
+            SG_IGNORE_SUB_OPTION(metgvn, s_meters, IgnoreMeters);
+            if (!(metgvn && !s_meters))
             {
                 SG_SET_FLAG_OPTION("cmet", s_cmet);
                 SG_SET_FLAG_OPTION("prog", s_prog);
                 SG_SET_FLAG_OPTION("multigamevar", s_multigame_var);
                 SG_SET_FLAG_OPTION("playerchoice", s_player_choice);
-                SG_SET_FLAG_OPTION("group", s_group);
+                //SG_SET_FLAG_OPTION("group", s_group);
+                uint8_t metgroup = 0;
+                SG_SET_FLAG_OPTION("group", metgroup);
 
                 if (!s_meters)
                 {
@@ -2400,11 +2404,11 @@ namespace sg
                     SG_IGNORE_SUB_OPTION(s_meters, s_prog, IgnorePROG);
                     SG_IGNORE_SUB_OPTION(s_meters, s_multigame_var, IgnoreMultiGameVar);
                     SG_IGNORE_SUB_OPTION(s_meters, s_player_choice, IgnorePlayerChoice);
-                    SG_IGNORE_SUB_OPTION(s_meters, s_group, IgnoreGroup);
+                    SG_IGNORE_SUB_OPTION(s_meters, metgroup, IgnoreGroup);
                 }
             }
 
-            if (!s_config && s_hash && !s_psn && !s_parameters && !s_state && !s_extjpinfo && !s_games && !s_gvn)
+            if (!s_config && !s_hash && !s_psn && !s_parameters && !s_state && !s_extjpinfo && !s_games && !s_gvn)
                 s_no_opt = 1;
             else
                 s_no_opt = 0;

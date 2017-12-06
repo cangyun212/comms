@@ -249,6 +249,7 @@ namespace sg {
         void    SetCellFormat(size_t row, size_t col, ConsoleTableFormat const& fmt);
         void    SetRowFormat(size_t row, ConsoleTableFormat const& fmt);
         void    SetHeaderCellFormat(size_t col, ConsoleTableFormat const& fmt);
+        size_t  GetRowNum() const { return m_rows.size(); }
 
         template <size_t N>
         void SetHeader(ConsoleTableItem (*it)[N])

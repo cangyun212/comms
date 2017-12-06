@@ -127,6 +127,10 @@ namespace sg
                                     catch (boost::bad_lexical_cast const&) {\
                                         COMMS_LOG("Invalid option value\n", CLL_Error);\
                                         return false;\
+                                    }\
+                                    catch(...) {\
+                                        COMMS_LOG("Parse option error\n", CLL_Error);\
+                                        return false;\
                                     }
 
 }

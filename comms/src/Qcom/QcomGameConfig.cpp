@@ -57,7 +57,8 @@ namespace sg
 
                     for (game = 0; game < game_num; ++game)
                     {
-                        if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET)
+                        if ((pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET) ||
+                            (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_CHANGE))
                         {
                             if (pd->data.control.game_config_state[game] & QCOM_GAME_CONFIG_GVN)
                             {
@@ -124,6 +125,7 @@ namespace sg
                                     }
 
                                     pd->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_READY;
+                                    pd->data.control.game_config_state[game] &= ~QCOM_GAME_CONFIG_CHANGE;
                                     flag = pd->data.control.game_config_state[game];
                                     break;
                                 }

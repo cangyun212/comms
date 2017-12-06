@@ -45,6 +45,7 @@ namespace sg {
                             {
                                 shared = 0;
                                 p->data.games[game].config.settings.pgid = data.pgid;
+                                p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_CHANGE;
                             }
                             else
                             {
@@ -55,6 +56,7 @@ namespace sg {
                                         (p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_READY))
                                     {
                                         p->data.games[i].config.settings.pgid = data.pgid;
+                                        p->data.control.game_config_state[i] |= QCOM_GAME_CONFIG_CHANGE;
                                     }
                                 }
                             }

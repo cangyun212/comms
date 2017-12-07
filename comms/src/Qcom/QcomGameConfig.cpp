@@ -313,6 +313,7 @@ namespace sg
                 game_num = p->data.config.games_num > 0 ? p->data.config.games_num : QCOM_MAX_GAME_NUM;
 
                 QcomProgressiveConfigData *share = nullptr;
+                uint8_t level = 0;
                 if (p->data.config.shared_progressive) // make sure all game use same progressive config
                 {
                     for (uint8_t i = 0; i < game_num; ++i)
@@ -320,6 +321,7 @@ namespace sg
                         if (p->data.control.game_config_state[i] & QCOM_GAME_CONFIG_SET)
                         {
                             share = &(p->data.games[i].config.progressive);
+                            level = p->data.games[i].prog.pnum;
                             break;
                         }
                     }
@@ -333,9 +335,9 @@ namespace sg
                         if (!(p->data.control.game_config_state[game] & QCOM_GAME_CONFIG_SET)) // use game config change poll if you want to change
                         {
                             if (share)
-                                pnum = 0; // I think this will work, fix if not
-
-                            job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, gvn, pnum, data));
+                                job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, gvn, level, data.settings, *share));
+                            else
+                                job->AddPoll(this->MakeGameConfigPoll(poll_address, p->data.control.last_control, gvn, pnum, data.settings, data.progressive));
 
                             p->data.control.game_config_state[game] |= QCOM_GAME_CONFIG_SET;
 
@@ -466,7 +468,7 @@ namespace sg
     //}
 
     QcomPollPtr QcomGameConfiguration::MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, uint8_t pnum, 
-        QcomGameConfigData const& data)
+        QcomGameSettingData const& game, QcomProgressiveConfigData const& prog)
     {
         QcomPollPtr poll = MakeSharedPtr<QcomPoll>();
 
@@ -478,11 +480,11 @@ namespace sg
         poll->poll.DLL.FunctionCode = QCOM_EGMGCP_FC;
 
         poll->poll.Data.egmgcp.GVN = gvn;
-        _QComPutBCD(data.settings.var, &(poll->poll.Data.egmgcp.VAR), sizeof(poll->poll.Data.egmgcp.VAR));
+        _QComPutBCD(game.var, &(poll->poll.Data.egmgcp.VAR), sizeof(poll->poll.Data.egmgcp.VAR));
         poll->poll.Data.egmgcp.GFLG.bits.res = (uint8_t)0;
-        poll->poll.Data.egmgcp.GFLG.bits.varlock = data.settings.var_lock;
-        poll->poll.Data.egmgcp.GFLG.bits.GEF = data.settings.game_enable;
-        poll->poll.Data.egmgcp.PGID = data.settings.pgid;
+        poll->poll.Data.egmgcp.GFLG.bits.varlock = game.var_lock;
+        poll->poll.Data.egmgcp.GFLG.bits.GEF = game.game_enable;
+        poll->poll.Data.egmgcp.PGID = game.pgid;
         poll->poll.Data.egmgcp.PNUM = pnum; //data.progressive_config.pnum;
         poll->poll.Data.egmgcp.SIZ = sizeof(qc_egmcpretype);
 
@@ -493,8 +495,8 @@ namespace sg
         for (uint8_t i = 0; i < pnum; ++i)
         {
             poll->poll.Data.egmgcp.re[i].PFLG.bits.res = 0;
-            poll->poll.Data.egmgcp.re[i].PFLG.bits.LP = data.progressive.flag_p[i];
-            poll->poll.Data.egmgcp.re[i].CAMT = data.progressive.sup[i];
+            poll->poll.Data.egmgcp.re[i].PFLG.bits.LP = prog.flag_p[i];
+            poll->poll.Data.egmgcp.re[i].CAMT = prog.sup[i];
         }
 
         //PutCRC_LSBfirst(poll->data, poll->poll.DLL.Length);

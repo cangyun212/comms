@@ -32,7 +32,7 @@ namespace sg
         bool        BuildGameConfigJobs(QcomJobDataPtr &jobs, uint8_t poll_address, uint16_t gvn, uint8_t pnum, QcomGameConfigData const& data);
 
     private:
-        QcomPollPtr MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, uint8_t pnum, QcomGameConfigData const& data);
+        QcomPollPtr MakeGameConfigPoll(uint8_t poll_address, uint8_t last_control, uint16_t gvn, uint8_t pnum, QcomGameSettingData const& game, QcomProgressiveConfigData const& prog);
         //bool        BuildGameConfigPollForGame(QcomJobDataPtr &job, QcomDataPtr &p, uint8_t poll_address, uint8_t game, uint8_t pnum, QcomGameConfigData const& data);
 
 

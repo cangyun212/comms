@@ -54,27 +54,33 @@ All files in above folders will be categorized by the build configuration. For e
 You can use *build_xx.py* to build specific library instead of building all of them. For example, if you just want to build core library, then you can use *build_core.py* with any build configuration. Please make sure all dependence are exist before building the specific library. For example, you must use *build_boost.py* and *build_pdcurses.py* with the same building configuration before building the core library.<br/>
 Currently CommsSim use CMake as the build system which is an open-source, cross-platform family of tools designed to build, test and package software. CMake is used to control the software compilation process using simple platform and compiler independent configuration files, and generate native makefiles and workspaces that can be used in the compiler environment of your choice.  This give us an opportunity to provide an uniform build method on all target platform. To simplify the build process, we also integrate all third-party library which use different build tools into our CMake building system.<br/>
 pdcurses library is a cross platform implementation for curses specification. Now we only use it on Windows platform since many Linux distribute with its own ncurses implementation. But if you met any issues with linking ncurses library on your Linux system, you can use pdcurse instead with a little effort to change the build script and CMake project file. To use pdcurse on Linux target platform, open *build_all.py* and comment line 24:
-
+```python 
     if "win" == bi.host_platform:
+```
 this will enable the building of pdcurses on Linux.
 Then open *core/cmake/CMakeLists.txt* and find the following codes:
-
+```cmake
     if(SG_PLATFORM_WINDOWS)
         include_directories(${PDCURSES_PROJECT_DIR}/pdcurses)
     endif()
+```
 and
-
+```cmake
     if(SG_PLATFORM_WINDOWS)
-        target_link_libraries(${LIB_NMAE} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY} debug pdcurses${SG_OUTPUT_SUFFIX}_d optimized pdcurses${SG_OUTPUT_SUFFIX})
+        target_compile_definitions(${LIB_NAME} PUBLIC -DSG_USE_PDCURSES)
+        target_link_libraries(${LIB_NMAE} PUBLIC ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY} debug pdcurses${SG_OUTPUT_SUFFIX}_d optimized pdcurses${SG_OUTPUT_SUFFIX})
     else()
-        target_link_libaries(${LIB_NAME} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ncurses)
+        target_link_libaries(${LIB_NAME} PUBLIC ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ncurses)
     endif()
+```
 and
-
+```cmake
     #if(SG_PLATFORM_LINUX)
+    #    target_compile_definitions(${LIB_NAME} PUBLIC -DSG_USE_PDCURSES)
     #    include(${PDCURSES_PROJECT_DIR}/pdcurses/x11/pdcurses.cmake)
-    #    target_link_libraries(${LIB_NAME} ${PDCURSES_XLIBS} ${PDCURSES_EXTRA_LIBS})
+    #    target_link_libraries(${LIB_NAME} PUBLIC ${PDCURSES_XLIBS} ${PDCURSES_EXTRA_LIBS})
     #endif()
+```
 Comment the condition compile statement and the ncurses linkage. Uncomment special link setting for Linux. Now you're able to use pdcurses on Linux.
   
 <a name="Feature"></a>
@@ -93,19 +99,21 @@ Here is a brief list including some C++1x features widely used in our current co
  * **lambda**
 ####RAII
 Resource Acquisition Is Initialization or RAII, is a C++ programming technique, which binds the life cycle of a resource (allocated memory, thread of execution, open socket, open file, locked mutex, database connection—anything that exists in limited supply) to the lifetime of an object. RAII guarantees that the resource is available to any function that may access the object. It also guarantees that all resources are released when the lifetime of their controlling objectends, in reverse order of acquisition. By the help of C++1x features, such as smart pointer and move semantic, we can write more stable and more exception safe code. Following code show the two implementation of our thread safe log, one without RAII and the other one with RAII after refactor:
-
+```c++
     extern CORE_API std::mutex g_log_guard;
+```
 Before refactor:
-
+```c++
     #define SG_START_LOG_BLOCK(s) { g_log_guard.lock()
     #define SG_LOG_BLOCK(s, t, l) sg::ConsolePrinter::Instance().Log(s, t, l)
     #define SG_END_LOG_BLOCK(s) s.flush(); g_log_guard.unlock();}
+```
 After refactor:
-
+```c++
     #define SG_START_LOG_BLOCK(s) { std::lock_guard<std::mutex> lock(g_log_guard)
     #define SG_LOG_BLOCK(s,t,l) sg::ConsolePrinter::Instance().Log(s,t,l)
     #define SG_END_LOG_BLOCK(s) s.flush();}
-
+```
 ###Modules
 ####Core
 The core lib is designed and implemented as a very fundamental lib which could be shared by various libs and apps. So we try to keep the API of core lib clean and safe as much as possible. We should not expose too much implement detail or put too many restriction to the usage of the lib.
@@ -144,36 +152,36 @@ Skip this part if you are not working on Alpha or DualOS platform.
 
  * Go to game_proc/egm/comms/base/comms.c, add following code into Comms Constructor: 
  
-
-        if (grantpt(fd) == -1 || unlockpt(fd) == -1)
+```c++
+    if (grantpt(fd) == -1 || unlockpt(fd) == -1)
+    {
+        cerr << strerror(errno) << endl;
+    }
+    else
+    {
+        const char* slave = ptsname(fd);
+        if (!slave)
         {
-            cerr << strerror(errno) << endl;
+            std::cout<< "unable to retrive slave device name" << endl;
         }
         else
         {
-            const char* slave = ptsname(fd);
-            if (!slave)
-            {
-                std::cout<< "unable to retrive slave device name" << endl;
-            }
-            else
-            {
-                std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl <<
-                             slave << endl <<
-                             "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-            }
+            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl <<
+                         slave << endl <<
+                         "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
         }
-
+    }
+```
  * Modify game_proc/egm/comms/qcom/qfunctions.c, line 39:
- 
-	    c = new CommsQcom("/dev/ptmx");
-
+```c++
+    c = new CommsQcom("/dev/ptmx");
+```
  * Modify game_proc/egm/comms/qcom/qcom_lib.c, line 3077:
-
-            #ifndef __COMMS_QCOM_USE_SERIAL__
-                qcom_ptr->comms_enabled = 1;
-            #endi
-
+```c++
+    #ifndef __COMMS_QCOM_USE_SERIAL__
+        qcom_ptr->comms_enabled = 1;
+    #endi
+```
 compile the kernel after you finish the change.
 ###Run the game and simulator
 ####Run the game

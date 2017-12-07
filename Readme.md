@@ -2,15 +2,7 @@
 
 #CommsSim
 
-## Table of Contents ##
-*[Environment](#Environment)
-*[Project Structure](#ProjectStructure)
-*[Building](#Building)
-*[Feature](#Feature)
-*[Design](#Design)
-*[Debug](#Debug)
-*[How To Use](#HowToUse)
-*[Authors](#Authors)
+[TOC]
 
 <a name="Environment"></a>
 ## Environment ##

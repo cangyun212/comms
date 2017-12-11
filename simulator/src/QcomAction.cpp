@@ -1706,7 +1706,7 @@ namespace sg
 
     const char* QcomRequestAllLoggedEventsAction::Description() const
     {
-        static const char * des = "\tRequest All Logged Events:\n\t\t\reqevents\n";
+        static const char * des = "\tRequest All Logged Events:\n\t\t\\reqevents\n";
 
         return des;
     }

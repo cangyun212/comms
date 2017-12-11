@@ -75,13 +75,22 @@ if(SG_PLATFORM_LINUX)
     set(SIM_EXTRA_LINK_LIB ${SIM_EXTRA_LINK_LIB} pthread)
 endif()
 
-target_link_libraries(${EXE_NAME} core comms)
+if(SG_COMMSSIM_BUILD_ALL)
+    target_link_libraries(${EXE_NAME} core comms)
+else()
+    # Build standalone, so no target core/comms, link it manually
+    include(${SG_PROJECT_DIR}/rapidjson/cmake/rapidjson.cmake)
+    include_directories(${RAPIDJSON_INCLUDE_DIR})
+    target_link_libraries(${EXE_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX}
+        debug comms${SG_OUTPUT_SUFFIX}_d optimized comms${SG_OUTPUT_SUFFIX}
+        ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    )
+    if(SG_PLATFORM_WINDOWS) # it's suck, match the core lib here
+        add_definitions(-DSG_USE_PDCURSES)
+    endif()
+endif()
+
 target_link_libraries(${EXE_NAME} ${SIM_EXTRA_LINK_LIB})
-#target_link_libraries(${EXE_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX}
-#    debug comms${SG_OUTPUT_SUFFIX}_d optimized comms${SG_OUTPUT_SUFFIX}
-#    ${Boost_PROGRAM_OPTIONS_LIBRARY}
-#    ${SIM_EXTRA_LINK_LIB}
-#    )
 
 
 set_target_properties(${EXE_NAME} PROPERTIES

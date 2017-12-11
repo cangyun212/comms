@@ -144,8 +144,15 @@ add_library(${LIB_NAME} SHARED
     ${COMMS_QCOM_QOGR_HEADER_FILES}
 )
 
-#target_link_libraries(${LIB_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX})
-target_link_libraries(${LIB_NAME} core)
+if(SG_COMMSSIM_BUILD_ALL)
+    target_link_libraries(${LIB_NAME} core)
+else()
+    # Build standalone, so no target core, link it manually
+    target_link_libraries(${LIB_NAME} debug core${SG_OUTPUT_SUFFIX}_d optimized core${SG_OUTPUT_SUFFIX})
+    if(SG_PLATFORM_WINDOWS) # it's suck, match the core lib here
+        add_definitions(-DSG_USE_PDCURSES)
+    endif()
+endif()
 
 set_target_properties(${LIB_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${SG_LIB_DIR}
